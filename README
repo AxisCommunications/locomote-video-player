@@ -1,0 +1,17 @@
+To compile
+- Install FlashDevelop (Windows only)
+- Open MJPGPlayer.as3proj and compile
+TODO: Add compile instructions that are IDE independent.
+
+JS API
+The player exports some JS functions, which can be called directly on the <object>/<embed> tag.
+- play(url): Start playback of the given url. If no url is given, the last url is used.
+- stop(): Stops playback. Clears the canvas.
+- pause(): Stops the playback. Shows a still of the last frame.
+- getFps(): Returns the currently played video's frame rate.
+- setEventCallbackName(functionName): Sets the name of the JS function that will be called whenever the player wants to dispatch an event. The function with the given name must be accessible from the global scope (i.e. referenced from the "window" JS object). If no callback function is set, it defaults to window.alert.
+The following events are dispatched to the callback function:
+- ['loaded']: The .swf is completely loaded and ready for interaction.
+- ['started', url]: A stream has started. This event will be dispatched some time after a call to play(). The second item is the url string that is being played.
+- ['error', errorNumber, message]: Whenever an error has ocurred, an event describing it will be emitted. The second item is a unique number representing the error and the third is a human readable string, describing the error. For a complete enumeration of the errors, see IPCam.as.
+To make sure no events are missed, it is a good idea to provide a callback function name at player creation. This can be accomplished by passing the FlashVar 'eventCallbackName'.
