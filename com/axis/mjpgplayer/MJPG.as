@@ -43,15 +43,23 @@ package com.axis.mjpgplayer
         loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, onImageError);
         this.addChild(loader);
       }
+      stage.addEventListener(Event.RESIZE, resizeListener);
+    }
+
+    private function resizeListener(e:Event):void {
+      for each (var loader:MJPGImage in getChildren())
+      {
+        scaleAndPosition(loader);
+      }
     }
 
     public function getChildren():Array
     {
        var children:Array = [];
-
        for (var i:uint = 0; i < this.numChildren; i++)
+       {
         children.push(this.getChildAt(i));
-
+       }
        return children;
     }
 
@@ -124,9 +132,7 @@ package com.axis.mjpgplayer
         updateDecFrames(0);
         updatePlaying(true);
 
-        var arr:Array = getChildren();
-        var loader:MJPGImage = null;
-        for each (loader in arr)
+        for each (var loader:MJPGImage in getChildren())
         {
           loader.data.inQue = true;
           idleQue.push(loader);
@@ -135,9 +141,30 @@ package com.axis.mjpgplayer
 
       if (idleQue.length > 0)
       {
-        loader = idleQue.shift() as MJPGImage;
-        loadImage(loader, imgBuf.shift());
+        loadImage(idleQue.shift(), imgBuf.shift());
       }
+    }
+
+    private function scaleAndPosition(loader:MJPGImage):void
+    {
+      // Scale to fit stage
+      var loaderAspectRatio:Number = loader.width / loader.height;
+      var stageAspectRatio:Number = stage.stageWidth / stage.stageHeight;
+      var scale:Number;
+      if (loaderAspectRatio > stageAspectRatio)
+      {
+        scale = stage.stageWidth / loader.width;
+      }
+      else
+      {
+        scale = stage.stageHeight / loader.height;
+      }
+      loader.width *= scale;
+      loader.height *= scale;
+
+      // Center on stage
+      loader.x = (stage.stageWidth - loader.width) / 2;
+      loader.y = (stage.stageHeight - loader.height) / 2;
     }
 
     private function onLoadComplete(event:Event):void
@@ -156,24 +183,7 @@ package com.axis.mjpgplayer
       }
       loader.data.loading = false;
 
-      // Scale to fit stage
-      var loaderAspectRatio:Number = loader.width / loader.height;
-      var stageAspectRatio:Number = stage.stageWidth / stage.stageHeight;
-      var scale:Number;
-      if (loaderAspectRatio > stageAspectRatio)
-      {
-        scale = stage.stageWidth / loader.width;
-      }
-      else
-      {
-        scale = stage.stageHeight / loader.height;
-      }
-      loader.width *= scale;
-      loader.height *= scale;
-
-      // Center on stage
-      this.x = (stage.stageWidth - loader.width) / 2;
-      this.y = (stage.stageHeight - loader.height) / 2;
+      scaleAndPosition(loader);
 
       var curTime:Number = new Date().getTime();
       decTime += curTime - loader.data.loadTime;
