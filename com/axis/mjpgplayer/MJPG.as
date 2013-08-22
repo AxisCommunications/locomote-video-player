@@ -34,7 +34,11 @@ package com.axis.mjpgplayer
     private function onStageAdded(e:Event):void
     {
       ExternalInterface.addCallback("getFps", getFps);
+      createLoaders();
+      stage.addEventListener(Event.RESIZE, resizeListener);
+    }
 
+    private function createLoaders():void {
       for (var i:uint = 0; i < maxImages; i++)
       {
         var loader:MJPGImage = new MJPGImage();
@@ -43,7 +47,15 @@ package com.axis.mjpgplayer
         loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, onImageError);
         this.addChild(loader);
       }
-      stage.addEventListener(Event.RESIZE, resizeListener);
+    }
+
+    private function destroyLoaders():void {
+      for each (var loader:MJPGImage in getChildren())
+      {
+        loader.contentLoaderInfo.removeEventListener(Event.COMPLETE, onLoadComplete);
+        loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, onImageError);
+      }
+      removeChildren();
     }
 
     private function resizeListener(e:Event):void {
@@ -264,11 +276,12 @@ package com.axis.mjpgplayer
         loader.data.loading = false;
         loader.data.inQue = false;
         loader.data.loadTime = 0.0;
+      }
 
-        if (clear)
-        {
-          loader.unload();
-        }
+      if (clear)
+      {
+        destroyLoaders();
+        createLoaders();
       }
 
       updateFps((framesDecoded * 1000) / (new Date().getTime() - sTime));
