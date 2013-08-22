@@ -1,7 +1,6 @@
 To compile
-- Install FlashDevelop (Windows only)
-- Open MJPGPlayer.as3proj and compile
-TODO: Add compile instructions that are IDE independent.
+- Install Adobe Flex SDK and add mxmlc to your path
+- Type make bin/Player.swf
 
 JS API
 The player exports some JS functions, which can be called directly on the <object>/<embed> tag.
