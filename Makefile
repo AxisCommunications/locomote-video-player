@@ -1,7 +1,8 @@
 include $(AXIS_TOP_DIR)/tools/build/Rules.axis
 
-SRC = MJPGPlayer.as
+SRC = src
 DEST = bin
+MAIN_AS_FILE = $(SRC)/MJPGPlayer.as
 SWF = $(DEST)/Player.swf
 MXMLC = mxmlc
 MXMLC_OPTIONS = -use-network \
@@ -32,10 +33,10 @@ all:
 install: all
 
 clean:
-	$(RM) $(DEST)
+	$(RM) -r $(DEST)
 
 # Since mxmlc is not part of standard Axis environment,
 # only build SWF if target triggered explicitly
-$(SWF): $(shell find com -type f) $(SRC)
+$(SWF): $(shell find $(SRC) -type f)
 	@mkdir -p $(DEST)
-	$(MXMLC) $(MXMLC_OPTIONS) $(SRC)
+	$(MXMLC) $(MXMLC_OPTIONS) $(MAIN_AS_FILE)
