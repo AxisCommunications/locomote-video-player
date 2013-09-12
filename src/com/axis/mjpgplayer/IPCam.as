@@ -181,8 +181,7 @@ package com.axis.mjpgplayer {
             return true;
           }
           throw(new Error("error"));
-        }
-        else {
+        } else {
           sendError(2, "Server retured error code " + arr[1] + ".");
         }
       }

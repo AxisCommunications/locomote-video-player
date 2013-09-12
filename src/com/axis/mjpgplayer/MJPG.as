@@ -16,14 +16,7 @@ package com.axis.mjpgplayer {
     private var firstImage:Boolean = true;
     private var imgBuf:Vector.<Object> = new Vector.<Object>();
     private var idleQue:Vector.<MJPGImage> = new Vector.<MJPGImage>();
-    private var _playing:Boolean = false;
-
-    // Statistics Variables
-    private var sTime:Number = 0;
-    private var decTime:uint = 0;
-    private var _fRecCount:uint = 0;
-    private var _fDecCount:uint = 0;
-    private var _fps:Number = 0.0;
+    private var playing:Boolean = false;
 
     public function MJPG(ipCam:IPCam) {
       this.ipCam = ipCam;
@@ -68,64 +61,14 @@ package com.axis.mjpgplayer {
        return children;
     }
 
-    [Bindable(event='framesDecChanged')]
-    public function get framesDecoded():uint {
-      return _fDecCount;
-    }
-
-    private function updateDecFrames(v:uint):void {
-      _fDecCount = v;
-      dispatchEvent(new Event("framesDecChanged"));
-    }
-
-    [Bindable(event='playingChanged')]
-    public function get playing():Boolean {
-      return _playing;
-    }
-
-    private function updatePlaying(v:Boolean):void {
-      _playing = v;
-      dispatchEvent(new Event("playingChanged"));
-    }
-
-    [Bindable(event='fpsChanged')]
-    public function get fps():Number {
-      return _fps;
-    }
-
-    public function getFps():Number {
-      return _fps;
-    }
-
-    private function updateFps(v:Number):void {
-      _fps = v;
-      dispatchEvent(new Event("fpsChanged"));
-    }
-
-    private function loadImage(loader:MJPGImage, obj:Object):void {
-      loader.data.loading = true;
-      loader.data.inQue = false;
-      loader.data.loadTime = new Date().getTime();
-      loader.data.frame = obj.frame;
-      loader.loadBytes(obj.data as ByteArray);
-      obj = null;
-    }
-
     public function load(image:ByteArray):void {
       if (imgBuf.length >= maxImages + 3) {
-        var obj:Object = imgBuf.shift();
-        obj = null;
+        imgBuf.shift();
       }
-      _fRecCount++;
-      imgBuf.push({frame: _fRecCount, data: image});
+      imgBuf.push({ data: image });
 
       if (!playing) {
-        sTime = new Date().getTime();
-        decTime = 0;
-        _fRecCount = 1;
-        updateDecFrames(0);
-        updatePlaying(true);
-
+        playing = true;
         for each (var loader:MJPGImage in getChildren()) {
           loader.data.inQue = true;
           idleQue.push(loader);
@@ -137,6 +80,14 @@ package com.axis.mjpgplayer {
       }
     }
 
+    private function loadImage(loader:MJPGImage, obj:Object):void {
+      loader.data.loading = true;
+      loader.data.inQue = false;
+      loader.data.loadTime = new Date().getTime();
+      loader.loadBytes(obj.data as ByteArray);
+      obj = null;
+    }
+
     private function scaleAndPosition(loader:MJPGImage):void {
       // Scale to fit stage
       var loaderAspectRatio:Number = loader.width / loader.height;
@@ -144,8 +95,7 @@ package com.axis.mjpgplayer {
       var scale:Number;
       if (loaderAspectRatio > stageAspectRatio) {
         scale = stage.stageWidth / loader.width;
-      }
-      else {
+      } else {
         scale = stage.stageHeight / loader.height;
       }
       loader.width *= scale;
@@ -157,9 +107,7 @@ package com.axis.mjpgplayer {
     }
 
     private function onLoadComplete(event:Event):void {
-      if (!playing) {
-        return;
-      }
+      if (!playing) { return; }
 
       var arr:Array = getChildren();
       var loader:MJPGImage = event.currentTarget.loader as MJPGImage;
@@ -172,31 +120,25 @@ package com.axis.mjpgplayer {
       scaleAndPosition(loader);
 
       var curTime:Number = new Date().getTime();
-      decTime += curTime - loader.data.loadTime;
       if (arr[arr.length - 1].data.loadTime <= loader.data.loadTime) {
         if (maxImages > 2) {
           removeChild(loader);
           addChild(loader);
-        }
-        else if (maxImages == 2) {
+        } else if (maxImages == 2) {
           this.swapChildren(arr[0], arr[1]);
         }
-        updateDecFrames(framesDecoded + 1);
-        updateFps((framesDecoded * 1000) / (curTime - sTime));
       }
 
       arr = getChildren();
       for (var i:uint = 0; i < arr.length - 1; i++) {
         loader = arr[i] as MJPGImage;
-        if (loader.data.inQue == true || loader.data.loading) {
-          continue;
-        }
+
+        if (loader.data.inQue == true || loader.data.loading) { continue; }
 
         if (imgBuf.length == 0) {
           loader.data.inQue = true;
           idleQue.push(loader);
-        }
-        else {
+        } else {
           loadImage(loader, imgBuf.shift());
         }
       }
@@ -213,28 +155,21 @@ package com.axis.mjpgplayer {
       if (imgBuf.length == 0) {
         loader.data.inQue = true;
         idleQue.push(loader);
-      }
-      else {
+      } else {
         loadImage(loader, imgBuf.shift());
       }
     }
 
     public function reset(clear:Boolean = false):void {
+      playing = false;
       firstImage = true;
-      updatePlaying(false);
       idleQue.length = 0;
 
       while (imgBuf.length != 0) {
-        _fRecCount--;
-        var obj:Object = imgBuf.shift();
-        obj = null;
+        imgBuf.shift();
       }
 
-      var arr:Array = getChildren();
-      for each (var loader:MJPGImage in arr) {
-        if (loader.data.loading) {
-          updateDecFrames(framesDecoded + 1);
-        }
+      for each (var loader:MJPGImage in getChildren()) {
         loader.data.loading = false;
         loader.data.inQue = false;
         loader.data.loadTime = 0.0;
@@ -244,10 +179,10 @@ package com.axis.mjpgplayer {
         destroyLoaders();
         createLoaders();
       }
+    }
 
-      updateFps((framesDecoded * 1000) / (new Date().getTime() - sTime));
-
-      var recvFps:Number = (_fRecCount * 1000) / (new Date().getTime() - sTime);
+    public function getFps():Number {
+      return 1337;
     }
 
   }
