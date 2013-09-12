@@ -1,5 +1,5 @@
-package com.axis.mjpgplayer
-{
+package com.axis.mjpgplayer {
+
   import flash.events.ErrorEvent;
   import flash.events.Event;
   import flash.events.EventDispatcher;
@@ -26,8 +26,8 @@ package com.axis.mjpgplayer
    * 3: Valid HTTP response (200), but invalid content
    */
 
-  public class IPCam extends EventDispatcher
-  {
+  public class IPCam extends EventDispatcher {
+
     private var jsEventCallbackName:String = "console.log";
     private var socket:Socket = null;
     private var buffer:ByteArray = null;
@@ -41,8 +41,7 @@ package com.axis.mjpgplayer
 
     public var image:ByteArray = null;
 
-    public function IPCam()
-    {
+    public function IPCam() {
       // Set up JS API
       ExternalInterface.marshallExceptions = true;
       ExternalInterface.addCallback("play", connect);
@@ -64,38 +63,31 @@ package com.axis.mjpgplayer
       socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
     }
 
-    public function sendLoadedEvent():void
-    {
+    public function sendLoadedEvent():void {
       // Tell the external JS environent that we are ready to accept API calls
       ExternalInterface.call(jsEventCallbackName, 'loaded');
     }
 
-    public function setJsEventCallbackName(jsEventCallbackName:String):void
-    {
+    public function setJsEventCallbackName(jsEventCallbackName:String):void {
       this.jsEventCallbackName = jsEventCallbackName;
     }
 
-    public function getJsEventCallbackName():String
-    {
+    public function getJsEventCallbackName():String {
       return jsEventCallbackName;
     }
 
-    private function onError(e:ErrorEvent):void
-    {
+    private function onError(e:ErrorEvent):void {
       sendError(0, e.text);
     }
 
-    private function sendError(errNo:Number = 0, msg:String = ""):void
-    {
+    private function sendError(errNo:Number = 0, msg:String = ""):void {
       disconnect();
       dispatchEvent(new Event("error"));
       ExternalInterface.call(jsEventCallbackName, "error", errNo, msg);
     }
 
-    public function disconnect():void
-    {
-      if (socket.connected)
-      {
+    public function disconnect():void {
+      if (socket.connected) {
         socket.close();
       }
       image = null;
@@ -103,23 +95,19 @@ package com.axis.mjpgplayer
       dispatchEvent(new Event("disconnect"));
     }
 
-    public function stop():void
-    {
+    public function stop():void {
       disconnect();
       dispatchEvent(new Event("clear"));
     }
 
-    public function connect(url:String = null):void
-    {
+    public function connect(url:String = null):void {
       disconnect();
 
-      if (url != null)
-      {
+      if (url != null) {
         this.url = url;
       }
 
-      if (!URLUtil.isHttpURL(this.url))
-      {
+      if (!URLUtil.isHttpURL(this.url)) {
         sendError(1, "Invalid Url");
         return;
       }
@@ -127,8 +115,7 @@ package com.axis.mjpgplayer
       socket.connect(URLUtil.getServerName(this.url), 80);
     }
 
-    private function onSockConn(event:Event):void
-    {
+    private function onSockConn(event:Event):void {
       buffer = new ByteArray();
       dataBuffer = new ByteArray();
 
@@ -138,23 +125,18 @@ package com.axis.mjpgplayer
       socket.writeUTFBytes("\r\n");
     }
 
-    private function onClose(e:Event):void
-    {
+    private function onClose(e:Event):void {
       // Security error is thrown if this line is excluded
       socket.close();
     }
 
-    private function readline():Boolean
-    {
-      while (dataBuffer.bytesAvailable > 0)
-      {
+    private function readline():Boolean {
+      while (dataBuffer.bytesAvailable > 0) {
         var t:String = dataBuffer.readMultiByte(1, "us-ascii");
-        if (t == "\r")
-        {
+        if (t == "\r") {
           continue;
         }
-        if (t == "\n")
-        {
+        if (t == "\n") {
           return true;
         }
         buffer.writeMultiByte(t, "us-ascii");
@@ -163,33 +145,26 @@ package com.axis.mjpgplayer
       return false;
     }
 
-    private function getContentType():String
-    {
+    private function getContentType():String {
       var content:String = "content-type: ";
-      for each (var str:String in headers)
-      {
-        if (str.toLowerCase().indexOf(content) >= 0)
-        {
+      for each (var str:String in headers) {
+        if (str.toLowerCase().indexOf(content) >= 0) {
           return str.substr(str.indexOf(content) + content.length).toLowerCase();
         }
       }
       return "";
     }
 
-    private function onParseHeaders():Boolean
-    {
+    private function onParseHeaders():Boolean {
       headers.length = 0;
-      while (1)
-      {
+      while (1) {
         var wholeLine:Boolean = readline();
 
-        if (!wholeLine)
-        {
+        if (!wholeLine) {
           return false;
         }
 
-        if (buffer.length == 0)
-        {
+        if (buffer.length == 0) {
           parseHeaders = false;
           break;
         }
@@ -197,69 +172,55 @@ package com.axis.mjpgplayer
         headers.push(buffer.toString());
         buffer.clear();
       }
-      try
-      {
+      try {
         var arr:Array = headers[0].split(" ");
-        if (arr[1] == "200")
-        {
+        if (arr[1] == "200") {
           var content:String = getContentType();
-          if (content.indexOf("multipart/x-mixed-replace") >= 0)
-          {
+          if (content.indexOf("multipart/x-mixed-replace") >= 0) {
             dispatchEvent(new Event("connect"));
             return true;
           }
           throw(new Error("error"));
         }
-        else
-        {
+        else {
           sendError(2, "Server retured error code " + arr[1] + ".");
         }
       }
-      catch (e:Error)
-      {
+      catch (e:Error) {
         sendError(3, "Invalid response received.");
       }
       return false;
     }
 
-    private function onSockData(event:ProgressEvent):void
-    {
+    private function onSockData(event:ProgressEvent):void {
       socket.readBytes(dataBuffer, dataBuffer.length);
-      if (parseHeaders)
-      {
-        if (!onParseHeaders())
-        {
+      if (parseHeaders) {
+        if (!onParseHeaders()) {
           return;
         }
       }
-      if (parseSubheaders)
-      {
-        if (!parseSubHeader())
-        {
+      if (parseSubheaders) {
+        if (!parseSubHeader()) {
           return;
         }
       }
       findImage();
     }
 
-    private function parseSubHeader():Boolean
-    {
+    private function parseSubHeader():Boolean {
       while (parseSubheaders) {
         var wholeLine:Boolean = readline();
 
-        if (!wholeLine)
-        {
+        if (!wholeLine) {
           return false;
         }
 
-        if (buffer.length == 0)
-        {
+        if (buffer.length == 0) {
           break;
         }
 
         var subHeaders:Array = buffer.toString().split(": ");
-        if ((subHeaders[0] as String).toLowerCase() == "content-length")
-        {
+        if ((subHeaders[0] as String).toLowerCase() == "content-length") {
           clen = subHeaders[1];
         }
         buffer.clear();
@@ -270,10 +231,8 @@ package com.axis.mjpgplayer
       return true;
     }
 
-    private function findImage():void
-    {
-      if (dataBuffer.bytesAvailable < clen + 2)
-      {
+    private function findImage():void {
+      if (dataBuffer.bytesAvailable < clen + 2) {
         return;
       }
 
@@ -289,5 +248,7 @@ package com.axis.mjpgplayer
       clen = 0;
       parseSubheaders = true;
     }
+
   }
+
 }
