@@ -11,12 +11,19 @@ package com.axis.mjpgplayer {
 
   public class MJPG extends Sprite {
 
+    private const FLOATING_AVG_LENGTH:Number = 10;
+    private const MAX_IMAGES:uint = 2;
+
     private var ipCam:IPCam;
-    private var maxImages:uint = 2;
-    private var firstImage:Boolean = true;
+    // All incoming raw image data chunks
     private var imgBuf:Vector.<Object> = new Vector.<Object>();
-    private var idleQue:Vector.<MJPGImage> = new Vector.<MJPGImage>();
+    // Children loaders which are available for use
+    private var idleQueue:Vector.<MJPGImage> = new Vector.<MJPGImage>();
+    // States
+    private var firstImage:Boolean = true;
     private var playing:Boolean = false;
+    // Statistics
+    private var timestamps:Vector.<Number> = new Vector.<Number>();
 
     public function MJPG(ipCam:IPCam) {
       this.ipCam = ipCam;
@@ -30,7 +37,7 @@ package com.axis.mjpgplayer {
     }
 
     private function createLoaders():void {
-      for (var i:uint = 0; i < maxImages; i++) {
+      for (var i:uint = 0; i < MAX_IMAGES; i++) {
         var loader:MJPGImage = new MJPGImage();
         loader.cacheAsBitmap = false;
         loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
@@ -54,29 +61,27 @@ package com.axis.mjpgplayer {
     }
 
     public function getChildren():Array {
-       var children:Array = [];
-       for (var i:uint = 0; i < this.numChildren; i++) {
-        children.push(this.getChildAt(i));
-       }
-       return children;
+      var children:Array = [];
+      for (var i:uint = 0; i < this.numChildren; i++) {
+       children.push(this.getChildAt(i));
+      }
+      return children;
     }
 
     public function load(image:ByteArray):void {
-      if (imgBuf.length >= maxImages + 3) {
-        imgBuf.shift();
-      }
+      if (imgBuf.length >= MAX_IMAGES + 3) { imgBuf.shift(); }
       imgBuf.push({ data: image });
 
       if (!playing) {
         playing = true;
         for each (var loader:MJPGImage in getChildren()) {
           loader.data.inQue = true;
-          idleQue.push(loader);
+          idleQueue.push(loader);
         }
       }
 
-      if (idleQue.length > 0) {
-        loadImage(idleQue.shift(), imgBuf.shift());
+      if (idleQueue.length > 0) {
+        loadImage(idleQueue.shift(), imgBuf.shift());
       }
     }
 
@@ -86,6 +91,62 @@ package com.axis.mjpgplayer {
       loader.data.loadTime = new Date().getTime();
       loader.loadBytes(obj.data as ByteArray);
       obj = null;
+    }
+
+    private function onLoadComplete(event:Event):void {
+      if (!playing) { return; }
+
+      var arr:Array = getChildren();
+      var loader:MJPGImage = event.currentTarget.loader as MJPGImage;
+      var bitmap:Bitmap = event.currentTarget.content;
+      if (bitmap != null) {
+        bitmap.smoothing = true;
+      }
+      loader.data.loading = false;
+
+      scaleAndPosition(loader);
+
+      timestamps.push(new Date().getTime());
+      if (timestamps.length > FLOATING_AVG_LENGTH) { timestamps.shift(); }
+
+      if (arr[arr.length - 1].data.loadTime <= loader.data.loadTime) {
+        if (MAX_IMAGES > 2) {
+          removeChild(loader);
+          addChild(loader);
+        } else if (MAX_IMAGES == 2) {
+          this.swapChildren(arr[0], arr[1]);
+        }
+      }
+
+      arr = getChildren();
+      for (var i:uint = 0; i < arr.length - 1; i++) {
+        loader = arr[i] as MJPGImage;
+
+        if (loader.data.inQue == true || loader.data.loading) { continue; }
+
+        if (imgBuf.length == 0) {
+          loader.data.inQue = true;
+          idleQueue.push(loader);
+        } else {
+          loadImage(loader, imgBuf.shift());
+        }
+      }
+
+      if (firstImage) {
+        ExternalInterface.call(ipCam.getJsEventCallbackName(), "started");
+        firstImage = false;
+      }
+    }
+
+    private function onImageError(event:IOErrorEvent):void {
+      var loader:MJPGImage = event.currentTarget.loader as MJPGImage;
+      loader.data.loading = false;
+      if (imgBuf.length == 0) {
+        loader.data.inQue = true;
+        idleQueue.push(loader);
+      } else {
+        loadImage(loader, imgBuf.shift());
+      }
     }
 
     private function scaleAndPosition(loader:MJPGImage):void {
@@ -106,64 +167,10 @@ package com.axis.mjpgplayer {
       loader.y = (stage.stageHeight - loader.height) / 2;
     }
 
-    private function onLoadComplete(event:Event):void {
-      if (!playing) { return; }
-
-      var arr:Array = getChildren();
-      var loader:MJPGImage = event.currentTarget.loader as MJPGImage;
-      var bitmap:Bitmap = event.currentTarget.content;
-      if (bitmap != null) {
-        bitmap.smoothing = true;
-      }
-      loader.data.loading = false;
-
-      scaleAndPosition(loader);
-
-      var curTime:Number = new Date().getTime();
-      if (arr[arr.length - 1].data.loadTime <= loader.data.loadTime) {
-        if (maxImages > 2) {
-          removeChild(loader);
-          addChild(loader);
-        } else if (maxImages == 2) {
-          this.swapChildren(arr[0], arr[1]);
-        }
-      }
-
-      arr = getChildren();
-      for (var i:uint = 0; i < arr.length - 1; i++) {
-        loader = arr[i] as MJPGImage;
-
-        if (loader.data.inQue == true || loader.data.loading) { continue; }
-
-        if (imgBuf.length == 0) {
-          loader.data.inQue = true;
-          idleQue.push(loader);
-        } else {
-          loadImage(loader, imgBuf.shift());
-        }
-      }
-
-      if (firstImage) {
-        ExternalInterface.call(ipCam.getJsEventCallbackName(), "started");
-        firstImage = false;
-      }
-    }
-
-    private function onImageError(event:IOErrorEvent):void {
-      var loader:MJPGImage = event.currentTarget.loader as MJPGImage;
-      loader.data.loading = false;
-      if (imgBuf.length == 0) {
-        loader.data.inQue = true;
-        idleQue.push(loader);
-      } else {
-        loadImage(loader, imgBuf.shift());
-      }
-    }
-
     public function reset(clear:Boolean = false):void {
       playing = false;
       firstImage = true;
-      idleQue.length = 0;
+      idleQueue.length = 0;
 
       while (imgBuf.length != 0) {
         imgBuf.shift();
@@ -182,7 +189,12 @@ package com.axis.mjpgplayer {
     }
 
     public function getFps():Number {
-      return 1337;
+      if (timestamps.length < 2) { return 0; }
+      var loadTimesSum:Number = 0;
+      for (var i:uint = 1; i < timestamps.length; i++) {
+        loadTimesSum += timestamps[i] - timestamps[i - 1];
+      }
+      return 1000 * (timestamps.length - 1) / loadTimesSum;
     }
 
   }
