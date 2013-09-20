@@ -1,8 +1,6 @@
-package com.axis.mjpgplayer
-{
+package com.axis.mjpgplayer {
 
-  public class ImageData
-  {
+  public class ImageData {
     public var inQue:Boolean = false;
     public var loading:Boolean = false;
     public var loadTime:Number = 0.0;

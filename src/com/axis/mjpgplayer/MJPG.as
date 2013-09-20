@@ -1,5 +1,5 @@
-package com.axis.mjpgplayer
-{
+package com.axis.mjpgplayer {
+
   import com.axis.mjpgplayer.MJPGImage;
   import flash.display.Bitmap;
   import flash.display.LoaderInfo;
@@ -9,38 +9,35 @@ package com.axis.mjpgplayer
   import flash.utils.ByteArray;
   import flash.external.ExternalInterface;
 
-  public class MJPG extends Sprite
-  {
+  public class MJPG extends Sprite {
+
+    private const FLOATING_AVG_LENGTH:Number = 10;
+    private const MAX_IMAGES:uint = 2;
+
     private var ipCam:IPCam;
-    private var maxImages:uint = 2;
-    private var firstImage:Boolean = true;
+    // All incoming raw image data chunks
     private var imgBuf:Vector.<Object> = new Vector.<Object>();
-    private var idleQue:Vector.<MJPGImage> = new Vector.<MJPGImage>();
-    private var _playing:Boolean = false;
+    // Children loaders which are available for use
+    private var idleQueue:Vector.<MJPGImage> = new Vector.<MJPGImage>();
+    // States
+    private var firstImage:Boolean = true;
+    private var playing:Boolean = false;
+    // Statistics
+    private var timestamps:Vector.<Number> = new Vector.<Number>();
 
-    // Statistics Variables
-    private var sTime:Number = 0;
-    private var decTime:uint = 0;
-    private var _fRecCount:uint = 0;
-    private var _fDecCount:uint = 0;
-    private var _fps:Number = 0.0;
-
-    public function MJPG(ipCam:IPCam)
-    {
+    public function MJPG(ipCam:IPCam) {
       this.ipCam = ipCam;
       addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
     }
 
-    private function onStageAdded(e:Event):void
-    {
+    private function onStageAdded(e:Event):void {
       ExternalInterface.addCallback("getFps", getFps);
       createLoaders();
       stage.addEventListener(Event.RESIZE, resizeListener);
     }
 
     private function createLoaders():void {
-      for (var i:uint = 0; i < maxImages; i++)
-      {
+      for (var i:uint = 0; i < MAX_IMAGES; i++) {
         var loader:MJPGImage = new MJPGImage();
         loader.cacheAsBitmap = false;
         loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
@@ -50,8 +47,7 @@ package com.axis.mjpgplayer
     }
 
     private function destroyLoaders():void {
-      for each (var loader:MJPGImage in getChildren())
-      {
+      for each (var loader:MJPGImage in getChildren()) {
         loader.contentLoaderInfo.removeEventListener(Event.COMPLETE, onLoadComplete);
         loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, onImageError);
       }
@@ -59,177 +55,79 @@ package com.axis.mjpgplayer
     }
 
     private function resizeListener(e:Event):void {
-      for each (var loader:MJPGImage in getChildren())
-      {
+      for each (var loader:MJPGImage in getChildren()) {
         scaleAndPosition(loader);
       }
     }
 
-    public function getChildren():Array
-    {
-       var children:Array = [];
-       for (var i:uint = 0; i < this.numChildren; i++)
-       {
-        children.push(this.getChildAt(i));
-       }
-       return children;
+    public function getChildren():Array {
+      var children:Array = [];
+      for (var i:uint = 0; i < this.numChildren; i++) {
+       children.push(this.getChildAt(i));
+      }
+      return children;
     }
 
-    [Bindable(event='framesDecChanged')]
-    public function get framesDecoded():uint
-    {
-      return _fDecCount;
+    public function load(image:ByteArray):void {
+      if (imgBuf.length >= MAX_IMAGES + 3) { imgBuf.shift(); }
+      imgBuf.push({ data: image });
+
+      if (!playing) {
+        playing = true;
+        for each (var loader:MJPGImage in getChildren()) {
+          loader.data.inQue = true;
+          idleQueue.push(loader);
+        }
+      }
+
+      if (idleQueue.length > 0) {
+        loadImage(idleQueue.shift(), imgBuf.shift());
+      }
     }
 
-    private function updateDecFrames(v:uint):void
-    {
-      _fDecCount = v;
-      dispatchEvent(new Event("framesDecChanged"));
-    }
-
-    [Bindable(event='playingChanged')]
-    public function get playing():Boolean
-    {
-      return _playing;
-    }
-
-    private function updatePlaying(v:Boolean):void
-    {
-      _playing = v;
-      dispatchEvent(new Event("playingChanged"));
-    }
-
-    [Bindable(event='fpsChanged')]
-    public function get fps():Number
-    {
-      return _fps;
-    }
-
-    public function getFps():Number
-    {
-      return _fps;
-    }
-
-    private function updateFps(v:Number):void
-    {
-      _fps = v;
-      dispatchEvent(new Event("fpsChanged"));
-    }
-
-    private function loadImage(loader:MJPGImage, obj:Object):void
-    {
+    private function loadImage(loader:MJPGImage, obj:Object):void {
       loader.data.loading = true;
       loader.data.inQue = false;
       loader.data.loadTime = new Date().getTime();
-      loader.data.frame = obj.frame;
       loader.loadBytes(obj.data as ByteArray);
       obj = null;
     }
 
-    public function load(image:ByteArray):void
-    {
-      if (imgBuf.length >= maxImages + 3)
-      {
-        var obj:Object = imgBuf.shift();
-        obj = null;
-      }
-      _fRecCount++;
-      imgBuf.push({frame: _fRecCount, data: image});
-
-      if (!playing)
-      {
-        sTime = new Date().getTime();
-        decTime = 0;
-        _fRecCount = 1;
-        updateDecFrames(0);
-        updatePlaying(true);
-
-        for each (var loader:MJPGImage in getChildren())
-        {
-          loader.data.inQue = true;
-          idleQue.push(loader);
-        }
-      }
-
-      if (idleQue.length > 0)
-      {
-        loadImage(idleQue.shift(), imgBuf.shift());
-      }
-    }
-
-    private function scaleAndPosition(loader:MJPGImage):void
-    {
-      // Scale to fit stage
-      var loaderAspectRatio:Number = loader.width / loader.height;
-      var stageAspectRatio:Number = stage.stageWidth / stage.stageHeight;
-      var scale:Number;
-      if (loaderAspectRatio > stageAspectRatio)
-      {
-        scale = stage.stageWidth / loader.width;
-      }
-      else
-      {
-        scale = stage.stageHeight / loader.height;
-      }
-      loader.width *= scale;
-      loader.height *= scale;
-
-      // Center on stage
-      loader.x = (stage.stageWidth - loader.width) / 2;
-      loader.y = (stage.stageHeight - loader.height) / 2;
-    }
-
-    private function onLoadComplete(event:Event):void
-    {
-      if (!playing)
-      {
-        return;
-      }
+    private function onLoadComplete(event:Event):void {
+      if (!playing) { return; }
 
       var arr:Array = getChildren();
       var loader:MJPGImage = event.currentTarget.loader as MJPGImage;
       var bitmap:Bitmap = event.currentTarget.content;
-      if (bitmap != null)
-      {
+      if (bitmap != null) {
         bitmap.smoothing = true;
       }
       loader.data.loading = false;
 
       scaleAndPosition(loader);
 
-      var curTime:Number = new Date().getTime();
-      decTime += curTime - loader.data.loadTime;
-      if (arr[arr.length - 1].data.loadTime <= loader.data.loadTime)
-      {
-        if (maxImages > 2)
-        {
+      timestamps.push(new Date().getTime());
+      if (timestamps.length > FLOATING_AVG_LENGTH) { timestamps.shift(); }
+
+      if (arr[arr.length - 1].data.loadTime <= loader.data.loadTime) {
+        if (MAX_IMAGES > 2) {
           removeChild(loader);
           addChild(loader);
-        }
-        else if (maxImages == 2)
-        {
+        } else if (MAX_IMAGES == 2) {
           this.swapChildren(arr[0], arr[1]);
         }
-        updateDecFrames(framesDecoded + 1);
-        updateFps((framesDecoded * 1000) / (curTime - sTime));
       }
 
       arr = getChildren();
-      for (var i:uint = 0; i < arr.length - 1; i++)
-      {
+      for (var i:uint = 0; i < arr.length - 1; i++) {
         loader = arr[i] as MJPGImage;
-        if (loader.data.inQue == true || loader.data.loading)
-        {
-          continue;
-        }
 
-        if (imgBuf.length == 0)
-        {
+        if (loader.data.inQue == true || loader.data.loading) { continue; }
+
+        if (imgBuf.length == 0) {
           loader.data.inQue = true;
-          idleQue.push(loader);
-        }
-        else
-        {
+          idleQueue.push(loader);
+        } else {
           loadImage(loader, imgBuf.shift());
         }
       }
@@ -240,54 +138,65 @@ package com.axis.mjpgplayer
       }
     }
 
-    private function onImageError(event:IOErrorEvent):void
-    {
+    private function onImageError(event:IOErrorEvent):void {
       var loader:MJPGImage = event.currentTarget.loader as MJPGImage;
       loader.data.loading = false;
-      if (imgBuf.length == 0)
-      {
+      if (imgBuf.length == 0) {
         loader.data.inQue = true;
-        idleQue.push(loader);
-      }
-      else
+        idleQueue.push(loader);
+      } else {
         loadImage(loader, imgBuf.shift());
+      }
     }
 
-    public function reset(clear:Boolean = false):void
-    {
-      firstImage = true;
-      updatePlaying(false);
-      idleQue.length = 0;
+    private function scaleAndPosition(loader:MJPGImage):void {
+      // Scale to fit stage
+      var loaderAspectRatio:Number = loader.width / loader.height;
+      var stageAspectRatio:Number = stage.stageWidth / stage.stageHeight;
+      var scale:Number;
+      if (loaderAspectRatio > stageAspectRatio) {
+        scale = stage.stageWidth / loader.width;
+      } else {
+        scale = stage.stageHeight / loader.height;
+      }
+      loader.width *= scale;
+      loader.height *= scale;
 
-      while (imgBuf.length != 0)
-      {
-        _fRecCount--;
-        var obj:Object = imgBuf.shift();
-        obj = null;
+      // Center on stage
+      loader.x = (stage.stageWidth - loader.width) / 2;
+      loader.y = (stage.stageHeight - loader.height) / 2;
+    }
+
+    public function reset(clear:Boolean = false):void {
+      playing = false;
+      firstImage = true;
+      idleQueue.length = 0;
+
+      while (imgBuf.length != 0) {
+        imgBuf.shift();
       }
 
-      var arr:Array = getChildren();
-      for each (var loader:MJPGImage in arr)
-      {
-        if (loader.data.loading)
-        {
-          updateDecFrames(framesDecoded + 1);
-        }
+      for each (var loader:MJPGImage in getChildren()) {
         loader.data.loading = false;
         loader.data.inQue = false;
         loader.data.loadTime = 0.0;
       }
 
-      if (clear)
-      {
+      if (clear) {
         destroyLoaders();
         createLoaders();
       }
-
-      updateFps((framesDecoded * 1000) / (new Date().getTime() - sTime));
-
-      var recvFps:Number = (_fRecCount * 1000) / (new Date().getTime() - sTime);
     }
+
+    public function getFps():Number {
+      if (timestamps.length < 2) { return 0; }
+      var loadTimesSum:Number = 0;
+      for (var i:uint = 1; i < timestamps.length; i++) {
+        loadTimesSum += timestamps[i] - timestamps[i - 1];
+      }
+      return 1000 * (timestamps.length - 1) / loadTimesSum;
+    }
+
   }
 
 }
