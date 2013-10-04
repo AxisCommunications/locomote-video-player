@@ -128,6 +128,7 @@ package com.axis.mjpgplayer {
     private function onClose(e:Event):void {
       // Security error is thrown if this line is excluded
       socket.close();
+      ExternalInterface.call(jsEventCallbackName, "stopped");
     }
 
     private function readline():Boolean {
