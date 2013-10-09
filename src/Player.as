@@ -1,7 +1,6 @@
 package {
 
-  import com.axis.mjpgplayer.IPCam;
-  import com.axis.mjpgplayer.MJPG;
+  import com.axis.rtspclient.HTTPClient;
   import flash.display.Sprite;
   import flash.display.LoaderInfo;
   import flash.display.Stage;
@@ -12,42 +11,36 @@ package {
 
   [SWF(frameRate="60")]
 
-  public class MJPGPlayer extends Sprite {
-    private var cam:IPCam = new IPCam();
-    private var mjpg:MJPG = new MJPG(cam);
+  public class Player extends Sprite {
+    private var client:HTTPClient = new HTTPClient();
 
-    public function MJPGPlayer() {
+    public function Player() {
       this.stage.align = StageAlign.TOP_LEFT;
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
       addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
     }
 
     private function onStageAdded(e:Event):void {
-      this.addChild(mjpg);
-      cam.addEventListener("image", onImage);
-      cam.addEventListener("disconnect", onDisconnect);
-      cam.addEventListener("clear", onClear);
+      client.addEventListener("connect", onConnect);
+      client.addEventListener("disconnect", onDisconnect);
 
       if (ExternalInterface.available) {
         var jsEventCallbackName:String = LoaderInfo(this.parent.loaderInfo).parameters["eventCallbackName"];
         if (jsEventCallbackName != null) {
-          cam.setJsEventCallbackName(jsEventCallbackName);
+          client.setJsEventCallbackName(jsEventCallbackName);
         }
       }
-      cam.sendLoadedEvent();
+      client.sendLoadedEvent();
     }
 
     private function onDisconnect(e:Event):void {
-      mjpg.reset(false);
+      trace('onDisconnect', e);
     }
 
-    private function onImage(e:Event):void {
-      mjpg.load(cam.image);
+    private function onConnect(e:Event):void {
+      trace('onConnect', e);
     }
 
-    private function onClear(e:Event):void {
-      mjpg.reset(true);
-    }
   }
 
 }

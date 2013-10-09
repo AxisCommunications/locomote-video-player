@@ -2,7 +2,7 @@ include $(AXIS_TOP_DIR)/tools/build/Rules.axis
 
 SRC = src
 DEST = bin
-MAIN_AS_FILE = $(SRC)/MJPGPlayer.as
+MAIN_AS_FILE = $(SRC)/Player.as
 SWF = $(DEST)/Player.swf
 MXMLC = mxmlc
 MXMLC_OPTIONS = -use-network \
@@ -12,11 +12,10 @@ MXMLC_OPTIONS = -use-network \
 		-allow-source-path-overlap=false \
 		-target-player=11.1 \
 		-locale en_US \
-		-output $(SWF)
-		-debug=false \
+		-output $(SWF) \
+		-debug=true \
 		-benchmark=false \
 		-verbose-stacktraces=false \
-		-omit-trace-statements \
 		-strict \
 		-warnings \
 		-show-unused-type-selector-warnings \
@@ -24,9 +23,7 @@ MXMLC_OPTIONS = -use-network \
 		-show-binding-warnings \
 		-show-invalid-css-property-warnings \
 		-incremental=false \
-		-es=false \
-		-optimize \
-	        -compress
+		-es=false
 
 all:
 
