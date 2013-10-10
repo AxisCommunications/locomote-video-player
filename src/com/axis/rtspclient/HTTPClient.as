@@ -97,20 +97,19 @@ package com.axis.rtspclient {
       if (url != null) { this.url = url; }
 
       getChannel.connect(URLUtil.getServerName(this.url), 80);
+      postChannel.connect(URLUtil.getServerName(this.url), 80);
+
       rtspClient = new RTSPClient(getChannel, postChannel, this.url, jsEventCallbackName);
     }
 
     private function onGetChannelConnect(event:Event):void {
       initializeGetChannel();
-      postChannel.connect(URLUtil.getServerName(this.url), 80);
       ExternalInterface.call(jsEventCallbackName, "get channel connected");
     }
 
     private function onPostChannelConnect(event:Event):void {
       dispatchEvent(new Event("connect"));
       ExternalInterface.call(jsEventCallbackName, "post channel connected");
-      initializePostChannel();
-      rtspClient.start();
     }
 
     public function stop():void {
@@ -130,45 +129,20 @@ package com.axis.rtspclient {
 
     private function onGetChannelData(event:ProgressEvent):void {
       getChannel.readBytes(getChannelData);
-      ExternalInterface.call(jsEventCallbackName, getChannelData.length, getChannelTotalLength);
+      ExternalInterface.call(jsEventCallbackName, getChannelData.toString());
+
       var copy:ByteArray = new ByteArray();
-
-      if (getChannelTotalLength === -1) {
-        var index:int = ByteArrayUtils.indexOf(getChannelData, "\r\n\r\n");
-        if (index === -1) { return; }
-        index += 4;
-
-        var headers:ByteArray = new ByteArray();
-        getChannelData.readBytes(headers, 0, index);
-
-        var headersString:String = headers.toString();
-        var matches:Array = headersString.match(/Content-Length: ([0-9]+)/i);
-        if (matches === null) {
-          ExternalInterface.call(jsEventCallbackName, "onGetChannelData discard", index);
-          getChannelData.readBytes(copy);
-          getChannelData = copy;
-          return;
-        }
-
-        getChannelTotalLength = parseInt(matches[1]) + headers.length;
-        getChannelContentLength = parseInt(matches[1]);
-        ExternalInterface.call(jsEventCallbackName, headers.length);
+      var index:int = ByteArrayUtils.indexOf(getChannelData, "\r\n\r\n");
+      if (index === -1) {
+        /* Not a full request yet */
+        return;
       }
+      var dummy:ByteArray = new ByteArray();
+      getChannelData.readBytes(dummy, 0, index + 4);
+      getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetChannelData);
 
-      if (getChannelData.length >= getChannelTotalLength) {
-        rtspClient.handle(getChannelData);
-
-        // Discard [ContentLength] bytes
-        getChannelData.readBytes(copy, 0, getChannelContentLength);
-        copy.clear();
-
-        getChannelData.readBytes(copy);
-        getChannelData = copy;
-      }
-    }
-
-    private function discardBytes(byteArray:ByteArray, length:uint = 0):void {
-
+      initializePostChannel();
+      rtspClient.start();
     }
 
     private function initializeGetChannel():void {
@@ -186,7 +160,5 @@ package com.axis.rtspclient {
       postChannel.writeUTFBytes("\r\n");
       postChannel.flush();
     }
-
   }
-
 }
