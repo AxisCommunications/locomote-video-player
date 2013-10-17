@@ -14,6 +14,7 @@ package com.axis.rtspclient {
   import flash.display.LoaderInfo;
 
   import com.axis.rtspclient.ByteArrayUtils;
+  import com.axis.rtspclient.GUID;
   import com.axis.rtspclient.RTSPClient;
 
   import mx.utils.URLUtil;
@@ -27,6 +28,7 @@ package com.axis.rtspclient {
     private var getChannel:Socket = null;
     private var postChannel:Socket = null;
     private var url:String = "";
+    private var sessioncookie:String = "";
 
     private var getChannelTotalLength:int = -1;
     private var getChannelContentLength:int = -1;
@@ -44,6 +46,8 @@ package com.axis.rtspclient {
 
       Security.allowDomain("*");
       Security.allowInsecureDomain("*");
+
+      sessioncookie = GUID.create();
 
       getChannel = new Socket();
       getChannel.timeout = 5000;
@@ -103,13 +107,13 @@ package com.axis.rtspclient {
     }
 
     private function onGetChannelConnect(event:Event):void {
-      initializeGetChannel();
       ExternalInterface.call(jsEventCallbackName, "get channel connected");
+      initializeGetChannel();
     }
 
     private function onPostChannelConnect(event:Event):void {
-      dispatchEvent(new Event("connect"));
       ExternalInterface.call(jsEventCallbackName, "post channel connected");
+      dispatchEvent(new Event("connect"));
     }
 
     public function stop():void {
@@ -129,7 +133,6 @@ package com.axis.rtspclient {
 
     private function onGetChannelData(event:ProgressEvent):void {
       getChannel.readBytes(getChannelData);
-      ExternalInterface.call(jsEventCallbackName, getChannelData.toString());
 
       var copy:ByteArray = new ByteArray();
       var index:int = ByteArrayUtils.indexOf(getChannelData, "\r\n\r\n");
@@ -146,15 +149,17 @@ package com.axis.rtspclient {
     }
 
     private function initializeGetChannel():void {
+      ExternalInterface.call(jsEventCallbackName, "Sending: GET");
       getChannel.writeUTFBytes("GET " + url + " HTTP/1.0\r\n");
-      getChannel.writeUTFBytes("x-sessioncookie: 12" + "\r\n");
+      getChannel.writeUTFBytes("x-sessioncookie: " +  sessioncookie + "\r\n");
       getChannel.writeUTFBytes("\r\n");
       getChannel.flush();
     }
 
     private function initializePostChannel():void {
+      ExternalInterface.call(jsEventCallbackName, "Sending: POST");
       postChannel.writeUTFBytes("POST " + url + " HTTP/1.0\r\n");
-      postChannel.writeUTFBytes("x-sessioncookie: 12" + "\r\n");
+      postChannel.writeUTFBytes("x-sessioncookie: " + sessioncookie + "\r\n");
       postChannel.writeUTFBytes("Content-Length: 32767" + "\r\n");
       postChannel.writeUTFBytes("Content-Type: application/x-rtsp-tunnelled" + "\r\n");
       postChannel.writeUTFBytes("\r\n");

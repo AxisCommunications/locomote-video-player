@@ -25,7 +25,7 @@ MXMLC_OPTIONS = -use-network \
 		-incremental=false \
 		-es=false
 
-all:
+all: $(SWF)
 
 install: all
 
