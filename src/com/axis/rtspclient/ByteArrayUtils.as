@@ -72,6 +72,28 @@ package com.axis.rtspclient {
       return toFind;
     }
 
-  }
+    public static function hexdump(ba:ByteArray, offset:uint = 0, length:int = -1):String
+    {
+      var result:String = "";
 
+      var realOffset:uint = ba.position + offset;
+
+      var realLength:int = (length === -1) ?
+        ba.length - realOffset :
+        Math.min(ba.length - realOffset, length);
+
+      for (var i:int = realOffset; i < realOffset + realLength; i++) {
+        result += "0x" + ba[i].toString(16) + " ";
+      }
+      return result;
+    }
+
+    public static function appendByteArray(dest:ByteArray, src:ByteArray):void
+    {
+      var prepos:uint = dest.position;
+      dest.position   = dest.length;
+      dest.writeBytes(src, src.position);
+      dest.position   = prepos;
+    }
+  }
 }

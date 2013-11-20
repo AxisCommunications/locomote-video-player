@@ -1,16 +1,18 @@
 package com.axis.rtspclient {
 
   import flash.events.ProgressEvent;
+  import flash.events.EventDispatcher;
   import flash.utils.ByteArray;
   import flash.net.Socket;
   import mx.utils.Base64Encoder;
   import flash.external.ExternalInterface;
 
   import com.axis.rtspclient.ByteArrayUtils;
+  import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.SDP;
 
-  public class RTSPClient {
+  public class RTSPClient extends EventDispatcher {
     private static var STATE_INITIAL:int       = 1<<0;
     private static var STATE_DESCRIBE_SENT:int = 1<<1;
     private static var STATE_DESCRIBE_RCVD:int = 1<<2;
@@ -27,10 +29,12 @@ package com.axis.rtspclient {
     private var postChannel:Socket;
 
     private var sdp:SDP;
+    private var flvmux:FLVMux;
+    private var analu:ANALU;
 
     private var url:String;
     private var jsEventCallbackName:String;
-    private var cSeq:uint = 0;
+    private var cSeq:uint = 1;
     private var session:String;
     private var base64encoder:Base64Encoder = new Base64Encoder();
 
@@ -45,6 +49,8 @@ package com.axis.rtspclient {
       this.url = url;
       this.jsEventCallbackName = jsEventCallbackName;
       this.sdp = new SDP(jsEventCallbackName);
+      this.flvmux = new FLVMux(jsEventCallbackName);
+      this.analu  = new ANALU(jsEventCallbackName);
     }
 
     public function start():void {
@@ -142,10 +148,14 @@ package com.axis.rtspclient {
         break;
 
       case STATE_PLAY_SENT:
+
         ExternalInterface.call(jsEventCallbackName, "STATE_PLAY_SENT");
         state = STATE_PLAYING;
         getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetData);
         getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onPlayData);
+
+        addEventListener(RTP.NEW_PACKET, analu.onRTPPacket);
+        analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
         break;
       }
     }
@@ -159,7 +169,6 @@ package com.axis.rtspclient {
         getChannelData.readByte();
         var channel:uint = getChannelData.readByte();
         rtpLength        = getChannelData.readShort();
-        ExternalInterface.call(jsEventCallbackName, "Channel: " + channel);
       }
 
       if (getChannelData.bytesAvailable < rtpLength) {
@@ -169,9 +178,13 @@ package com.axis.rtspclient {
 
       var pkgData:ByteArray = new ByteArray();
       getChannelData.readBytes(pkgData, 0, rtpLength);
-      ExternalInterface.call(jsEventCallbackName, "Package complete, length: " + rtpLength);
+      //ExternalInterface.call(jsEventCallbackName, "Package complete, length: " + rtpLength);
 
-      var pkg:RTP = new RTP(pkgData, jsEventCallbackName);
+      dispatchEvent(new RTP(pkgData, jsEventCallbackName));
+
+      //getChannel.close();
+      //postChannel.close()
+
       requestReset();
 
       if (0 < getChannelData.bytesAvailable) {
@@ -214,6 +227,7 @@ package com.axis.rtspclient {
 
     private function base64encode(str:String):String {
       base64encoder.reset();
+      base64encoder.insertNewLines = false;
       base64encoder.encode(str);
       return base64encoder.toString();
     }

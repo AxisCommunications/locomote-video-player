@@ -1,25 +1,34 @@
 package com.axis.rtspclient {
 
+  import flash.events.Event;
   import flash.external.ExternalInterface;
   import flash.utils.ByteArray;
 
-  public class RTP {
+  public class RTP extends Event
+  {
+    public static const NEW_PACKET:String = "NEW_PACKET";
 
     private var data:ByteArray;
     private var jsEventCallbackName:String;
 
-    private var version:uint;
-    private var padding:uint;
-    private var extension:uint;
-    private var csrc:uint;
-    private var marker:uint;
-    private var pt:uint;
-    private var sequence:uint;
-    private var timestamp:uint;
+    public var version:uint;
+    public var padding:uint;
+    public var extension:uint;
+    public var csrc:uint;
+    public var ssrc:uint;
+    public var marker:uint;
+    public var pt:uint;
+    public var sequence:uint;
+    public var timestamp:uint;
 
-    public function RTP(pkg:ByteArray, jsEventCallbackName:String)
+    public var headerLength:uint;
+    public var bodyLength:uint;
+
+    public function RTP(pkt:ByteArray, jsEventCallbackName:String)
     {
-      var line1:uint = pkg.readUnsignedInt();
+      super(RTP.NEW_PACKET, false, false);
+
+      var line1:uint = pkt.readUnsignedInt();
 
       version   = (line1 & 0xC0000000) >>> 30;
       padding   = (line1 & 0x20000000) >>> 29;
@@ -28,8 +37,13 @@ package com.axis.rtspclient {
       marker    = (line1 & 0x00800000) >>> 23;
       pt        = (line1 & 0x007F0000) >>> 16;
       sequence  = (line1 & 0x0000FFFF) >>> 0;
-      timestamp = pkg.readUnsignedInt();
+      timestamp = pkt.readUnsignedInt();
+      ssrc      = pkt.readUnsignedInt();
 
+      headerLength = pkt.position;
+      bodyLength   = pkt.bytesAvailable;
+
+      /*
       ExternalInterface.call(jsEventCallbackName, "version:   " + version);
       ExternalInterface.call(jsEventCallbackName, "padding:   " + padding);
       ExternalInterface.call(jsEventCallbackName, "extension: " + extension);
@@ -38,10 +52,16 @@ package com.axis.rtspclient {
       ExternalInterface.call(jsEventCallbackName, "pt:        " + pt);
       ExternalInterface.call(jsEventCallbackName, "sequence:  " + sequence);
       ExternalInterface.call(jsEventCallbackName, "timestamp: " + timestamp);
+      ExternalInterface.call(jsEventCallbackName, "ssrc: "      + ssrc);
+      */
 
-      this.data                = data;
+      this.data                = pkt;
       this.jsEventCallbackName = jsEventCallbackName;
+    }
+
+    public function getPayload():ByteArray
+    {
+      return data;
     }
   }
 }
-

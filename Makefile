@@ -1,4 +1,4 @@
-include $(AXIS_TOP_DIR)/tools/build/Rules.axis
+-include $(AXIS_TOP_DIR)/tools/build/Rules.axis
 
 SRC = src
 DEST = bin

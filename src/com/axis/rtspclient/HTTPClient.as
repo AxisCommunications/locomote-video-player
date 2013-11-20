@@ -100,8 +100,8 @@ package com.axis.rtspclient {
 
       if (url != null) { this.url = url; }
 
-      getChannel.connect(URLUtil.getServerName(this.url), 80);
-      postChannel.connect(URLUtil.getServerName(this.url), 80);
+      getChannel.connect(URLUtil.getServerName(this.url), 554);
+      postChannel.connect(URLUtil.getServerName(this.url), 554);
 
       rtspClient = new RTSPClient(getChannel, postChannel, this.url, jsEventCallbackName);
     }
@@ -151,7 +151,8 @@ package com.axis.rtspclient {
     private function initializeGetChannel():void {
       ExternalInterface.call(jsEventCallbackName, "Sending: GET");
       getChannel.writeUTFBytes("GET " + url + " HTTP/1.0\r\n");
-      getChannel.writeUTFBytes("x-sessioncookie: " +  sessioncookie + "\r\n");
+      getChannel.writeUTFBytes("X-Sessioncookie: " +  sessioncookie + "\r\n");
+      getChannel.writeUTFBytes("Accept: application/x-rtsp-tunnelled\r\n");
       getChannel.writeUTFBytes("\r\n");
       getChannel.flush();
     }
@@ -159,7 +160,7 @@ package com.axis.rtspclient {
     private function initializePostChannel():void {
       ExternalInterface.call(jsEventCallbackName, "Sending: POST");
       postChannel.writeUTFBytes("POST " + url + " HTTP/1.0\r\n");
-      postChannel.writeUTFBytes("x-sessioncookie: " + sessioncookie + "\r\n");
+      postChannel.writeUTFBytes("X-Sessioncookie: " + sessioncookie + "\r\n");
       postChannel.writeUTFBytes("Content-Length: 32767" + "\r\n");
       postChannel.writeUTFBytes("Content-Type: application/x-rtsp-tunnelled" + "\r\n");
       postChannel.writeUTFBytes("\r\n");

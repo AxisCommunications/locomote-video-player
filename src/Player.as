@@ -7,29 +7,43 @@ package {
   import flash.display.StageAlign;
   import flash.display.StageScaleMode;
   import flash.events.Event;
+  import flash.events.NetStatusEvent;
   import flash.external.ExternalInterface;
+  import flash.media.Video;
+  import flash.net.NetStream;
+  import flash.utils.ByteArray;
+  import flash.net.NetConnection;
 
   [SWF(frameRate="60")]
 
   public class Player extends Sprite {
+    private var jsEventCallbackName:String = "console.log";
     private var client:HTTPClient = new HTTPClient();
+
+    private var vid:Video;
+    private static var ns:NetStream;
 
     public function Player() {
       this.stage.align = StageAlign.TOP_LEFT;
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
       addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
+
+      var nc:NetConnection = new NetConnection();
+      nc.connect(null);
+      vid = new Video();
+      ns = new NetStream(nc);
+      ns.play(null);
+      vid.attachNetStream(ns);
+
+      addChild(vid);
     }
 
     private function onStageAdded(e:Event):void {
       client.addEventListener("connect", onConnect);
       client.addEventListener("disconnect", onDisconnect);
 
-      if (ExternalInterface.available) {
-        var jsEventCallbackName:String = LoaderInfo(this.parent.loaderInfo).parameters["eventCallbackName"];
-        if (jsEventCallbackName != null) {
-          client.setJsEventCallbackName(jsEventCallbackName);
-        }
-      }
+      client.setJsEventCallbackName(jsEventCallbackName);
+
       client.sendLoadedEvent();
     }
 
@@ -41,6 +55,9 @@ package {
       trace('onConnect', e);
     }
 
+    public static function getNetStream():NetStream
+    {
+      return ns;
+    }
   }
-
 }
