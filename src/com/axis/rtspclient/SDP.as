@@ -6,11 +6,9 @@ package com.axis.rtspclient {
   public class SDP {
 
     private var tracks:Vector.<String> = new Vector.<String>();
-    private var jsEventCallbackName:String;
 
-    public function SDP(jsEventCallbackName:String)
+    public function SDP()
     {
-      this.jsEventCallbackName = jsEventCallbackName;
     }
 
     public function parse(content:ByteArray):Boolean
@@ -24,6 +22,8 @@ package com.axis.rtspclient {
       for each (var match:String in matches) {
         tracks.push(match.replace("a=control:", ""));
       }
+
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, dataString);
 
       return true;
     }

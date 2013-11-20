@@ -11,13 +11,11 @@ package com.axis.rtspclient {
   /* Assembler of NAL units */
   public class ANALU extends EventDispatcher
   {
-    private var jsEventCallbackName:String;
     private var initialTime:uint = 0;
     private var nalu:NALU = null;
 
-    public function ANALU(jsEventCallbackName:String)
+    public function ANALU()
     {
-      this.jsEventCallbackName = jsEventCallbackName;
     }
 
     public function onRTPPacket(pkt:RTP):void
@@ -59,7 +57,7 @@ package com.axis.rtspclient {
       }
 
       if (1 === nfend) {
-        ExternalInterface.call(jsEventCallbackName, "Fragmented NALU complete. Dispatching.");
+        ExternalInterface.call(HTTPClient.jsEventCallbackName, "Fragmented NALU complete. Dispatching.");
         dispatchEvent(nalu);
         nalu = null;
       }

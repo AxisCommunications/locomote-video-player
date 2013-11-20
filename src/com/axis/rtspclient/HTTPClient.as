@@ -24,7 +24,7 @@ package com.axis.rtspclient {
 
   public class HTTPClient extends EventDispatcher {
 
-    private var jsEventCallbackName:String = "console.log";
+    public static var jsEventCallbackName:String = "console.log";
     private var getChannel:Socket = null;
     private var postChannel:Socket = null;
     private var url:String = "";
@@ -70,8 +70,8 @@ package com.axis.rtspclient {
       ExternalInterface.call(jsEventCallbackName, 'loaded');
     }
 
-    public function setJsEventCallbackName(jsEventCallbackName:String):void {
-      this.jsEventCallbackName = jsEventCallbackName;
+    public function setJsEventCallbackName(jcn:String):void {
+      jsEventCallbackName = jcn;
     }
 
     public function getJsEventCallbackName():String {
@@ -103,7 +103,7 @@ package com.axis.rtspclient {
       getChannel.connect(URLUtil.getServerName(this.url), 554);
       postChannel.connect(URLUtil.getServerName(this.url), 554);
 
-      rtspClient = new RTSPClient(getChannel, postChannel, this.url, jsEventCallbackName);
+      rtspClient = new RTSPClient(getChannel, postChannel, this.url);
     }
 
     private function onGetChannelConnect(event:Event):void {

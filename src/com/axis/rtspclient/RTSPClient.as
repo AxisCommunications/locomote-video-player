@@ -33,7 +33,6 @@ package com.axis.rtspclient {
     private var analu:ANALU;
 
     private var url:String;
-    private var jsEventCallbackName:String;
     private var cSeq:uint = 1;
     private var session:String;
     private var base64encoder:Base64Encoder = new Base64Encoder();
@@ -43,14 +42,13 @@ package com.axis.rtspclient {
     private var contentLength:int = -1;
     private var rtpLength:int = -1;
 
-    public function RTSPClient(getChannel:Socket, postChannel:Socket, url:String, jsEventCallbackName:String) {
+    public function RTSPClient(getChannel:Socket, postChannel:Socket, url:String) {
       this.getChannel = getChannel;
       this.postChannel = postChannel;
       this.url = url;
-      this.jsEventCallbackName = jsEventCallbackName;
-      this.sdp = new SDP(jsEventCallbackName);
-      this.flvmux = new FLVMux(jsEventCallbackName);
-      this.analu  = new ANALU(jsEventCallbackName);
+      this.sdp = new SDP();
+      this.flvmux = new FLVMux();
+      this.analu  = new ANALU();
     }
 
     public function start():void {
@@ -117,29 +115,29 @@ package com.axis.rtspclient {
 
       switch (state) {
       case STATE_INITIAL:
-        ExternalInterface.call(jsEventCallbackName, "STATE_INITIAL");
+        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_INITIAL");
 
         break;
       case STATE_DESCRIBE_SENT:
-        ExternalInterface.call(jsEventCallbackName, "STATE_DESCRIBE_SENT");
+        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_DESCRIBE_SENT");
 
         state = STATE_DESCRIBE_RCVD;
         if (!sdp.parse(body)) {
-          ExternalInterface.call(jsEventCallbackName, "ERROR", "Failed to parse SDP file");
+          ExternalInterface.call(HTTPClient.jsEventCallbackName, "ERROR", "Failed to parse SDP file");
           return;
         }
         sendRequest(setupReq());
         state = STATE_SETUP_SENT;
         break;
       case STATE_SETUP_SENT:
-        ExternalInterface.call(jsEventCallbackName, "STATE_SETUP_SENT");
+        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_SETUP_SENT");
 
         state = STATE_SETUP_RCVD;
 
         var headerString:String = headers.toString();
         var matches:Array = headerString.match(/Session: ([^;]+);/);
         if (null === matches) {
-          ExternalInterface.call(jsEventCallbackName, "No session in SETUP reply");
+          ExternalInterface.call(HTTPClient.jsEventCallbackName, "No session in SETUP reply");
         }
         session = matches[1];
 
@@ -149,7 +147,7 @@ package com.axis.rtspclient {
 
       case STATE_PLAY_SENT:
 
-        ExternalInterface.call(jsEventCallbackName, "STATE_PLAY_SENT");
+        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_PLAY_SENT");
         state = STATE_PLAYING;
         getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetData);
         getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onPlayData);
@@ -178,9 +176,9 @@ package com.axis.rtspclient {
 
       var pkgData:ByteArray = new ByteArray();
       getChannelData.readBytes(pkgData, 0, rtpLength);
-      //ExternalInterface.call(jsEventCallbackName, "Package complete, length: " + rtpLength);
+      //ExternalInterface.call(HTTPClient.jsEventCallbackName, "Package complete, length: " + rtpLength);
 
-      dispatchEvent(new RTP(pkgData, jsEventCallbackName));
+      dispatchEvent(new RTP(pkgData));
 
       //getChannel.close();
       //postChannel.close()
@@ -249,7 +247,7 @@ package com.axis.rtspclient {
     }
 
     private function sendRequest(request:String):void {
-      ExternalInterface.call(jsEventCallbackName, "Sending: " +
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "Sending: " +
                              request.substr(0, request.indexOf(" ")));
       postChannel.writeUTFBytes(base64encode(request));
       postChannel.flush();

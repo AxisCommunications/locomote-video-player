@@ -9,7 +9,6 @@ package com.axis.rtspclient {
     public static const NEW_PACKET:String = "NEW_PACKET";
 
     private var data:ByteArray;
-    private var jsEventCallbackName:String;
 
     public var version:uint;
     public var padding:uint;
@@ -24,7 +23,7 @@ package com.axis.rtspclient {
     public var headerLength:uint;
     public var bodyLength:uint;
 
-    public function RTP(pkt:ByteArray, jsEventCallbackName:String)
+    public function RTP(pkt:ByteArray)
     {
       super(RTP.NEW_PACKET, false, false);
 
@@ -44,19 +43,18 @@ package com.axis.rtspclient {
       bodyLength   = pkt.bytesAvailable;
 
       /*
-      ExternalInterface.call(jsEventCallbackName, "version:   " + version);
-      ExternalInterface.call(jsEventCallbackName, "padding:   " + padding);
-      ExternalInterface.call(jsEventCallbackName, "extension: " + extension);
-      ExternalInterface.call(jsEventCallbackName, "csrc:      " + csrc);
-      ExternalInterface.call(jsEventCallbackName, "marker:    " + marker);
-      ExternalInterface.call(jsEventCallbackName, "pt:        " + pt);
-      ExternalInterface.call(jsEventCallbackName, "sequence:  " + sequence);
-      ExternalInterface.call(jsEventCallbackName, "timestamp: " + timestamp);
-      ExternalInterface.call(jsEventCallbackName, "ssrc: "      + ssrc);
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "version:   " + version);
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "padding:   " + padding);
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "extension: " + extension);
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "csrc:      " + csrc);
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "marker:    " + marker);
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "pt:        " + pt);
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "sequence:  " + sequence);
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "timestamp: " + timestamp);
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "ssrc: "      + ssrc);
       */
 
       this.data                = pkt;
-      this.jsEventCallbackName = jsEventCallbackName;
     }
 
     public function getPayload():ByteArray
