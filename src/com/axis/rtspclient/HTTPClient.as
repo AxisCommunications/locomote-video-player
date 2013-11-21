@@ -79,6 +79,7 @@ package com.axis.rtspclient {
     }
 
     private function onError(e:ErrorEvent):void {
+      ExternalInterface.call(jsEventCallbackName, "Connection timed out");
       sendError(0, e.text);
     }
 

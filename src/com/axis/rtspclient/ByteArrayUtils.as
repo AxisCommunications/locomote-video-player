@@ -83,7 +83,7 @@ package com.axis.rtspclient {
         Math.min(ba.length - realOffset, length);
 
       for (var i:int = realOffset; i < realOffset + realLength; i++) {
-        result += "0x" + ba[i].toString(16) + " ";
+        result += "0x" + (ba[i] < 16 ? "0" : "") + ba[i].toString(16) + (((i - realOffset) % 16 == 15) ? "\n" : " ");
       }
       return result;
     }

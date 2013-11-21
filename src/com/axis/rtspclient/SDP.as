@@ -23,8 +23,6 @@ package com.axis.rtspclient {
         tracks.push(match.replace("a=control:", ""));
       }
 
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, dataString);
-
       return true;
     }
 

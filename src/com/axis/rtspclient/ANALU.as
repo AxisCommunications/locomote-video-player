@@ -37,6 +37,7 @@ package com.axis.rtspclient {
       var timestamp:uint = pkt.timestamp - initialTime;
 
       if (26 >= naltype) {
+        //ExternalInterface.call(HTTPClient.jsEventCallbackName, "Single packet NALU complete. Dispatching.");
         /* This RTP package is a single NALU, dispatch and forget */
         isIDR = (naltype === 5); // 5 = IDR, 1 = Non-IDR
         dispatchEvent(new NALU(data, isIDR, timestamp));
@@ -57,7 +58,7 @@ package com.axis.rtspclient {
       }
 
       if (1 === nfend) {
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "Fragmented NALU complete. Dispatching.");
+        //ExternalInterface.call(HTTPClient.jsEventCallbackName, "Fragmented NALU complete. Dispatching.");
         dispatchEvent(nalu);
         nalu = null;
       }
