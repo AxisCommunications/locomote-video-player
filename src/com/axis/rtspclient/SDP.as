@@ -14,6 +14,9 @@ package com.axis.rtspclient {
     public function parse(content:ByteArray):Boolean
     {
       var dataString:String = content.toString();
+
+      ExternalInterface.call('console.log', dataString);
+
       var matches:Array = dataString.match(/a=control:(.*)/g);
       if (0 === matches.length) {
         return false;
@@ -30,5 +33,6 @@ package com.axis.rtspclient {
     {
       return tracks[tracks.length - 1];
     }
+
   }
 }

@@ -3,6 +3,7 @@ package com.axis.rtspclient {
   import flash.events.Event;
   import flash.external.ExternalInterface;
   import flash.utils.ByteArray;
+  import com.axis.rtspclient.ByteArrayUtils;
 
   public class RTP extends Event
   {
@@ -42,8 +43,7 @@ package com.axis.rtspclient {
       headerLength = pkt.position;
       bodyLength   = pkt.bytesAvailable;
 
-      /*
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "version:   " + version);
+      /*ExternalInterface.call(HTTPClient.jsEventCallbackName, "version:   " + version);
       ExternalInterface.call(HTTPClient.jsEventCallbackName, "padding:   " + padding);
       ExternalInterface.call(HTTPClient.jsEventCallbackName, "extension: " + extension);
       ExternalInterface.call(HTTPClient.jsEventCallbackName, "csrc:      " + csrc);
@@ -51,15 +51,20 @@ package com.axis.rtspclient {
       ExternalInterface.call(HTTPClient.jsEventCallbackName, "pt:        " + pt);
       ExternalInterface.call(HTTPClient.jsEventCallbackName, "sequence:  " + sequence);
       ExternalInterface.call(HTTPClient.jsEventCallbackName, "timestamp: " + timestamp);
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "ssrc: "      + ssrc);
-      */
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "ssrc: "      + ssrc);*/
+      //ExternalInterface.call(HTTPClient.jsEventCallbackName, ByteArrayUtils.hexdump(pkt, pkt.position));
 
-      this.data                = pkt;
+      this.data = pkt;
     }
 
     public function getPayload():ByteArray
     {
       return data;
+    }
+
+    public function getTimestampMS():uint
+    {
+      return 1000 * (timestamp / 90000); // PT > 96 have sampling rate 90000Hz
     }
   }
 }

@@ -76,14 +76,15 @@ package com.axis.rtspclient {
     {
       var result:String = "";
 
-      var realOffset:uint = ba.position + offset;
+      //var realOffset:uint = ba.position + offset;
+      var realOffset:uint = offset;
 
       var realLength:int = (length === -1) ?
         ba.length - realOffset :
         Math.min(ba.length - realOffset, length);
 
       for (var i:int = realOffset; i < realOffset + realLength; i++) {
-        result += "0x" + (ba[i] < 16 ? "0" : "") + ba[i].toString(16) + (((i - realOffset) % 16 == 15) ? "\n" : " ");
+        result += "" + (ba[i] < 16 ? "0" : "") + ba[i].toString(16) + (((i - realOffset) % 16 == 7) ? " " : "") + (((i - realOffset) % 16 == 15) ? "\n" : " ");
       }
       return result;
     }

@@ -41,6 +41,7 @@ package com.axis.rtspclient {
     private var getChannelData:ByteArray = new ByteArray();
     private var contentLength:int = -1;
     private var rtpLength:int = -1;
+    private var channel:int = -1;
 
     public function RTSPClient(getChannel:Socket, postChannel:Socket, url:String) {
       this.getChannel = getChannel;
@@ -68,6 +69,7 @@ package com.axis.rtspclient {
       headers = new ByteArray();
       contentLength = -1;
       rtpLength     = -1;
+      channel       = -1;
     }
 
     private function readRequest(oHeaders:ByteArray, oBody:ByteArray):Boolean
@@ -160,13 +162,13 @@ package com.axis.rtspclient {
 
     private function onPlayData(event:ProgressEvent):void
     {
-      getChannel.readBytes(getChannelData);
+      getChannel.readBytes(getChannelData, getChannelData.length);
 
       if (-1 == rtpLength && 0x24 === getChannelData[0]) {
         /* This is the beginning of a new RTP package */
         getChannelData.readByte();
-        var channel:uint = getChannelData.readByte();
-        rtpLength        = getChannelData.readShort();
+        channel   = getChannelData.readByte();
+        rtpLength = getChannelData.readShort();
       }
 
       if (getChannelData.bytesAvailable < rtpLength) {
@@ -175,13 +177,12 @@ package com.axis.rtspclient {
       }
 
       var pkgData:ByteArray = new ByteArray();
+
       getChannelData.readBytes(pkgData, 0, rtpLength);
-      //ExternalInterface.call(HTTPClient.jsEventCallbackName, "Package complete, length: " + rtpLength);
 
-      dispatchEvent(new RTP(pkgData));
-
-      //getChannel.close();
-      //postChannel.close()
+      if (channel == 0) {
+        dispatchEvent(new RTP(pkgData));
+      }
 
       requestReset();
 

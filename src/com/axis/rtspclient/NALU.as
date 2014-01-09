@@ -26,7 +26,7 @@ package com.axis.rtspclient {
     public function appendData(idata:ByteArray):void
     {
       ByteArrayUtils.appendByteArray(data, idata);
-      this.bodySize  = data.bytesAvailable;
+      this.bodySize = data.bytesAvailable;
     }
 
     public function getPayload():ByteArray
