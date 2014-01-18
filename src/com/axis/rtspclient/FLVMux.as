@@ -103,9 +103,9 @@ package com.axis.rtspclient {
       /* Arguments */
       size += writeECMAArray({
         videocodecid    : 7.0,
-        width           : 1024.0,
-        height          : 768.0,
-        framerate       : 17.0,
+        width           : 1280.0,
+        height          : 800.0,
+        framerate       : 30.0,
         metadatacreator : "Slush FLV Muxer",
         creationdate    : new Date().toString()
       });
@@ -149,12 +149,11 @@ package com.axis.rtspclient {
       container.writeByte(0xE1); // 111xxxxx (xxxxx=numSequenceParameters)
       container.writeShort(0x0013); // Sequence Parameter Set 1 Length
       container.writeUnsignedInt(0x67420029);
-      container.writeUnsignedInt(0xe2900800);
-      container.writeUnsignedInt(0xc3602dc0);
+      container.writeUnsignedInt(0xe2900A00);
+      container.writeUnsignedInt(0xcb602dc0);
       container.writeUnsignedInt(0x40406907);
       container.writeShort(0x8911);
       container.writeByte(0x50);
-
 
       /* Picture parameters these should probably be more dynamic... */
       container.writeByte(0x01); // Num picture parameters
@@ -171,10 +170,6 @@ package com.axis.rtspclient {
 
       /* End of tag */
       container.writeUnsignedInt(size);
-
-      //ExternalInterface.call(HTTPClient.jsEventCallbackName, 'config:');
-      //ExternalInterface.call(HTTPClient.jsEventCallbackName,
-      //    ByteArrayUtils.hexdump(container, start));
     }
 
     private function createVideoTag(nalu:NALU):void
@@ -186,13 +181,11 @@ package com.axis.rtspclient {
       }
 
       ts -= initialTimestamp;
-      //ExternalInterface.call(HTTPClient.jsEventCallbackName, "timestamp: ", ts);
 
       var size:uint = 0; // Header to StreamID
       size += 1; // Video tag header
       size += 4; // AVC tag header
-      size += nalu.bodySize;
-      size += 5;  // NALU header
+      size += nalu.writeSize(); // NALU size contribution
 
       /* FLV Tag */
       container.writeUnsignedInt(0x09 << 24 | (size & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
@@ -202,34 +195,24 @@ package com.axis.rtspclient {
       container.writeByte(0x00);
 
       /* Video Tag Header */
-      container.writeByte((nalu.isIDR ? 1 : 2) << 4 | 0x07); // Keyframe << 4 | CodecID
+      container.writeByte((nalu.isIDR() ? 1 : 2) << 4 | 0x07); // Keyframe << 4 | CodecID
       container.writeUnsignedInt(0x01 << 24 | (0x0 & 0x00FFFFFF)); // AVC NALU << 24 | CompositionTime & 0x00FFFFFF
 
-
-      //container.writeUnsignedInt(0x000062f9);
-      //container.writeByte(0x65);
-
       /* Video Data */
-      var n:ByteArray = nalu.getPayload();
-      container.writeShort(0x0000); // DON
-      container.writeShort(nalu.bodySize + 1); // NALU length
-      container.writeByte(nalu.isIDR ? 0x65 : 0x41); // NAL header
-      container.writeBytes(n, n.position);
+      nalu.writeStream(container);
 
       /* Previous Tag Size */
       container.writeUnsignedInt(size + 11);
     }
 
-    private var hasLogged:Boolean = false;
-    private var hasSkippedFirst:Boolean = false;
     public function onNALU(nalu:NALU):void
     {
-      //ExternalInterface.call(HTTPClient.jsEventCallbackName, "onNALU");
-      if (nalu.getPayload().bytesAvailable >= 200) {
-        //ExternalInterface.call(HTTPClient.jsEventCallbackName, "Creating video tag");
+      ExternalInterface.call(HTTPClient.jsEventCallbackName, "onNALU");
+      if (nalu.ntype == 1 || nalu.ntype == 5) {
+        ExternalInterface.call(HTTPClient.jsEventCallbackName, "Creating video tag");
         createVideoTag(nalu);
       } else {
-        //ExternalInterface.call(HTTPClient.jsEventCallbackName, "Not creating video tag");
+        ExternalInterface.call(HTTPClient.jsEventCallbackName, "Not creating video tag");
       }
 
       var ns:NetStream = Player.getNetStream();
@@ -237,22 +220,9 @@ package com.axis.rtspclient {
       container.position = 0;
 
       if (container.bytesAvailable > 0) {
-        //ExternalInterface.call(HTTPClient.jsEventCallbackName, "Appending bytes: ", container.bytesAvailable);
-        /*if (hasSkippedFirst) {
-          container.readBytes(loggedBytes, loggedBytes.length);
-        }
-        hasSkippedFirst = true;
-
-        container.position = 0;*/
         ns.appendBytes(container);
-        //ExternalInterface.call(HTTPClient.jsEventCallbackName, ByteArrayUtils.hexdump(container));
         ExternalInterface.call(HTTPClient.jsEventCallbackName, "Video buffer: " + ns.info.videoBufferByteLength + " bytes, " + ns.info.videoBufferLength + " s." );
       }
-
-      /*if (loggedBytes.length > 200000 && !hasLogged) {
-        hasLogged = true;
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, ByteArrayUtils.hexdump(loggedBytes));
-      }*/
 
       container.clear();
     }

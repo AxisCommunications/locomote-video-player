@@ -28,14 +28,20 @@ package com.axis.rtspclient {
 
       var nalhdr:uint = data.readUnsignedByte();
 
+      var nri:uint     = nalhdr & 0x60;
       var naltype:uint = nalhdr & 0x1F;
 
-      var isIDR:Boolean;
-
-      if (26 >= naltype) {
+      if (27 >= naltype) {
         /* This RTP package is a single NALU, dispatch and forget */
-        isIDR = (naltype === 5); // 5 = IDR, 1 = Non-IDR
-        dispatchEvent(new NALU(data, isIDR, pkt.getTimestampMS()));
+        dispatchEvent(new NALU(naltype, nri, data, pkt.getTimestampMS()));
+        return;
+      }
+
+      /* This is a fragmented NAL unit, FU-A if 28 and FU-B if 29 */
+
+      if (28 != naltype) {
+        /* Only support for FU-A at this time */
+        ExternalInterface.call('console.log', 'Unsupported NAL unit, type ' + naltype);
         return;
       }
 
@@ -44,11 +50,11 @@ package com.axis.rtspclient {
       var nfend:uint   = (nalfrag & 0x40) >>> 6;
       var nftype:uint  = nalfrag & 0x1F;
 
-      isIDR = (nftype === 5); // 5 = IDR, 1 = Non-IDR
-
       if (null === nalu) {
-        nalu = new NALU(data, isIDR, pkt.getTimestampMS());
+        /* Create a new NAL unit from multiple fragmented NAL units */
+        nalu = new NALU(nftype, nri, data, pkt.getTimestampMS());
       } else {
+        /* We've already created the NAL unit, append current data */
         nalu.appendData(data);
       }
 
