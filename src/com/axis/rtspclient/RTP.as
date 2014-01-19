@@ -10,6 +10,7 @@ package com.axis.rtspclient {
     public static const NEW_PACKET:String = "NEW_PACKET";
 
     private var data:ByteArray;
+    private var media:Object;
 
     public var version:uint;
     public var padding:uint;
@@ -24,7 +25,7 @@ package com.axis.rtspclient {
     public var headerLength:uint;
     public var bodyLength:uint;
 
-    public function RTP(pkt:ByteArray)
+    public function RTP(pkt:ByteArray, sdp:SDP)
     {
       super(RTP.NEW_PACKET, false, false);
 
@@ -43,16 +44,11 @@ package com.axis.rtspclient {
       headerLength = pkt.position;
       bodyLength   = pkt.bytesAvailable;
 
-      /*ExternalInterface.call(HTTPClient.jsEventCallbackName, "version:   " + version);
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "padding:   " + padding);
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "extension: " + extension);
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "csrc:      " + csrc);
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "marker:    " + marker);
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "pt:        " + pt);
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "sequence:  " + sequence);
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "timestamp: " + timestamp);
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "ssrc: "      + ssrc);*/
-      //ExternalInterface.call(HTTPClient.jsEventCallbackName, ByteArrayUtils.hexdump(pkt, pkt.position));
+      media = sdp.getMediaBlock('video');
+      if (null === media || -1 === media.fmt.indexOf(pt)) {
+        ExternalInterface.call('console.log', 'Media description for payload type: ' + pt + ' not provided.');
+      }
+
 
       this.data = pkt;
     }
@@ -64,7 +60,7 @@ package com.axis.rtspclient {
 
     public function getTimestampMS():uint
     {
-      return 1000 * (timestamp / 90000); // PT > 96 have sampling rate 90000Hz
+      return 1000 * (timestamp / media.rtpmap[pt].clock);
     }
   }
 }

@@ -76,7 +76,6 @@ package com.axis.rtspclient {
     {
       var result:String = "";
 
-      //var realOffset:uint = ba.position + offset;
       var realOffset:uint = offset;
 
       var realLength:int = (length === -1) ?

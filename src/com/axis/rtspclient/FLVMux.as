@@ -6,6 +6,7 @@ package com.axis.rtspclient {
   import flash.utils.ByteArray;
   import flash.net.NetStream;
   import flash.net.FileReference;
+  import mx.utils.Base64Decoder;
 
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.ByteArrayUtils;
@@ -16,7 +17,7 @@ package com.axis.rtspclient {
     private var loggedBytes:ByteArray = new ByteArray();
     private var initialTimestamp:int = -1;
 
-    public function FLVMux()
+    public function FLVMux(sdp:SDP)
     {
       container.writeByte(0x46); // 'F'
       container.writeByte(0x4C); // 'L'
@@ -27,7 +28,7 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(0x0) // Previous tag size: shall be 0
 
       createMetaDataTag();
-      createDecoderConfigRecordTag();
+      createDecoderConfigRecordTag(sdp);
     }
 
     private function writeECMAArray(contents:Object):uint
@@ -117,12 +118,9 @@ package com.axis.rtspclient {
       container[sizePosition + 0] = dataSize & 0x00FF0000;
       container[sizePosition + 1] = dataSize & 0x0000FF00;
       container[sizePosition + 2] = dataSize & 0x000000FF;
-
-      //ExternalInterface.call(HTTPClient.jsEventCallbackName, ByteArrayUtils.hexdump(container, 13));
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, 'metadata size: ' + dataSize);
     }
 
-    public function createDecoderConfigRecordTag():void
+    public function createDecoderConfigRecordTag(sdp:SDP):void
     {
       var start:uint = container.position;
 
@@ -138,27 +136,8 @@ package com.axis.rtspclient {
       container.writeByte(0x01 << 4 | 0x07); // Keyframe << 4 | CodecID
       container.writeUnsignedInt(0x00 << 24 | 0x00000000); // AVC NALU << 24 | CompositionTime
 
-      /* AVC Decoder Configuration Record TODO: parse from SDP file */
-      container.writeByte(0x01); // Version
-      container.writeByte(0x42); // AVC Profile, Baseline
-      container.writeByte(0x00); // Profile compatibility
-      container.writeByte(0x29); // Level indication
-      container.writeByte(0xFF); // 111111xx (xx=lengthSizeMinsOne)
-
-      /* Sequence parameters, these should probably be more dynamic... */
-      container.writeByte(0xE1); // 111xxxxx (xxxxx=numSequenceParameters)
-      container.writeShort(0x0013); // Sequence Parameter Set 1 Length
-      container.writeUnsignedInt(0x67420029);
-      container.writeUnsignedInt(0xe2900A00);
-      container.writeUnsignedInt(0xcb602dc0);
-      container.writeUnsignedInt(0x40406907);
-      container.writeShort(0x8911);
-      container.writeByte(0x50);
-
-      /* Picture parameters these should probably be more dynamic... */
-      container.writeByte(0x01); // Num picture parameters
-      container.writeShort(0x0004); // Picture Parameter Length
-      container.writeUnsignedInt(0x68CE3C80);
+      writeDecoderConfigurationRecord(sdp);
+      writeParameterSets(sdp);
 
       var size:uint = container.position - start;
 
@@ -170,6 +149,36 @@ package com.axis.rtspclient {
 
       /* End of tag */
       container.writeUnsignedInt(size);
+    }
+
+    public function writeDecoderConfigurationRecord(sdp:SDP):void
+    {
+      container.writeByte(0x01); // Version
+      container.writeByte(0x42); // AVC Profile, Baseline
+      container.writeByte(0x00); // Profile compatibility
+      container.writeByte(0x29); // Level indication
+      container.writeByte(0xFF); // 111111xx (xx=lengthSizeMinusOne)
+    }
+
+    public function writeParameterSets(sdp:SDP):void
+    {
+      var sets:Array = sdp.getMediaBlock('video').spropParameterSets.split(',');
+      var sps:Base64Decoder = new Base64Decoder();
+      var pps:Base64Decoder = new Base64Decoder();
+
+      sps.decode(sets[0]);
+      pps.decode(sets[1]);
+
+      var spsba:ByteArray = sps.toByteArray();
+      var ppsba:ByteArray = pps.toByteArray();
+
+      container.writeByte(0xE1); // 111xxxxx (xxxxx=numSequenceParameters), only support 1
+      container.writeShort(spsba.bytesAvailable); // Sequence Parameter Set 1 Length
+      container.writeBytes(spsba, spsba.position);
+
+      container.writeByte(0x01); // Num picture parameters, only support 1
+      container.writeShort(ppsba.bytesAvailable); // Picture Parameter Length
+      container.writeBytes(ppsba, ppsba.position);
     }
 
     private function createVideoTag(nalu:NALU):void
@@ -207,24 +216,32 @@ package com.axis.rtspclient {
 
     public function onNALU(nalu:NALU):void
     {
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "onNALU");
-      if (nalu.ntype == 1 || nalu.ntype == 5) {
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "Creating video tag");
+      switch (nalu.ntype) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        /* 1 - 5 are Video Coding Layer (VCL) unit type class (Rec. ITU-T H264 04/2013), and contains video data */
         createVideoTag(nalu);
-      } else {
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "Not creating video tag");
+        break;
+
+      default:
+        ExternalInterface.call(HTTPClient.jsEventCallbackName, "Unsupported NALU type: " + nalu.ntype);
+        /* Return here as nothing was created, and thus nothing should be appended */
+        return;
       }
 
       var ns:NetStream = Player.getNetStream();
-
       container.position = 0;
-
-      if (container.bytesAvailable > 0) {
-        ns.appendBytes(container);
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "Video buffer: " + ns.info.videoBufferByteLength + " bytes, " + ns.info.videoBufferLength + " s." );
-      }
-
+      ns.appendBytes(container);
       container.clear();
+
+      /*
+      ExternalInterface.call(HTTPClient.jsEventCallbackName,
+        "Video buffer: " + ns.info.videoBufferByteLength + " bytes, " +
+        ns.info.videoBufferLength + " seconds.");
+      */
     }
   }
 }

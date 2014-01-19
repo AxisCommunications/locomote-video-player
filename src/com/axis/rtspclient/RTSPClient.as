@@ -48,7 +48,6 @@ package com.axis.rtspclient {
       this.postChannel = postChannel;
       this.url = url;
       this.sdp = new SDP();
-      this.flvmux = new FLVMux();
       this.analu  = new ANALU();
     }
 
@@ -151,6 +150,9 @@ package com.axis.rtspclient {
 
         ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_PLAY_SENT");
         state = STATE_PLAYING;
+
+        this.flvmux = new FLVMux(this.sdp);
+
         getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetData);
         getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onPlayData);
 
@@ -181,7 +183,7 @@ package com.axis.rtspclient {
       getChannelData.readBytes(pkgData, 0, rtpLength);
 
       if (channel == 0) {
-        dispatchEvent(new RTP(pkgData));
+        dispatchEvent(new RTP(pkgData, sdp));
       }
 
       requestReset();

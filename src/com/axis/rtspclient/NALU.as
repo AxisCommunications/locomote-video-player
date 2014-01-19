@@ -23,10 +23,6 @@ package com.axis.rtspclient {
       this.nri       = nri;
       this.timestamp = timestamp;
       this.bodySize  = data.bytesAvailable;
-
-      if (5 === ntype) {
-        ExternalInterface.call('console.log', 'Key frame');
-      }
     }
 
     public function appendData(idata:ByteArray):void
@@ -48,7 +44,7 @@ package com.axis.rtspclient {
     public function writeStream(output:ByteArray):void
     {
       output.writeShort(0x0000); // DON
-      output.writeShort(data.bytesAvailable); // NALU length
+      output.writeShort(data.bytesAvailable + 1); // NALU length + header
       output.writeByte((0x0 & 0x80) | (nri & 0x60) | (ntype & 0x1F)); // NAL header
       output.writeBytes(data, data.position);
     }

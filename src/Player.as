@@ -48,7 +48,7 @@ package {
       var nc:NetConnection = new NetConnection();
       nc.connect(null);
 
-      vid = new Video(1280, 800);
+      vid = new Video(640,480);
 
       ns = new NetStream(nc);
       ns.client = customClient;
