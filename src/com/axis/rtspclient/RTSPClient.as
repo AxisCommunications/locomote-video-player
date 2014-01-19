@@ -35,6 +35,7 @@ package com.axis.rtspclient {
     private var url:String;
     private var cSeq:uint = 1;
     private var session:String;
+    private var contentBase:String;
     private var base64encoder:Base64Encoder = new Base64Encoder();
 
     private var headers:ByteArray = new ByteArray();
@@ -123,10 +124,15 @@ package com.axis.rtspclient {
         ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_DESCRIBE_SENT");
 
         state = STATE_DESCRIBE_RCVD;
+
         if (!sdp.parse(body)) {
           ExternalInterface.call(HTTPClient.jsEventCallbackName, "ERROR", "Failed to parse SDP file");
           return;
         }
+
+        var cbmatch:Array = headers.toString().match(/Content-Base: (.*)\r\n/);
+        contentBase = cbmatch[1];
+
         sendRequest(setupReq());
         state = STATE_SETUP_SENT;
         break;
@@ -202,7 +208,7 @@ package com.axis.rtspclient {
     }
 
     private function setupReq():String {
-      return getCommandHeader("SETUP", sdp.getTrack()) +
+      return getCommandHeader("SETUP", contentBase + sdp.getMediaBlock('video').control) +
              getCSeqHeader() +
              getUserAgentHeader() +
              "Transport: RTP/AVP/TCP;interleaved=0-1\r\n" +
@@ -211,7 +217,7 @@ package com.axis.rtspclient {
 
 
     private function playReq():String {
-      return getCommandHeader("PLAY", sdp.getTrack()) +
+      return getCommandHeader("PLAY", contentBase + sdp.getMediaBlock('video').control) +
              getCSeqHeader() +
              getUserAgentHeader() +
              getSessionHeader() +
@@ -219,7 +225,7 @@ package com.axis.rtspclient {
     }
 
     private function teardownReq():String {
-      return getCommandHeader("TEARDOWN", sdp.getTrack()) +
+      return getCommandHeader("TEARDOWN", contentBase + sdp.getMediaBlock('video').control) +
              getCSeqHeader() +
              getUserAgentHeader() +
              getSessionHeader() +

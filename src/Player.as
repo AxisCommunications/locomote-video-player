@@ -31,16 +31,6 @@ package {
 
     public function Player() {
 
-      var customClient:Object = new Object();
-
-      customClient.onImageData = function (imageData:Object):void {
-        ExternalInterface.call(jsEventCallbackName, "imageData");
-      }
-
-      customClient.onMetaData = function (item:Object):void {
-        ExternalInterface.call(jsEventCallbackName, "metaData");
-      }
-
       this.stage.align = StageAlign.TOP_LEFT;
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
       addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
@@ -51,7 +41,6 @@ package {
       vid = new Video(640,480);
 
       ns = new NetStream(nc);
-      ns.client = customClient;
       ns.play(null);
       vid.attachNetStream(ns);
 

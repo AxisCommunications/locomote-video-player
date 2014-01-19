@@ -8,7 +8,6 @@ package com.axis.rtspclient {
     private var origin:Object;
     private var sessionName:String;
     private var timing:Object;
-    private var tracks:Vector.<String> = new Vector.<String>();
     private var media:Object = new Object;
 
     public function SDP()
@@ -86,9 +85,6 @@ package com.axis.rtspclient {
 
       media[currentMediaBlock.type] = currentMediaBlock;
 
-      parseTracks(dataString); /* TODO: DONT DO THIS */
-
-      ExternalInterface.call('console.log', media.video);
       return success;
     }
 
@@ -234,30 +230,9 @@ package com.axis.rtspclient {
       return true;
     }
 
-    private function parseTracks(sdp:String):Boolean
-    {
-      var matches:Array = sdp.match(/a=control:(.*)/g);
-      if (0 === matches.length) {
-        ExternalInterface.call('console.log', 'Could not parse control tracks from SDP');
-        return false;
-      }
-
-      for each (var match:String in matches) {
-        tracks.push(match.replace("a=control:", ""));
-      }
-
-      return true;
-    }
-
     public function getMediaBlock(mediaType:String):Object
     {
       return media[mediaType];
     }
-
-    public function getTrack():String
-    {
-      return tracks[tracks.length - 1];
-    }
-
   }
 }
