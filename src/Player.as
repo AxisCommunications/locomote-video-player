@@ -11,7 +11,6 @@ package {
   import flash.external.ExternalInterface;
   import flash.media.Video;
   import flash.net.NetStream;
-  import flash.net.NetStreamAppendBytesAction;
   import flash.utils.ByteArray;
   import flash.net.NetConnection;
 
@@ -19,6 +18,7 @@ package {
   import flash.net.Socket;
 
   import com.axis.rtspclient.ByteArrayUtils;
+  import com.axis.rtspclient.BitArray;
 
   [SWF(frameRate="60")]
 
@@ -38,9 +38,23 @@ package {
       var nc:NetConnection = new NetConnection();
       nc.connect(null);
 
-      vid = new Video(640,480);
+      vid = new Video(stage.stageWidth, stage.stageHeight);
 
       ns = new NetStream(nc);
+      ns.bufferTime = 1;
+      ns.client = new Object();
+      ns.client.onMetaData = function(item:Object):void {
+        vid.width  = Math.min(item.width,  stage.stageWidth);
+        vid.height = Math.min(item.height, stage.stageHeight);
+
+        vid.x = 0;
+        vid.y = 0;
+        if (item.width < stage.stageWidth || item.height < stage.stageHeight) {
+          vid.x = (stage.stageWidth - item.width) / 2;
+          vid.y = (stage.stageHeight - item.height) / 2;
+        }
+      };
+
       ns.play(null);
       vid.attachNetStream(ns);
 
