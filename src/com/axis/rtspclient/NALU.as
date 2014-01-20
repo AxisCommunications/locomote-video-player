@@ -43,10 +43,16 @@ package com.axis.rtspclient {
 
     public function writeStream(output:ByteArray):void
     {
+      /* This appears to be a NALU of type STAP-B, no idea why. Nothing else seems to work. */
       output.writeShort(0x0000); // DON
       output.writeShort(data.bytesAvailable + 1); // NALU length + header
       output.writeByte((0x0 & 0x80) | (nri & 0x60) | (ntype & 0x1F)); // NAL header
       output.writeBytes(data, data.position);
+    }
+
+    public function getPayload():ByteArray
+    {
+      return data;
     }
   }
 }

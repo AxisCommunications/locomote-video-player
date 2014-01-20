@@ -13,6 +13,7 @@ package com.axis.rtspclient {
 
   public class FLVMux {
 
+    private var sdp:SDP;
     private var container:ByteArray = new ByteArray();
     private var loggedBytes:ByteArray = new ByteArray();
     private var initialTimestamp:int = -1;
@@ -27,8 +28,17 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(0x09) // Reserved: usually is 0x09
       container.writeUnsignedInt(0x0) // Previous tag size: shall be 0
 
+      this.sdp = sdp;
+
       createMetaDataTag();
-      createDecoderConfigRecordTag(sdp);
+
+      /* Initial parameters must be taken from SDP file. Additional may be received as NAL */
+      var sets:Array = sdp.getMediaBlock('video').fmtp['sprop-parameter-sets'].split(',');
+      var sps:Base64Decoder = new Base64Decoder();
+      var pps:Base64Decoder = new Base64Decoder();
+      sps.decode(sets[0]);
+      pps.decode(sets[1]);
+      createDecoderConfigRecordTag(sps.toByteArray(), pps.toByteArray());
     }
 
     private function writeECMAArray(contents:Object):uint
@@ -46,18 +56,20 @@ package com.axis.rtspclient {
         container.writeShort(key.length); // Length of key
         container.writeUTFBytes(key); // The key itself
         size += 2 + key.length;
-        switch(typeof contents[key]) {
-        case 'number':
+        switch(contents[key]) {
+        case contents[key] as Number:
           size += writeDouble(contents[key]);
           break;
 
-        case 'string':
+        case contents[key] as String:
           size += writeString(contents[key]);
           break;
 
         default:
           ExternalInterface.call(HTTPClient.jsEventCallbackName,
-            "Unknown type in ECMA array: ", typeof contents[key]);
+            "Unknown type in ECMA array: " + typeof contents[key]);
+
+          break;
         }
       }
 
@@ -85,6 +97,43 @@ package com.axis.rtspclient {
       return 1 + 2 + contents.length;
     }
 
+    private function parseSPS(sps:BitArray):Object
+    {
+      var nalhdr:uint      = sps.readBits(8);
+      var profile:uint     = sps.readBits(8);
+      var constraints:uint = sps.readBits(8);
+      var level:uint       = sps.readBits(8);
+
+      var seq_parameter_set_id:uint = sps.readUnsignedExpGolomb();
+      if (-1 !== [100, 110, 122, 244, 44, 83, 86, 118, 128, 138].indexOf(profile)) {
+        /* Parse chroma/luma parameters */
+        throw new Error("No support for parsing Chroma/Luma parameters");
+      }
+
+      var log2_max_frame_num_minus4:uint = sps.readUnsignedExpGolomb();
+      var pic_order_cnt_type:uint        = sps.readUnsignedExpGolomb();
+      if (0 == pic_order_cnt_type) {
+        var log2_max_pic_order_cnt_lsb_minus4:uint = sps.readUnsignedExpGolomb();
+      } else if (1 == pic_order_cnt_type) {
+        throw new Error("No support for parsing 'pic_order_cnt_type' != 0");
+      }
+
+      var max_num_ref_frames:uint                   = sps.readUnsignedExpGolomb();
+      var gaps_in_frame_num_value_allowed_flag:uint = sps.readBits(1);
+      var pic_width_in_mbs_minus1:uint              = sps.readUnsignedExpGolomb();
+      var pic_height_in_map_units_minus1:uint       = sps.readUnsignedExpGolomb();
+      var pic_frame_mbs_only_flag:uint              = sps.readBits(1);
+
+      /* There's more information here, but can't be bothered right now */
+
+      return {
+        'profile' : profile,
+        'level'   : level / 10.0,
+        'width'   : (pic_width_in_mbs_minus1 + 1) * 16,
+        'height'  : (2 - pic_frame_mbs_only_flag) * (pic_height_in_map_units_minus1 + 1) * 16
+      };
+    }
+
     public function createMetaDataTag():void
     {
       var size:uint = 0;
@@ -101,12 +150,20 @@ package com.axis.rtspclient {
       /* Method call */
       size += writeString("onMetaData");
 
+      /* Decode the base64 encoded parameter sets to pass to parseSPS */
+      var sets:Array = sdp.getMediaBlock('video').fmtp['sprop-parameter-sets'].split(',');
+      var spsdec:Base64Decoder = new Base64Decoder();
+      spsdec.decode(sets[0]);
+      var sps:BitArray = new BitArray(spsdec.toByteArray());
+      var params:Object = parseSPS(sps);
+
       /* Arguments */
       size += writeECMAArray({
-        videocodecid    : 7.0,
-        width           : 1280.0,
-        height          : 800.0,
-        framerate       : 30.0,
+        videocodecid    : 7.0, /* Only support AVC (H.264) */
+        width           : params.width,
+        height          : params.height,
+        avcprofile      : params.profile,
+        avclevel        : params.level,
         metadatacreator : "Slush FLV Muxer",
         creationdate    : new Date().toString()
       });
@@ -120,7 +177,7 @@ package com.axis.rtspclient {
       container[sizePosition + 2] = dataSize & 0x000000FF;
     }
 
-    public function createDecoderConfigRecordTag(sdp:SDP):void
+    public function createDecoderConfigRecordTag(sps:ByteArray, pps:ByteArray):void
     {
       var start:uint = container.position;
 
@@ -136,8 +193,8 @@ package com.axis.rtspclient {
       container.writeByte(0x01 << 4 | 0x07); // Keyframe << 4 | CodecID
       container.writeUnsignedInt(0x00 << 24 | 0x00000000); // AVC NALU << 24 | CompositionTime
 
-      writeDecoderConfigurationRecord(sdp);
-      writeParameterSets(sdp);
+      writeDecoderConfigurationRecord();
+      writeParameterSets(sps, pps);
 
       var size:uint = container.position - start;
 
@@ -151,34 +208,37 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(size);
     }
 
-    public function writeDecoderConfigurationRecord(sdp:SDP):void
+    public function writeDecoderConfigurationRecord():void
     {
+      /* Always take this from SDP file. Is this correct? */
+      var profilelevelid:uint = parseInt(sdp.getMediaBlock('video').fmtp['profile-level-id'], 16);
       container.writeByte(0x01); // Version
-      container.writeByte(0x42); // AVC Profile, Baseline
-      container.writeByte(0x00); // Profile compatibility
-      container.writeByte(0x29); // Level indication
+      container.writeByte((profilelevelid & 0x00FF0000) >> 16); // AVC Profile, Baseline
+      container.writeByte((profilelevelid & 0x0000FF00) >> 8); // Profile compatibility
+      container.writeByte((profilelevelid & 0x000000FF) >> 0); // Level indication
       container.writeByte(0xFF); // 111111xx (xx=lengthSizeMinusOne)
     }
 
-    public function writeParameterSets(sdp:SDP):void
+    public function writeParameterSets(sps:ByteArray, pps:ByteArray):void
     {
-      var sets:Array = sdp.getMediaBlock('video').spropParameterSets.split(',');
-      var sps:Base64Decoder = new Base64Decoder();
-      var pps:Base64Decoder = new Base64Decoder();
+      if (sps.bytesAvailable > 0) {
+        /* There is one sps available */
+        container.writeByte(0xE1); // 111xxxxx (xxxxx=numSequenceParameters), only support 1
+        container.writeShort(sps.bytesAvailable); // Sequence parameter set 1 length
+        container.writeBytes(sps, sps.position); // Actual parameters
+      } else {
+        /* No sps here */
+        container.writeByte(0xE0); // 111xxxxx (xxxxx=numOfSequenceParameters), 0 sps here
+      }
 
-      sps.decode(sets[0]);
-      pps.decode(sets[1]);
-
-      var spsba:ByteArray = sps.toByteArray();
-      var ppsba:ByteArray = pps.toByteArray();
-
-      container.writeByte(0xE1); // 111xxxxx (xxxxx=numSequenceParameters), only support 1
-      container.writeShort(spsba.bytesAvailable); // Sequence Parameter Set 1 Length
-      container.writeBytes(spsba, spsba.position);
-
-      container.writeByte(0x01); // Num picture parameters, only support 1
-      container.writeShort(ppsba.bytesAvailable); // Picture Parameter Length
-      container.writeBytes(ppsba, ppsba.position);
+      if (pps.bytesAvailable > 0) {
+        container.writeByte(0x01); // Num picture parameters, only support 1
+        container.writeShort(pps.bytesAvailable); // Picture parameter length
+        container.writeBytes(pps, pps.position); // Actual parameters
+      } else {
+        /* No pps here */
+        container.writeByte(0x00); // numOfPictureParameterSets
+      }
     }
 
     private function createVideoTag(nalu:NALU):void
@@ -226,6 +286,16 @@ package com.axis.rtspclient {
         createVideoTag(nalu);
         break;
 
+      case 7:
+        /* What to do about these? Inserting new decoder configurations doesn't seem to work. */
+        /* createDecoderConfigRecordTag(nalu.getPayload(), new ByteArray()); */
+        break;
+
+      case 8:
+        /* What to do about these? Inserting new decoder configurations doesn't seem to work. */
+        /* createDecoderConfigRecordTag(new ByteArray(), nalu.getPayload()); */
+        break;
+
       default:
         ExternalInterface.call(HTTPClient.jsEventCallbackName, "Unsupported NALU type: " + nalu.ntype);
         /* Return here as nothing was created, and thus nothing should be appended */
@@ -240,7 +310,9 @@ package com.axis.rtspclient {
       /*
       ExternalInterface.call(HTTPClient.jsEventCallbackName,
         "Video buffer: " + ns.info.videoBufferByteLength + " bytes, " +
-        ns.info.videoBufferLength + " seconds.");
+        ns.info.videoBufferLength + " seconds, " +
+        ns.info.droppedFrames + " frames dropped, " +
+        'FPS: ' + ns.currentFPS + ' frames/second.');
       */
     }
   }
