@@ -3,6 +3,8 @@ package com.axis.rtspclient {
   import flash.utils.ByteArray;
   import flash.external.ExternalInterface;
 
+  import mx.utils.StringUtil;
+
   public class SDP {
     private var version:int = -1;
     private var origin:Object;
@@ -23,10 +25,12 @@ package com.axis.rtspclient {
       var success:Boolean = true;
       var currentMediaBlock:Object = null;
 
-      /* Could end up with '\r' in the 'line' variable, just keep in mind when matching */
       for each (var line:String in content.toString().split("\n")) {
-        line = line.replace(/\r/, '');
-        if (0 === line.length) continue;
+        line = line.replace(/\r/, ''); /* Delimiter '\r\n' is allowed, if this is the case, remove '\r' too */
+        if (0 === line.length) {
+          /* Empty row (last row perhaps), skip to next */
+          continue;
+        }
 
         switch (line.charAt(0)) {
         case 'v':
@@ -178,9 +182,9 @@ package com.axis.rtspclient {
         return true;
       }
 
-      var matches:Array; /* Used in some cases of below switch-case */
+      var matches:Array; /* Used for some cases of below switch-case */
       var separator:int    = line.indexOf(':');
-      var attribute:String = line.substr(0, (-1 === separator) ? 0x7FFFFFFF : separator);
+      var attribute:String = line.substr(0, (-1 === separator) ? 0x7FFFFFFF : separator); /* 0x7FF.. is default */
 
       switch (attribute) {
       case 'a=recvonly':
@@ -214,14 +218,10 @@ package com.axis.rtspclient {
           return false;
         }
 
-        for each (var param:String in matches[2].split('; ')) {
+        media.fmtp = new Object();
+        for each (var param:String in matches[2].split(';')) {
           var idx:int = param.indexOf('=');
-          if (param.substr(0, idx) !== 'sprop-parameter-sets') {
-            /* Only store sprop-parameter-sets for now */
-            continue;
-          }
-
-          media.spropParameterSets = param.substr(idx + 1);
+          media.fmtp[StringUtil.trim(param.substr(0, idx))] = StringUtil.trim(param.substr(idx + 1));
         }
 
         break;
