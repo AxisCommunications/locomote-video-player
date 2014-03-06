@@ -16,7 +16,8 @@ package com.axis.rtspclient {
     private var sdp:SDP;
     private var container:ByteArray = new ByteArray();
     private var loggedBytes:ByteArray = new ByteArray();
-    private var initialTimestamp:int = -1;
+    private var videoInitialTimestamp:int = -1;
+    private var audioInitialTimestamp:int = -1;
 
     public function FLVMux(sdp:SDP)
     {
@@ -24,7 +25,10 @@ package com.axis.rtspclient {
       container.writeByte(0x4C); // 'L'
       container.writeByte(0x56); // 'V'
       container.writeByte(0x01); // Version 1
-      container.writeByte(0x00 << 2 | 0x01); // Audio << 2 | Video
+      container.writeByte(
+        (sdp.getMediaBlock('audio') ? 0x01 : 0x00) << 2 |
+        (sdp.getMediaBlock('video') ? 0x01 : 0x00) << 0
+      );
       container.writeUnsignedInt(0x09) // Reserved: usually is 0x09
       container.writeUnsignedInt(0x0) // Previous tag size: shall be 0
 
@@ -32,13 +36,20 @@ package com.axis.rtspclient {
 
       createMetaDataTag();
 
-      /* Initial parameters must be taken from SDP file. Additional may be received as NAL */
-      var sets:Array = sdp.getMediaBlock('video').fmtp['sprop-parameter-sets'].split(',');
-      var sps:Base64Decoder = new Base64Decoder();
-      var pps:Base64Decoder = new Base64Decoder();
-      sps.decode(sets[0]);
-      pps.decode(sets[1]);
-      createDecoderConfigRecordTag(sps.toByteArray(), pps.toByteArray());
+      if (sdp.getMediaBlock('video')) {
+        /* Initial parameters must be taken from SDP file. Additional may be received as NAL */
+        var sets:Array = sdp.getMediaBlock('video').fmtp['sprop-parameter-sets'].split(',');
+        var sps:Base64Decoder = new Base64Decoder();
+        var pps:Base64Decoder = new Base64Decoder();
+        sps.decode(sets[0]);
+        pps.decode(sets[1]);
+        createDecoderConfigRecordTag(sps.toByteArray(), pps.toByteArray());
+      }
+
+      if (sdp.getMediaBlock('audio')) {
+        var config:uint = parseInt(sdp.getMediaBlock('audio').fmtp['config'], 16);
+        createAudioSpecificConfigTag(config);
+      }
     }
 
     private function writeECMAArray(contents:Object):uint
@@ -200,9 +211,9 @@ package com.axis.rtspclient {
 
       /* Rewind and set the data size in tag header to actual size */
       var dataSize:uint = size - 11;
-      container[sizePosition + 0] = dataSize & 0x00FF0000;
-      container[sizePosition + 1] = dataSize & 0x0000FF00;
-      container[sizePosition + 2] = dataSize & 0x000000FF;
+      container[sizePosition + 0] = (dataSize >> 16 & 0xFF);
+      container[sizePosition + 1] = (dataSize >> 8  & 0xFF);
+      container[sizePosition + 2] = (dataSize >> 0  & 0xFF);
 
       /* End of tag */
       container.writeUnsignedInt(size);
@@ -241,22 +252,49 @@ package com.axis.rtspclient {
       }
     }
 
-    private function createVideoTag(nalu:NALU):void
+    public function createAudioSpecificConfigTag(config:uint):void
     {
-      var ts:uint = nalu.timestamp;
-
-      if (initialTimestamp == -1) {
-        initialTimestamp = ts;
-      }
-
-      ts -= initialTimestamp;
-
-      var size:uint = 0; // Header to StreamID
-      size += 1; // Video tag header
-      size += 4; // AVC tag header
-      size += nalu.writeSize(); // NALU size contribution
+      var start:uint = container.position;
 
       /* FLV Tag */
+      var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
+      container.writeUnsignedInt(0x00000008 << 24 | (0x000000 & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
+      container.writeUnsignedInt(0x00000000); // Timestamp & TimestampExtended
+      container.writeByte(0x00); // StreamID - always 0
+      container.writeByte(0x00); // StreamID - always 0
+      container.writeByte(0x00); // StreamID - always 0
+
+      /* Audio Tag Header */
+      container.writeByte(0xA << 4 | 0x3 << 2 | 0x1 << 1 | 0x0 << 0); // Format << 4 | Sampling << 2 | Size << 1 | Type << 0
+      container.writeByte(0x0); // AAC Sequence Header
+
+      /* AudioSpecificConfig */
+      container.writeShort(config); /* TODO: This should probably be more dynamic */
+
+      var size:uint = container.position - start;
+
+      /* Rewind and set the data size in tag header to actual size */
+      var dataSize:uint = size - 11;
+      container[sizePosition + 0] = (dataSize >> 16 & 0xFF);
+      container[sizePosition + 1] = (dataSize >> 8  & 0xFF);
+      container[sizePosition + 2] = (dataSize >> 0  & 0xFF);
+
+      /* End of tag */
+      container.writeUnsignedInt(size);
+    }
+
+    private function createVideoTag(nalu:NALU):void
+    {
+      var start:uint = container.position;
+      var ts:uint = nalu.timestamp;
+      if (videoInitialTimestamp == -1) {
+        videoInitialTimestamp = ts;
+      }
+
+      ts -= videoInitialTimestamp;
+
+      /* FLV Tag */
+      var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
       container.writeUnsignedInt(0x09 << 24 | (size & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
       container.writeUnsignedInt(((ts >>> 24) & 0xFF) | ((ts << 8) & 0xFFFFFF00));
       container.writeByte(0x00);
@@ -270,28 +308,75 @@ package com.axis.rtspclient {
       /* Video Data */
       nalu.writeStream(container);
 
+      var size:uint = container.position - start;
+
+      /* Rewind and set the data size in tag header to actual size */
+      var dataSize:uint = size - 11;
+
+      container[sizePosition + 0] = (dataSize >> 16 & 0xFF);
+      container[sizePosition + 1] = (dataSize >> 8  & 0xFF);
+      container[sizePosition + 2] = (dataSize >> 0  & 0xFF);
+
       /* Previous Tag Size */
       container.writeUnsignedInt(size + 11);
+    }
+
+    public function createAudioTag(aacframe:AACFrame):void
+    {
+      var start:uint = container.position;
+      var ts:uint = aacframe.timestamp;
+      if (audioInitialTimestamp === -1) {
+        audioInitialTimestamp = ts;
+      }
+
+      ts -= audioInitialTimestamp;
+
+      /* FLV Tag */
+      var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
+      container.writeUnsignedInt(0x00000008 << 24 | (0x000000 & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
+      container.writeUnsignedInt(((ts >>> 24) & 0xFF) | ((ts << 8) & 0xFFFFFF00));
+      container.writeByte(0x00); // StreamID - always 0
+      container.writeByte(0x00); // StreamID - always 0
+      container.writeByte(0x00); // StreamID - always 0
+
+      /* Audio Tag Header */
+      container.writeByte(0xA << 4 | 0x3 << 2 | 0x1 << 1 | 0x1 << 0); // Format << 4 | Sampling << 2 | Size << 1 | Type << 0
+      container.writeByte(0x1); // AAC Raw
+
+      /* Audio Data */
+      aacframe.writeStream(container);
+
+      var size:uint = container.position - start;
+
+      /* Rewind and set the data size in tag header to actual size */
+      var dataSize:uint = size - 11;
+
+      container[sizePosition + 0] = (dataSize >> 16 & 0xFF);
+      container[sizePosition + 1] = (dataSize >> 8  & 0xFF);
+      container[sizePosition + 2] = (dataSize >> 0  & 0xFF);
+
+      /* End of tag */
+      container.writeUnsignedInt(size);
     }
 
     public function onNALU(nalu:NALU):void
     {
       switch (nalu.ntype) {
-      case 1:
-      case 2:
-      case 3:
-      case 4:
-      case 5:
+      case 1: /* Coded slice of a non-IDR picture */
+      case 2: /* Coded slice data partition A */
+      case 3: /* Coded slice data partition B */
+      case 4: /* Coded slice data partition C */
+      case 5: /* Coded slice of an IDR picture */
         /* 1 - 5 are Video Coding Layer (VCL) unit type class (Rec. ITU-T H264 04/2013), and contains video data */
         createVideoTag(nalu);
         break;
 
-      case 7:
+      case 7: /* Sequence parameter set */
         /* What to do about these? Inserting new decoder configurations doesn't seem to work. */
         /* createDecoderConfigRecordTag(nalu.getPayload(), new ByteArray()); */
         break;
 
-      case 8:
+      case 8: /* Picture parameter set */
         /* What to do about these? Inserting new decoder configurations doesn't seem to work. */
         /* createDecoderConfigRecordTag(new ByteArray(), nalu.getPayload()); */
         break;
@@ -302,18 +387,38 @@ package com.axis.rtspclient {
         return;
       }
 
-      var ns:NetStream = Player.getNetStream();
-      container.position = 0;
-      ns.appendBytes(container);
-      container.clear();
+      pushData();
 
       /*
+      var ns:NetStream = Player.getNetStream();
       ExternalInterface.call(HTTPClient.jsEventCallbackName,
         "Video buffer: " + ns.info.videoBufferByteLength + " bytes, " +
         ns.info.videoBufferLength + " seconds, " +
         ns.info.droppedFrames + " frames dropped, " +
         'FPS: ' + ns.currentFPS + ' frames/second.');
-      */
+        */
+    }
+
+    public function onAACFrame(aacframe:AACFrame):void
+    {
+      createAudioTag(aacframe);
+      pushData();
+
+      /*
+      var ns:NetStream = Player.getNetStream();
+      ExternalInterface.call('console.log',
+        "Audio buffer: " + ns.info.audioBufferByteLength + " bytes, " +
+        ns.info.audioBufferLength + " seconds, " +
+        ns.info.audioLossRate + ' loss rate');
+        */
+    }
+
+    private function pushData():void
+    {
+      var ns:NetStream = Player.getNetStream();
+      container.position = 0;
+      ns.appendBytes(container);
+      container.clear();
     }
   }
 }

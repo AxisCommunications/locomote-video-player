@@ -16,12 +16,11 @@ package com.axis.rtspclient {
     private static var STATE_INITIAL:int       = 1<<0;
     private static var STATE_DESCRIBE_SENT:int = 1<<1;
     private static var STATE_DESCRIBE_RCVD:int = 1<<2;
-    private static var STATE_SETUP_SENT:int    = 1<<3;
-    private static var STATE_SETUP_RCVD:int    = 1<<4;
-    private static var STATE_PLAY_SENT:int     = 1<<5;
-    private static var STATE_PLAYING:int       = 1<<6;
-    private static var STATE_TEARDOWN_SENT:int = 1<<7;
-    private static var STATE_TEARDOWN_RCVD:int = 1<<8;
+    private static var STATE_SETUP:int         = 1<<3;
+    private static var STATE_PLAY_SENT:int     = 1<<4;
+    private static var STATE_PLAYING:int       = 1<<5;
+    private static var STATE_TEARDOWN_SENT:int = 1<<6;
+    private static var STATE_TEARDOWN_RCVD:int = 1<<7;
 
     private var state:int = STATE_INITIAL;
 
@@ -31,11 +30,13 @@ package com.axis.rtspclient {
     private var sdp:SDP;
     private var flvmux:FLVMux;
     private var analu:ANALU;
+    private var aaac:AAAC;
 
     private var url:String;
     private var cSeq:uint = 1;
     private var session:String;
     private var contentBase:String;
+    private var interleaveChannelIndex:uint = 0;
     private var base64encoder:Base64Encoder = new Base64Encoder();
 
     private var headers:ByteArray = new ByteArray();
@@ -43,13 +44,15 @@ package com.axis.rtspclient {
     private var contentLength:int = -1;
     private var rtpLength:int = -1;
     private var channel:int = -1;
+    private var tracks:Array;
 
     public function RTSPClient(getChannel:Socket, postChannel:Socket, url:String) {
       this.getChannel = getChannel;
       this.postChannel = postChannel;
       this.url = url;
       this.sdp = new SDP();
-      this.analu  = new ANALU();
+      this.analu = new ANALU();
+      this.aaac = new AAAC(sdp);
     }
 
     public function start():void {
@@ -132,22 +135,28 @@ package com.axis.rtspclient {
 
         var cbmatch:Array = headers.toString().match(/Content-Base: (.*)\r\n/);
         contentBase = cbmatch[1];
+        tracks = sdp.getMediaBlockList();
+        ExternalInterface.call('console.log', tracks.length);
 
-        sendRequest(setupReq());
-        state = STATE_SETUP_SENT;
-        break;
-      case STATE_SETUP_SENT:
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_SETUP_SENT");
-
-        state = STATE_SETUP_RCVD;
+        state = STATE_SETUP;
+        /* Fall through, it's time for setup */
+      case STATE_SETUP:
+        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_SETUP");
 
         var headerString:String = headers.toString();
         var matches:Array = headerString.match(/Session: ([^;]+);/);
-        if (null === matches) {
-          ExternalInterface.call(HTTPClient.jsEventCallbackName, "No session in SETUP reply");
+        if (null !== matches) {
+          session = matches[1];
         }
-        session = matches[1];
 
+        if (0 !== tracks.length) {
+          /* More tracks we must setup before playing */
+          var block:Object = tracks.shift();
+          sendRequest(setupReq(block));
+          return;
+        }
+
+        /* All tracks setup and ready to go! */
         sendRequest(playReq());
         state = STATE_PLAY_SENT;
         break;
@@ -162,8 +171,10 @@ package com.axis.rtspclient {
         getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetData);
         getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onPlayData);
 
-        addEventListener(RTP.NEW_PACKET, analu.onRTPPacket);
+        addEventListener("VIDEO_PACKET", analu.onRTPPacket);
+        addEventListener("AUDIO_PACKET", aaac.onRTPPacket);
         analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
+        aaac.addEventListener(AACFrame.NEW_FRAME, flvmux.onAACFrame);
         break;
       }
     }
@@ -188,8 +199,10 @@ package com.axis.rtspclient {
 
       getChannelData.readBytes(pkgData, 0, rtpLength);
 
-      if (channel == 0) {
-        dispatchEvent(new RTP(pkgData, sdp));
+      if (channel === 0 || channel === 2) {
+        /* We're discarding the RTCP counter parts for now */
+        var rtppkt:RTP = new RTP(pkgData, sdp);
+        dispatchEvent(rtppkt);
       }
 
       requestReset();
@@ -207,17 +220,21 @@ package com.axis.rtspclient {
              "\r\n";
     }
 
-    private function setupReq():String {
-      return getCommandHeader("SETUP", contentBase + sdp.getMediaBlock('video').control) +
+    private function setupReq(block:Object):String {
+      var interleavedChannels:String = interleaveChannelIndex++ + "-" + interleaveChannelIndex++;
+
+      return getCommandHeader("SETUP", contentBase + block.control) +
              getCSeqHeader() +
              getUserAgentHeader() +
-             "Transport: RTP/AVP/TCP;interleaved=0-1\r\n" +
+             getSessionHeader() +
+             "Date: " + new Date().toUTCString() + "\r\n" +
+             "Transport: RTP/AVP/TCP;unicast;interleaved=" + interleavedChannels + "\r\n" +
              "\r\n";
     }
 
 
     private function playReq():String {
-      return getCommandHeader("PLAY", contentBase + sdp.getMediaBlock('video').control) +
+      return getCommandHeader("PLAY", contentBase) +
              getCSeqHeader() +
              getUserAgentHeader() +
              getSessionHeader() +
@@ -225,7 +242,7 @@ package com.axis.rtspclient {
     }
 
     private function teardownReq():String {
-      return getCommandHeader("TEARDOWN", contentBase + sdp.getMediaBlock('video').control) +
+      return getCommandHeader("TEARDOWN", contentBase) +
              getCSeqHeader() +
              getUserAgentHeader() +
              getSessionHeader() +
@@ -244,7 +261,7 @@ package com.axis.rtspclient {
     }
 
     private function getCSeqHeader():String {
-      return "CSeq: " + (cSeq++) + "\r\n";
+      return "CSeq: " + (++cSeq) + "\r\n";
     }
 
     private function getUserAgentHeader():String {
@@ -252,12 +269,11 @@ package com.axis.rtspclient {
     }
 
     private function getSessionHeader():String {
-      return "Session: " + session + "\r\n";
+      return (session ? ("Session: " + session + "\r\n") : "");
     }
 
     private function sendRequest(request:String):void {
-      ExternalInterface.call(HTTPClient.jsEventCallbackName, "Sending: " +
-                             request.substr(0, request.indexOf(" ")));
+      ExternalInterface.call('console.log', 'RTSP client sending:', request);
       postChannel.writeUTFBytes(base64encode(request));
       postChannel.flush();
     }

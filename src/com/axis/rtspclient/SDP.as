@@ -19,7 +19,6 @@ package com.axis.rtspclient {
     public function parse(content:ByteArray):Boolean
     {
       var dataString:String = content.toString();
-
       ExternalInterface.call('console.log', dataString);
 
       var success:Boolean = true;
@@ -28,7 +27,7 @@ package com.axis.rtspclient {
       for each (var line:String in content.toString().split("\n")) {
         line = line.replace(/\r/, ''); /* Delimiter '\r\n' is allowed, if this is the case, remove '\r' too */
         if (0 === line.length) {
-          /* Empty row (last row perhaps), skip to next */
+          /* Empty row (last row perhaps?), skip to next */
           continue;
         }
 
@@ -82,7 +81,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          //ExternalInterface.call('console.log', 'Ignored unknown SDP type: ' + line.charAt(0) + '=');
+          ExternalInterface.call('console.log', 'Ignored unknown SDP type: ' + line.charAt(0) + '=');
           break;
         }
       }
@@ -177,11 +176,6 @@ package com.axis.rtspclient {
         return true;
       }
 
-      if ('video' !== media.type) {
-        /* Only support video for now */
-        return true;
-      }
-
       var matches:Array; /* Used for some cases of below switch-case */
       var separator:int    = line.indexOf(':');
       var attribute:String = line.substr(0, (-1 === separator) ? 0x7FFFFFFF : separator); /* 0x7FF.. is default */
@@ -199,16 +193,22 @@ package com.axis.rtspclient {
         break;
 
       case 'a=rtpmap':
-        matches = line.match(/^a=rtpmap:(\d+) ([^\/]+)\/(\d+)$/);
-        if (0 === matches.length) {
+        matches = line.match(/^a=rtpmap:(\d+) (.*)$/);
+        if (null === matches) {
           ExternalInterface.call('console.log', 'Could not parse \'rtpmap\' of \'a=\'');
           return false;
         }
 
         var payload:int = parseInt(matches[1]);
         media.rtpmap[payload] = new Object();
-        media.rtpmap[payload].name  = matches[2];
-        media.rtpmap[payload].clock = matches[3];
+
+        var attrs:Array = matches[2].split('/');
+        media.rtpmap[payload].name  = attrs[0];
+        media.rtpmap[payload].clock = attrs[1];
+        if (undefined !== attrs[2]) {
+          media.rtpmap[payload].encparams = attrs[2];
+        }
+
         break;
 
       case 'a=fmtp':
@@ -232,7 +232,28 @@ package com.axis.rtspclient {
 
     public function getMediaBlock(mediaType:String):Object
     {
-      return media[mediaType];
+      return this.media[mediaType];
+    }
+
+    public function getMediaBlockByPayloadType(pt:int):Object
+    {
+      for each (var m:Object in this.media) {
+        if (-1 !== m.fmt.indexOf(pt)) {
+          return m;
+        }
+      }
+
+      throw new Error('No media block for payload type: ' + pt);
+    }
+
+    public function getMediaBlockList():Array
+    {
+      var res:Array = [];
+      for each (var m:Object in this.media) {
+        res.push(m);
+      }
+
+      return res;
     }
   }
 }

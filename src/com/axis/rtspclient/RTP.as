@@ -7,8 +7,6 @@ package com.axis.rtspclient {
 
   public class RTP extends Event
   {
-    public static const NEW_PACKET:String = "NEW_PACKET";
-
     private var data:ByteArray;
     private var media:Object;
 
@@ -27,8 +25,6 @@ package com.axis.rtspclient {
 
     public function RTP(pkt:ByteArray, sdp:SDP)
     {
-      super(RTP.NEW_PACKET, false, false);
-
       var line1:uint = pkt.readUnsignedInt();
 
       version   = (line1 & 0xC0000000) >>> 30;
@@ -44,11 +40,12 @@ package com.axis.rtspclient {
       headerLength = pkt.position;
       bodyLength   = pkt.bytesAvailable;
 
-      media = sdp.getMediaBlock('video');
+      media = sdp.getMediaBlockByPayloadType(pt);
       if (null === media || -1 === media.fmt.indexOf(pt)) {
         ExternalInterface.call('console.log', 'Media description for payload type: ' + pt + ' not provided.');
       }
 
+      super(media.type.toUpperCase() + '_PACKET', false, false);
 
       this.data = pkt;
     }
@@ -61,6 +58,20 @@ package com.axis.rtspclient {
     public function getTimestampMS():uint
     {
       return 1000 * (timestamp / media.rtpmap[pt].clock);
+    }
+
+    public override function toString():String
+    {
+      return "RTP(" +
+        "version:"   + version   + ", " +
+        "padding:"   + padding   + ", " +
+        "extension:" + extension + ", " +
+        "csrc:"      + csrc      + ", " +
+        "marker:"    + marker    + ", " +
+        "pt:"        + pt        + ", " +
+        "sequence:"  + sequence  + ", " +
+        "timestamp:" + timestamp + ", " +
+        "ssrc:"      + ssrc      + ")";
     }
   }
 }

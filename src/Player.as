@@ -10,6 +10,7 @@ package {
   import flash.events.NetStatusEvent;
   import flash.external.ExternalInterface;
   import flash.media.Video;
+  import flash.media.SoundTransform;
   import flash.net.NetStream;
   import flash.utils.ByteArray;
   import flash.net.NetConnection;

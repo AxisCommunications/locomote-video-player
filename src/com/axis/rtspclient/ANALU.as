@@ -4,7 +4,6 @@ package com.axis.rtspclient {
   import flash.events.EventDispatcher;
   import flash.external.ExternalInterface;
   import flash.utils.ByteArray;
-  import flash.net.NetStream;
 
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.ByteArrayUtils;
