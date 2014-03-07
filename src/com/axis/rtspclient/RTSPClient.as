@@ -136,7 +136,6 @@ package com.axis.rtspclient {
         var cbmatch:Array = headers.toString().match(/Content-Base: (.*)\r\n/);
         contentBase = cbmatch[1];
         tracks = sdp.getMediaBlockList();
-        ExternalInterface.call('console.log', tracks.length);
 
         state = STATE_SETUP;
         /* Fall through, it's time for setup */

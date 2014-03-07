@@ -221,7 +221,7 @@ package com.axis.rtspclient {
         media.fmtp = new Object();
         for each (var param:String in matches[2].split(';')) {
           var idx:int = param.indexOf('=');
-          media.fmtp[StringUtil.trim(param.substr(0, idx))] = StringUtil.trim(param.substr(idx + 1));
+          media.fmtp[StringUtil.trim(param.substr(0, idx).toLowerCase())] = StringUtil.trim(param.substr(idx + 1));
         }
 
         break;

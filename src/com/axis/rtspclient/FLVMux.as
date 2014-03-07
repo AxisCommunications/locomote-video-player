@@ -47,8 +47,7 @@ package com.axis.rtspclient {
       }
 
       if (sdp.getMediaBlock('audio')) {
-        var config:uint = parseInt(sdp.getMediaBlock('audio').fmtp['config'], 16);
-        createAudioSpecificConfigTag(config);
+        createAudioSpecificConfigTag(ByteArrayUtils.createFromHexstring(sdp.getMediaBlock('audio').fmtp['config']));
       }
     }
 
@@ -252,7 +251,7 @@ package com.axis.rtspclient {
       }
     }
 
-    public function createAudioSpecificConfigTag(config:uint):void
+    public function createAudioSpecificConfigTag(config:ByteArray):void
     {
       var start:uint = container.position;
 
@@ -269,7 +268,7 @@ package com.axis.rtspclient {
       container.writeByte(0x0); // AAC Sequence Header
 
       /* AudioSpecificConfig */
-      container.writeShort(config); /* TODO: This should probably be more dynamic */
+      container.writeBytes(config);
 
       var size:uint = container.position - start;
 

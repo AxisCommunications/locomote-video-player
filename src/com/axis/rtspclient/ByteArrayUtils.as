@@ -95,5 +95,15 @@ package com.axis.rtspclient {
       dest.writeBytes(src, src.position);
       dest.position   = prepos;
     }
+
+    public static function createFromHexstring(hex:String):ByteArray
+    {
+      var res:ByteArray = new ByteArray();
+      for (var i:uint = 0; i < hex.length; i += 2) {
+        res.writeByte(parseInt(hex.substr(i, 2), 16));
+      }
+
+      return res;
+    }
   }
 }
