@@ -19,7 +19,6 @@ package com.axis.rtspclient {
     public function parse(content:ByteArray):Boolean
     {
       var dataString:String = content.toString();
-      ExternalInterface.call('console.log', dataString);
 
       var success:Boolean = true;
       var currentMediaBlock:Object = null;
@@ -125,7 +124,7 @@ package com.axis.rtspclient {
 
     private function parseSessionName(line:String):Boolean
     {
-      var matches:Array = line.match(/^s=([^ \r\n]+)$/);
+      var matches:Array = line.match(/^s=([^\r\n]+)$/);
       if (0 === matches.length) {
         ExternalInterface.call('console.log', '\'s=\' (Session Name) formatted incorrectly: ' + line);
         return false;

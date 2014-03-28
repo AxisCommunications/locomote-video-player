@@ -118,6 +118,8 @@ package com.axis.rtspclient {
         return;
       }
 
+      //ExternalInterface.call(HTTPClient.jsEventCallbackName, 'RTSP client received:\n', headers.toString(), body.toString());
+
       switch (state) {
       case STATE_INITIAL:
         ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_INITIAL");
@@ -143,10 +145,11 @@ package com.axis.rtspclient {
         ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_SETUP");
 
         var headerString:String = headers.toString();
-        var matches:Array = headerString.match(/Session: ([^;]+);/);
+        var matches:Array = headerString.match(/Session: ([^;\s]+)[;\s]{1}/);
         if (null !== matches) {
           session = matches[1];
         }
+
 
         if (0 !== tracks.length) {
           /* More tracks we must setup before playing */
@@ -226,8 +229,8 @@ package com.axis.rtspclient {
              getCSeqHeader() +
              getUserAgentHeader() +
              getSessionHeader() +
-             "Date: " + new Date().toUTCString() + "\r\n" +
              "Transport: RTP/AVP/TCP;unicast;interleaved=" + interleavedChannels + "\r\n" +
+             "Date: " + new Date().toUTCString() + "\r\n" +
              "\r\n";
     }
 
@@ -272,7 +275,7 @@ package com.axis.rtspclient {
     }
 
     private function sendRequest(request:String):void {
-      ExternalInterface.call('console.log', 'RTSP client sending:', request);
+      //ExternalInterface.call('console.log', 'RTSP client sending:\n', request);
       postChannel.writeUTFBytes(base64encode(request));
       postChannel.flush();
     }

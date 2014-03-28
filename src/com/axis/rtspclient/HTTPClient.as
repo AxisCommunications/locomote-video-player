@@ -101,8 +101,10 @@ package com.axis.rtspclient {
 
       if (url != null) { this.url = url; }
 
-      getChannel.connect(URLUtil.getServerName(this.url), 554);
-      postChannel.connect(URLUtil.getServerName(this.url), 554);
+      var port:uint = (URLUtil.getPort(this.url) === 0) ? 554 : URLUtil.getPort(this.url);
+      ExternalInterface.call('console.log', 'connecting on port:', port);
+      getChannel.connect(URLUtil.getServerName(this.url), port);
+      postChannel.connect(URLUtil.getServerName(this.url), port);
 
       rtspClient = new RTSPClient(getChannel, postChannel, this.url);
     }
