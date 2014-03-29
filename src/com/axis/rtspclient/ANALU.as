@@ -19,16 +19,13 @@ package com.axis.rtspclient {
 
     public function onRTPPacket(pkt:RTP):void
     {
-      if (pkt.pt != 97) {
-        return;
-      }
-
       var data:ByteArray = pkt.getPayload();
 
       var nalhdr:uint = data.readUnsignedByte();
 
       var nri:uint     = nalhdr & 0x60;
       var naltype:uint = nalhdr & 0x1F;
+      trace(naltype);
 
       if (27 >= naltype) {
         /* This RTP package is a single NALU, dispatch and forget */

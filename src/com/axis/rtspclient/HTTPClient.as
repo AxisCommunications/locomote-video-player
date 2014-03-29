@@ -9,15 +9,13 @@ package com.axis.rtspclient {
   import flash.net.Socket;
   import flash.utils.ByteArray;
   import flash.utils.setTimeout;
-  import flash.system.Security;
   import flash.external.ExternalInterface;
   import flash.display.LoaderInfo;
 
   import com.axis.rtspclient.ByteArrayUtils;
   import com.axis.rtspclient.GUID;
   import com.axis.rtspclient.RTSPClient;
-
-  import mx.utils.URLUtil;
+  import com.axis.http.url;
 
   [Event(name="connect", type="flash.events.Event")]
   [Event(name="disconnect", type="flash.events.Event")]
@@ -27,7 +25,7 @@ package com.axis.rtspclient {
     public static var jsEventCallbackName:String = "console.log";
     private var getChannel:Socket = null;
     private var postChannel:Socket = null;
-    private var url:String = "";
+    private var urlParsed:Object = {};
     private var sessioncookie:String = "";
 
     private var getChannelTotalLength:int = -1;
@@ -37,16 +35,6 @@ package com.axis.rtspclient {
     private var rtspClient:RTSPClient;
 
     public function HTTPClient() {
-      // Set up JS API
-      ExternalInterface.marshallExceptions = true;
-      ExternalInterface.addCallback("play", connect);
-      ExternalInterface.addCallback("pause", disconnect);
-      ExternalInterface.addCallback("stop", stop);
-      ExternalInterface.addCallback("setEventCallbackName", setJsEventCallbackName);
-
-      Security.allowDomain("*");
-      Security.allowInsecureDomain("*");
-
       sessioncookie = GUID.create();
 
       getChannel = new Socket();
@@ -66,16 +54,8 @@ package com.axis.rtspclient {
     }
 
     public function sendLoadedEvent():void {
-      // Tell the external JS environent that we are ready to accept API calls
+      // Tell the external JS environment that we are ready to accept API calls
       ExternalInterface.call(jsEventCallbackName, 'loaded');
-    }
-
-    public function setJsEventCallbackName(jcn:String):void {
-      jsEventCallbackName = jcn;
-    }
-
-    public function getJsEventCallbackName():String {
-      return jsEventCallbackName;
     }
 
     private function onError(e:ErrorEvent):void {
@@ -96,17 +76,15 @@ package com.axis.rtspclient {
       dispatchEvent(new Event("disconnect"));
     }
 
-    public function connect(url:String = null):void {
+    public function connect(iurl:String = null):void {
       disconnect();
 
-      if (url != null) { this.url = url; }
+      this.urlParsed = url.parse(iurl);
 
-      var port:uint = (URLUtil.getPort(this.url) === 0) ? 554 : URLUtil.getPort(this.url);
-      ExternalInterface.call('console.log', 'connecting on port:', port);
-      getChannel.connect(URLUtil.getServerName(this.url), port);
-      postChannel.connect(URLUtil.getServerName(this.url), port);
+      getChannel.connect(this.urlParsed.host, this.urlParsed.port);
+      postChannel.connect(this.urlParsed.host, this.urlParsed.port);
 
-      rtspClient = new RTSPClient(getChannel, postChannel, this.url);
+      rtspClient = new RTSPClient(getChannel, postChannel, this.urlParsed);
     }
 
     private function onGetChannelConnect(event:Event):void {
@@ -153,7 +131,7 @@ package com.axis.rtspclient {
 
     private function initializeGetChannel():void {
       ExternalInterface.call(jsEventCallbackName, "Sending: GET");
-      getChannel.writeUTFBytes("GET " + url + " HTTP/1.0\r\n");
+      getChannel.writeUTFBytes("GET " + urlParsed.urlpath + " HTTP/1.0\r\n");
       getChannel.writeUTFBytes("X-Sessioncookie: " +  sessioncookie + "\r\n");
       getChannel.writeUTFBytes("Accept: application/x-rtsp-tunnelled\r\n");
       getChannel.writeUTFBytes("\r\n");
@@ -162,7 +140,7 @@ package com.axis.rtspclient {
 
     private function initializePostChannel():void {
       ExternalInterface.call(jsEventCallbackName, "Sending: POST");
-      postChannel.writeUTFBytes("POST " + url + " HTTP/1.0\r\n");
+      postChannel.writeUTFBytes("POST " + urlParsed.urlpath + " HTTP/1.0\r\n");
       postChannel.writeUTFBytes("X-Sessioncookie: " + sessioncookie + "\r\n");
       postChannel.writeUTFBytes("Content-Length: 32767" + "\r\n");
       postChannel.writeUTFBytes("Content-Type: application/x-rtsp-tunnelled" + "\r\n");

@@ -11,6 +11,7 @@ package com.axis.rtspclient {
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.SDP;
+  import com.axis.http.url;
 
   public class RTSPClient extends EventDispatcher {
     private static var STATE_INITIAL:int       = 1<<0;
@@ -32,7 +33,7 @@ package com.axis.rtspclient {
     private var analu:ANALU;
     private var aaac:AAAC;
 
-    private var url:String;
+    private var urlParsed:Object;
     private var cSeq:uint = 1;
     private var session:String;
     private var contentBase:String;
@@ -46,10 +47,10 @@ package com.axis.rtspclient {
     private var channel:int = -1;
     private var tracks:Array;
 
-    public function RTSPClient(getChannel:Socket, postChannel:Socket, url:String) {
+    public function RTSPClient(getChannel:Socket, postChannel:Socket, urlParsed:Object) {
       this.getChannel = getChannel;
       this.postChannel = postChannel;
-      this.url = url;
+      this.urlParsed = urlParsed;
       this.sdp = new SDP();
       this.analu = new ANALU();
       this.aaac = new AAAC(sdp);
@@ -215,7 +216,7 @@ package com.axis.rtspclient {
     }
 
     private function describeReq():String {
-      return getCommandHeader("DESCRIBE", url) +
+      return getCommandHeader("DESCRIBE", urlParsed.urlpath) +
              getCSeqHeader() +
              getUserAgentHeader() +
              "Accept: application/sdp\r\n" +
@@ -225,7 +226,8 @@ package com.axis.rtspclient {
     private function setupReq(block:Object):String {
       var interleavedChannels:String = interleaveChannelIndex++ + "-" + interleaveChannelIndex++;
 
-      return getCommandHeader("SETUP", contentBase + block.control) +
+      var p:String = url.isAbsolute(block.control) ? block.control : contentBase + block.control;
+      return getCommandHeader("SETUP", p) +
              getCSeqHeader() +
              getUserAgentHeader() +
              getSessionHeader() +
@@ -275,7 +277,6 @@ package com.axis.rtspclient {
     }
 
     private function sendRequest(request:String):void {
-      //ExternalInterface.call('console.log', 'RTSP client sending:\n', request);
       postChannel.writeUTFBytes(base64encode(request));
       postChannel.flush();
     }
