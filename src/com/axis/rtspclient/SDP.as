@@ -1,7 +1,6 @@
 package com.axis.rtspclient {
 
   import flash.utils.ByteArray;
-  import flash.external.ExternalInterface;
 
   import mx.utils.StringUtil;
 
@@ -19,7 +18,6 @@ package com.axis.rtspclient {
     public function parse(content:ByteArray):Boolean
     {
       var dataString:String = content.toString();
-
       var success:Boolean = true;
       var currentMediaBlock:Object = null;
 
@@ -33,7 +31,7 @@ package com.axis.rtspclient {
         switch (line.charAt(0)) {
         case 'v':
           if (-1 !== version) {
-            ExternalInterface.call('console.log', 'Version present multiple times in SDP');
+            trace('Version present multiple times in SDP');
             return false;
           }
           success &&= parseVersion(line);
@@ -41,7 +39,7 @@ package com.axis.rtspclient {
 
         case 'o':
           if (null !== origin) {
-            ExternalInterface.call('console.log', 'Origin present multiple times in SDP');
+            trace('Origin present multiple times in SDP');
             return false;
           }
           success &&= parseOrigin(line);
@@ -49,7 +47,7 @@ package com.axis.rtspclient {
 
         case 's':
           if (null !== sessionName) {
-            ExternalInterface.call('console.log', 'Session Name present multiple times in SDP');
+            trace('Session Name present multiple times in SDP');
             return false;
           }
           success &&= parseSessionName(line);
@@ -57,7 +55,7 @@ package com.axis.rtspclient {
 
         case 't':
           if (null !== timing) {
-            ExternalInterface.call('console.log', 'Timing present multiple times in SDP');
+            trace('Timing present multiple times in SDP');
             return false;
           }
           success &&= parseTiming(line);
@@ -80,7 +78,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          ExternalInterface.call('console.log', 'Ignored unknown SDP type: ' + line.charAt(0) + '=');
+          trace('Ignored unknown SDP type: ' + line.charAt(0) + '=');
           break;
         }
       }
@@ -94,7 +92,7 @@ package com.axis.rtspclient {
     {
       var matches:Array = line.match(/^v=(0)$/);
       if (0 === matches.length) {
-        ExternalInterface.call('console.log', '\'v=\' (Version) formatted incorrectly: ' + line);
+        trace('\'v=\' (Version) formatted incorrectly: ' + line);
         return false;
       }
 
@@ -107,7 +105,7 @@ package com.axis.rtspclient {
     {
       var matches:Array = line.match(/^o=([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$/);
       if (0 === matches.length) {
-        ExternalInterface.call('console.log', '\'o=\' (Origin) formatted incorrectly: ' + line);
+        trace('\'o=\' (Origin) formatted incorrectly: ' + line);
         return false;
       }
 
@@ -126,7 +124,7 @@ package com.axis.rtspclient {
     {
       var matches:Array = line.match(/^s=([^\r\n]+)$/);
       if (0 === matches.length) {
-        ExternalInterface.call('console.log', '\'s=\' (Session Name) formatted incorrectly: ' + line);
+        trace('\'s=\' (Session Name) formatted incorrectly: ' + line);
         return false;
       }
 
@@ -139,7 +137,7 @@ package com.axis.rtspclient {
     {
       var matches:Array = line.match(/^t=([0-9]+) ([0-9]+)$/);
       if (0 === matches.length) {
-        ExternalInterface.call('console.log', '\'t=\' (Timing) formatted incorrectly: ' + line);
+        trace('\'t=\' (Timing) formatted incorrectly: ' + line);
         return false;
       }
 
@@ -154,7 +152,7 @@ package com.axis.rtspclient {
     {
       var matches:Array = line.match(/^m=([^ ]+) ([^ ]+) ([^ ]+)[ ]/);
       if (0 === matches.length) {
-        ExternalInterface.call('console.log', '\'m=\' (Media) formatted incorrectly: ' + line);
+        trace('\'m=\' (Media) formatted incorrectly: ' + line);
         return false;
       }
 
@@ -194,7 +192,7 @@ package com.axis.rtspclient {
       case 'a=rtpmap':
         matches = line.match(/^a=rtpmap:(\d+) (.*)$/);
         if (null === matches) {
-          ExternalInterface.call('console.log', 'Could not parse \'rtpmap\' of \'a=\'');
+          trace('Could not parse \'rtpmap\' of \'a=\'');
           return false;
         }
 
@@ -213,7 +211,7 @@ package com.axis.rtspclient {
       case 'a=fmtp':
         matches = line.match(/^a=fmtp:(\d+) (.*)$/);
         if (0 === matches.length) {
-          ExternalInterface.call('console.log', 'Could not parse \'fmtp\'  of \'a=\'');
+          trace('Could not parse \'fmtp\'  of \'a=\'');
           return false;
         }
 

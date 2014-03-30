@@ -87,18 +87,7 @@ package {
     }
 
     private function onStageAdded(e:Event):void {
-      client.addEventListener("connected", onConnect);
-      client.addEventListener("disconnect", onDisconnect);
-
       client.sendLoadedEvent();
-    }
-
-    private function onDisconnect(e:Event):void {
-      trace('onDisconnect', e);
-    }
-
-    private function onConnect(e:Event):void {
-      trace('onConnect', e);
     }
 
     public static function getNetStream():NetStream

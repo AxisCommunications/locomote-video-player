@@ -74,7 +74,7 @@ package com.axis.rtspclient {
     }
 
     private function onError(e:ErrorEvent):void {
-      ExternalInterface.call(jsEventCallbackName, "HTTPClient socket error");
+      trace("HTTPClient socket error");
     }
 
     public function disconnect():void {
@@ -95,12 +95,12 @@ package com.axis.rtspclient {
     }
 
     private function onGetChannelConnect(event:Event):void {
-      ExternalInterface.call(jsEventCallbackName, "get channel connected");
+      trace("get channel connected");
       initializeGetChannel();
     }
 
     private function onPostChannelConnect(event:Event):void {
-      ExternalInterface.call(jsEventCallbackName, "post channel connected");
+      trace("post channel connected");
       initializePostChannel();
     }
 
@@ -212,7 +212,7 @@ package com.axis.rtspclient {
     }
 
     private function initializeGetChannel():void {
-      ExternalInterface.call(jsEventCallbackName, "Sending: GET");
+      trace("Sending: GET");
       getChannel.writeUTFBytes("GET " + urlParsed.urlpath + " HTTP/1.0\r\n");
       getChannel.writeUTFBytes("X-Sessioncookie: " +  sessioncookie + "\r\n");
       getChannel.writeUTFBytes("Accept: application/x-rtsp-tunnelled\r\n");
@@ -222,7 +222,7 @@ package com.axis.rtspclient {
     }
 
     private function initializePostChannel():void {
-      ExternalInterface.call(jsEventCallbackName, "Sending: POST");
+      trace("Sending: POST");
       postChannel.writeUTFBytes("POST " + urlParsed.urlpath + " HTTP/1.0\r\n");
       postChannel.writeUTFBytes("X-Sessioncookie: " + sessioncookie + "\r\n");
       postChannel.writeUTFBytes("Content-Length: 32767" + "\r\n");

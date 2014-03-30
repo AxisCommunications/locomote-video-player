@@ -121,16 +121,16 @@ package com.axis.rtspclient {
 
       switch (state) {
       case STATE_INITIAL:
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_INITIAL");
+        trace("RTSPClient: STATE_INITIAL");
 
         break;
       case STATE_DESCRIBE_SENT:
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_DESCRIBE_SENT");
+        trace("RTSPClient: STATE_DESCRIBE_SENT");
 
         state = STATE_DESCRIBE_RCVD;
 
         if (!sdp.parse(body)) {
-          ExternalInterface.call(HTTPClient.jsEventCallbackName, "ERROR", "Failed to parse SDP file");
+          trace("RTSPClient:Failed to parse SDP file");
           return;
         }
 
@@ -141,7 +141,7 @@ package com.axis.rtspclient {
         state = STATE_SETUP;
         /* Fall through, it's time for setup */
       case STATE_SETUP:
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_SETUP");
+        trace("RTSPClient: STATE_SETUP");
 
         var headerString:String = headers.toString();
         var matches:Array = headerString.match(/Session: ([^;\s]+)[;\s]{1}/);
@@ -164,7 +164,7 @@ package com.axis.rtspclient {
 
       case STATE_PLAY_SENT:
 
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_PLAY_SENT");
+        trace("RTSPClient: STATE_PLAY_SENT");
         state = STATE_PLAYING;
 
         this.flvmux = new FLVMux(this.sdp);
