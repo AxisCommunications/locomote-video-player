@@ -24,7 +24,7 @@ package com.axis.http {
       ret.user = userpass[0];
       ret.pass = userpass[1];
       ret.host = hostport[0];
-      ret.port = hostport[1];
+      ret.port = (null == hostport[1]) ? protocolDefaultPort(ret.protocol) : hostport[1];
 
       return ret;
     }
@@ -32,6 +32,17 @@ package com.axis.http {
     public static function isAbsolute(url:String):Boolean
     {
       return /^[^:]+:\/\//.test(url);
+    }
+
+    private static function protocolDefaultPort(protocol:String):uint
+    {
+      switch (protocol) {
+        case 'rtsp': return 554;
+        case 'http': return 80;
+        case 'https': return 443;
+      }
+
+      return 0;
     }
   }
 }

@@ -13,9 +13,16 @@ package com.axis.audioclient {
   import flash.utils.ByteArray;
 
   import com.axis.codec.g711;
+  import com.axis.http.url;
+  import com.axis.http.auth;
+  import com.axis.http.request;
 
   public class AxisTransmit {
+    private var urlParsed:Object = {};
     private var conn:Socket = new Socket();
+
+    private var authState:String = 'none';
+    private var authOpts:Object = {};
 
     public function AxisTransmit() {
       var mic:Microphone = Microphone.getMicrophone();
@@ -29,11 +36,13 @@ package com.axis.audioclient {
       trace('mic status changed: ', event);
     }
 
-    public function start(url:String):void {
+    public function start(iurl:String):void {
       if (conn.connected) {
         trace('already connected');
         return;
       }
+
+      this.urlParsed = url.parse(iurl);
 
       conn = new Socket();
       conn.addEventListener(Event.CONNECT, onConnected);
@@ -42,7 +51,7 @@ package com.axis.audioclient {
       conn.addEventListener(IOErrorEvent.IO_ERROR, onError);
       conn.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 
-      conn.connect('10.0.1.102', 80);
+      conn.connect(urlParsed.host, urlParsed.port);
     }
 
     public function stop():void {
@@ -54,14 +63,42 @@ package com.axis.audioclient {
       conn.close();
     }
 
+    private function writeAuthorizationHeader():void
+    {
+      var a:String = '';
+      switch (authState) {
+        case "basic":
+          a = auth.basic(this.urlParsed.user, this.urlParsed.pass) + "\r\n";
+          break;
+
+        case "digest":
+          a = auth.digest(
+            this.urlParsed.user,
+            this.urlParsed.pass,
+            "POST",
+            authOpts.digestRealm,
+            urlParsed.urlpath,
+            authOpts.qop.split(','),
+            authOpts.nonce
+          );
+          break;
+
+        default:
+        case "none":
+          return;
+      }
+
+      conn.writeUTFBytes('Authorization: ' + a + "\r\n");
+    }
+
+
     private function onConnected(event:Event):void {
-      trace('axis audio connected');
-      conn.writeUTFBytes("POST /axis-cgi/audio/transmit.cgi HTTP/1.0\r\n");
-      conn.writeUTFBytes("Content-Type: audio/basic\n");
-      conn.writeUTFBytes("Content-Length: 9999999\n");
-      conn.writeUTFBytes("Connection: Keep-Alive\n");
-      conn.writeUTFBytes("Cache-Control: no-cache\n");
-      conn.writeUTFBytes("Authorization: Basic cm9vdDpwYXNz\n");
+      conn.writeUTFBytes("POST " + this.urlParsed.urlpath + " HTTP/1.0\r\n");
+      conn.writeUTFBytes("Content-Type: audio/basic\r\n");
+      conn.writeUTFBytes("Content-Length: 9999999\r\n");
+      conn.writeUTFBytes("Connection: Keep-Alive\r\n");
+      conn.writeUTFBytes("Cache-Control: no-cache\r\n");
+      writeAuthorizationHeader();
       conn.writeUTFBytes("\r\n");
     }
 
@@ -84,9 +121,30 @@ package com.axis.audioclient {
     }
 
     private function onRequestData(event:ProgressEvent):void {
-      var d:ByteArray = new ByteArray();
-      conn.readBytes(d);
-      trace(d.toString());
+      var data:ByteArray = new ByteArray();
+      var parsed:* = request.readHeaders(conn, data);
+
+      if (false === parsed) {
+        return;
+      }
+
+     if (401 === parsed.code) {
+        /* Unauthorized, change authState and (possibly) try again */
+        authOpts = parsed.headers['www-authenticate'];
+        var newAuthState:String = auth.nextMethod(authState, authOpts);
+        if (authState === newAuthState) {
+          trace('AxisTransmit: Exhausted all authentication methods.');
+          trace('AxisTransmit: Unable to authorize to ' + urlParsed.host);
+          return;
+        }
+
+        trace('AxisTransmit: switching http-authorization from ' + authState + ' to ' + newAuthState);
+        authState = newAuthState;
+        conn.close();
+        conn.connect(this.urlParsed.host, this.urlParsed.port);
+        return;
+      }
+
     }
 
     private function onError(e:ErrorEvent):void {

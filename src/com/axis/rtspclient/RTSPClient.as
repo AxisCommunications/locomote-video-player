@@ -119,8 +119,6 @@ package com.axis.rtspclient {
         return;
       }
 
-      //ExternalInterface.call(HTTPClient.jsEventCallbackName, 'RTSP client received:\n', headers.toString(), body.toString());
-
       switch (state) {
       case STATE_INITIAL:
         ExternalInterface.call(HTTPClient.jsEventCallbackName, "STATE_INITIAL");

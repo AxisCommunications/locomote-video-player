@@ -12,10 +12,14 @@ package com.axis.rtspclient {
   import flash.external.ExternalInterface;
   import flash.display.LoaderInfo;
 
+  import mx.utils.ObjectUtil;
+
   import com.axis.rtspclient.ByteArrayUtils;
   import com.axis.rtspclient.GUID;
   import com.axis.rtspclient.RTSPClient;
   import com.axis.http.url;
+  import com.axis.http.auth;
+  import com.axis.http.request;
 
   [Event(name="connect", type="flash.events.Event")]
   [Event(name="disconnect", type="flash.events.Event")]
@@ -28,15 +32,23 @@ package com.axis.rtspclient {
     private var urlParsed:Object = {};
     private var sessioncookie:String = "";
 
-    private var getChannelTotalLength:int = -1;
-    private var getChannelContentLength:int = -1;
-    private var getChannelData:ByteArray = new ByteArray();
+    private var getAuthState:String = "none";
+    private var postAuthState:String = "none";
+    private var getChannelAuthOpts:Object = {};
+    private var postChannelAuthOpts:Object = {};
+
+    private var getChannelData:ByteArray;
+    private var postChannelData:ByteArray;
 
     private var rtspClient:RTSPClient;
 
     public function HTTPClient() {
       sessioncookie = GUID.create();
+      this.addEventListener('connected', onHTTPConnected);
+    }
 
+    private function setupSockets():void
+    {
       getChannel = new Socket();
       getChannel.timeout = 5000;
       getChannel.addEventListener(Event.CONNECT, onGetChannelConnect);
@@ -49,42 +61,37 @@ package com.axis.rtspclient {
       postChannel.timeout = 5000;
       postChannel.addEventListener(Event.CONNECT, onPostChannelConnect);
       postChannel.addEventListener(Event.CLOSE, onPostChannelClose);
+      postChannel.addEventListener(ProgressEvent.SOCKET_DATA, onPostChannelData);
       postChannel.addEventListener(IOErrorEvent.IO_ERROR, onError);
       postChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
+
+      getChannelData = new ByteArray();
+      postChannelData = new ByteArray();
     }
 
     public function sendLoadedEvent():void {
-      // Tell the external JS environment that we are ready to accept API calls
       ExternalInterface.call(jsEventCallbackName, 'loaded');
     }
 
     private function onError(e:ErrorEvent):void {
-      ExternalInterface.call(jsEventCallbackName, "Connection timed out");
-      sendError(0, e.text);
-    }
-
-    private function sendError(errNo:Number = 0, msg:String = ""):void {
-      disconnect();
-      dispatchEvent(new Event("error"));
-      ExternalInterface.call(jsEventCallbackName, "error", errNo, msg);
+      ExternalInterface.call(jsEventCallbackName, "HTTPClient socket error");
     }
 
     public function disconnect():void {
-      if (getChannel.connected) {
+      if (getChannel && getChannel.connected) {
         getChannel.close();
       }
+      if (postChannel && postChannel.connected) {
+        postChannel.close();
+      }
+
       dispatchEvent(new Event("disconnect"));
     }
 
     public function connect(iurl:String = null):void {
-      disconnect();
-
+      setupSockets();
       this.urlParsed = url.parse(iurl);
-
       getChannel.connect(this.urlParsed.host, this.urlParsed.port);
-      postChannel.connect(this.urlParsed.host, this.urlParsed.port);
-
-      rtspClient = new RTSPClient(getChannel, postChannel, this.urlParsed);
     }
 
     private function onGetChannelConnect(event:Event):void {
@@ -94,39 +101,114 @@ package com.axis.rtspclient {
 
     private function onPostChannelConnect(event:Event):void {
       ExternalInterface.call(jsEventCallbackName, "post channel connected");
-      dispatchEvent(new Event("connect"));
+      initializePostChannel();
     }
 
     public function stop():void {
       disconnect();
-      dispatchEvent(new Event("clear"));
     }
 
-    private function onGetChannelClose(event:Event):void {
-      // Security error is thrown if this line is excluded
-      getChannel.close();
-      ExternalInterface.call(jsEventCallbackName, "get channel stopped");
+    private function onGetChannelClose(event:Event):void
+    {
+      trace('GET channel closed');
     }
 
-    private function onPostChannelClose(event:Event):void {
-      ExternalInterface.call(jsEventCallbackName, "post channel stopped");
+    private function onPostChannelClose(event:Event):void
+    {
+      trace('POST channel closed');
     }
 
     private function onGetChannelData(event:ProgressEvent):void {
-      getChannel.readBytes(getChannelData);
-
-      var copy:ByteArray = new ByteArray();
-      var index:int = ByteArrayUtils.indexOf(getChannelData, "\r\n\r\n");
-      if (index === -1) {
-        /* Not a full request yet */
+      var parsed:* = request.readHeaders(getChannel, getChannelData);
+      if (false === parsed) {
         return;
       }
-      var dummy:ByteArray = new ByteArray();
-      getChannelData.readBytes(dummy, 0, index + 4);
-      getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetChannelData);
 
-      initializePostChannel();
-      rtspClient.start();
+      if (401 === parsed.code) {
+        /* Unauthorized, change authState and (possibly) try again */
+        getChannelAuthOpts = parsed.headers['www-authenticate'];
+        var newAuthState:String = auth.nextMethod(getAuthState, getChannelAuthOpts);
+        if (getAuthState === newAuthState) {
+          trace('GET: Exhausted all authentication methods.');
+          trace('GET: Unable to authorize to ' + urlParsed.host);
+          return;
+        }
+
+        trace('GET: switching http-authorization from ' + getAuthState + ' to ' + newAuthState);
+        getAuthState = newAuthState;
+        getChannelData = new ByteArray();
+        getChannel.close();
+        getChannel.connect(this.urlParsed.host, this.urlParsed.port);
+        return;
+      }
+
+      if (200 !== parsed.code) {
+        trace('Invalid HTTP code: ' + parsed.code);
+        return;
+      }
+
+      getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetChannelData);
+      postChannel.connect(this.urlParsed.host, this.urlParsed.port);
+    }
+
+    private function onPostChannelData(event:ProgressEvent):void
+    {
+      var parsed:* = request.readHeaders(postChannel, postChannelData);
+      if (false === parsed) {
+        return;
+      }
+
+      if (401 === parsed.code) {
+        /* Unauthorized, change authState and (possibly) try again */
+        postChannelAuthOpts = parsed.headers['www-authenticate'];
+        var newAuthState:String = auth.nextMethod(postAuthState, postChannelAuthOpts);
+        if (postAuthState === newAuthState) {
+          trace('POST: Exhausted all authentication methods.');
+          trace('POST: Unable to authorize to ' + urlParsed.host);
+          return;
+        }
+
+        trace('POST: switching http-authorization from ' + postAuthState + ' to ' + newAuthState);
+        postAuthState = newAuthState;
+        postChannelData = new ByteArray();
+        postChannel.close();
+        postChannel.connect(this.urlParsed.host, this.urlParsed.port);
+        return;
+      }
+
+      trace("received invalid data on POST channel");
+    }
+
+    private function writeAuthorizationHeader(method:String):void
+    {
+      var authOpts:Object = ('GET' === method) ? getChannelAuthOpts : postChannelAuthOpts;
+      var channel:Socket = ('GET' === method) ? getChannel : postChannel;
+      var authState:String = ('GET' === method) ? getAuthState : postAuthState;
+
+      var a:String = '';
+      switch (authState) {
+        case "basic":
+          a = auth.basic(this.urlParsed.user, this.urlParsed.pass) + "\r\n";
+          break;
+
+        case "digest":
+          a = auth.digest(
+            this.urlParsed.user,
+            this.urlParsed.pass,
+            method,
+            authOpts.digestRealm,
+            urlParsed.urlpath,
+            authOpts.qop.split(','),
+            authOpts.nonce
+          );
+          break;
+
+        default:
+        case "none":
+          return;
+      }
+
+      channel.writeUTFBytes('Authorization: ' + a + "\r\n");
     }
 
     private function initializeGetChannel():void {
@@ -134,6 +216,7 @@ package com.axis.rtspclient {
       getChannel.writeUTFBytes("GET " + urlParsed.urlpath + " HTTP/1.0\r\n");
       getChannel.writeUTFBytes("X-Sessioncookie: " +  sessioncookie + "\r\n");
       getChannel.writeUTFBytes("Accept: application/x-rtsp-tunnelled\r\n");
+      writeAuthorizationHeader("GET");
       getChannel.writeUTFBytes("\r\n");
       getChannel.flush();
     }
@@ -144,8 +227,24 @@ package com.axis.rtspclient {
       postChannel.writeUTFBytes("X-Sessioncookie: " + sessioncookie + "\r\n");
       postChannel.writeUTFBytes("Content-Length: 32767" + "\r\n");
       postChannel.writeUTFBytes("Content-Type: application/x-rtsp-tunnelled" + "\r\n");
+      writeAuthorizationHeader("POST");
       postChannel.writeUTFBytes("\r\n");
       postChannel.flush();
+
+      if ("digest" === getAuthState && "none" === postAuthState) {
+        /* Digest was required for GET-channel. The same should be
+           require for POST-channel. Do not send connected here as
+           we should get Unauthorized for this request. We will dispatch
+           'connected' event when we do it with digest authorization. */
+        return;
+      l}
+
+      dispatchEvent(new Event("connected"));
+    }
+
+    private function onHTTPConnected(event:Event):void {
+      rtspClient = new RTSPClient(getChannel, postChannel, this.urlParsed);
+      rtspClient.start();
     }
   }
 }

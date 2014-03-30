@@ -1,0 +1,82 @@
+package com.axis.http {
+
+  import mx.utils.Base64Encoder;
+  import com.adobe.crypto.MD5;
+  import com.axis.rtspclient.GUID;
+
+  public class auth {
+
+    public static function basic(user:String, pass:String):String
+    {
+      var b64:Base64Encoder = new Base64Encoder();
+      b64.encode(user + ':' + pass);
+      return 'Basic ' + b64.toString();
+    }
+
+    public static function digest(
+      user:String,
+      pass:String,
+      httpmethod:String,
+      realm:String,
+      uri:String,
+      qop:String,
+      nonce:String,
+      nc:String = '1'):String
+    {
+      /* NOTE: Unsupported: md5-sess and auth-int */
+
+      if ('auth' !== qop) {
+        trace('unsupported quality of protection: ' + qop);
+        return "";
+      }
+
+      var ha1:String = MD5.hash(user + ':' + realm + ':' + pass);
+      var ha2:String = MD5.hash(httpmethod + ':' + uri);
+      var cnonce:String = MD5.hash(GUID.create());
+      var resp:String = MD5.hash(
+        ha1 + ':' +
+        nonce + ':' +
+        nc + ':' +
+        cnonce + ':' +
+        qop + ':' +
+        ha2
+      );
+
+      return 'Digest ' +
+        'username="' + user + '", ' +
+        'realm="' + realm + '", ' +
+        'nonce="' + nonce + '", ' +
+        'uri="' + uri + '", ' +
+        'qop="' + qop + '", ' +
+        'nc="' + nc + '", ' +
+        'cnonce="' + cnonce + '", ' +
+        'response="' + resp + '"'
+        ;
+    }
+
+    public static function nextMethod(current:String, authOpts:Object):String
+    {
+      switch (current) {
+        case 'none':
+          /* No authorization attempt yet, try with the best method supported by server */
+          if (authOpts.digestRealm)
+            return 'digest';
+          else if (authOpts.basicRealm)
+            return 'basic';
+          break;
+
+        case 'digest':
+          /* Weird to get unauthorized here unless credentials are invalid.
+             On the off-chance of server-bug, try basic aswell */
+          if (authOpts.basicRealm)
+            return 'basic';
+
+        case 'basic':
+          /* If we failed with basic, we're done. Credentials are invalid. */
+      }
+
+      /* Getting the same method as passed as current should be considered an error */
+      return current;
+    }
+  }
+}

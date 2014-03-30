@@ -25,7 +25,6 @@ package com.axis.rtspclient {
 
       var nri:uint     = nalhdr & 0x60;
       var naltype:uint = nalhdr & 0x1F;
-      trace(naltype);
 
       if (27 >= naltype) {
         /* This RTP package is a single NALU, dispatch and forget */

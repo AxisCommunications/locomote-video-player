@@ -46,7 +46,8 @@ package {
       ExternalInterface.addCallback("stop", client.stop);
 
       /* Audio Transmission API */
-      ExternalInterface.addCallback("audioTransmit", audioTransmitInterface);
+      ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
+      ExternalInterface.addCallback("stopAudioTransmit", audioTransmitStopInterface);
 
       this.stage.align = StageAlign.TOP_LEFT;
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -77,20 +78,16 @@ package {
       addChild(vid);
     }
 
-    public function transmitAudio(url:String = null):void {
-      audioTransmit.start(url)
+    public function audioTransmitStopInterface():void {
+      audioTransmit.stop();
     }
 
-    public function audioTransmitInterface(state:Boolean, url:String = null):void {
-      if (state) {
-        audioTransmit.start(url);
-      } else {
-        audioTransmit.stop();
-      }
+    public function audioTransmitStartInterface(url:String = null):void {
+      audioTransmit.start(url);
     }
 
     private function onStageAdded(e:Event):void {
-      client.addEventListener("connect", onConnect);
+      client.addEventListener("connected", onConnect);
       client.addEventListener("disconnect", onDisconnect);
 
       client.sendLoadedEvent();
