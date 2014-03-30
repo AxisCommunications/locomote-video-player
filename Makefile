@@ -1,7 +1,7 @@
 -include $(AXIS_TOP_DIR)/tools/build/Rules.axis
 
 SRC = src
-DEST = bin
+DEST = build
 MAIN_AS_FILE = $(SRC)/Player.as
 SWF = $(DEST)/Player.swf
 MXMLC = $(FLEX_HOME)/bin/mxmlc

@@ -1,5 +1,3 @@
-bin-debug/Player.swf
-bin/Player.swf
+build
 .swp
 .swo
-src/com/adobe/
