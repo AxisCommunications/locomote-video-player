@@ -25,15 +25,22 @@ package com.axis.audioclient {
     private var authOpts:Object = {};
 
     public function AxisTransmit() {
-      var mic:Microphone = Microphone.getMicrophone();
-      mic.rate = 8;
-      mic.setSilenceLevel(0, -1);
-      mic.addEventListener(StatusEvent.STATUS, this.onMicStatus);
-      mic.addEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
     }
 
     private function onMicStatus(event:StatusEvent):void {
-      trace('mic status changed: ', event);
+      if (conn.connected) {
+        authState = 'none';
+        conn.close();
+      }
+
+      if ('Microphone.Muted' === event.code) {
+        trace('AxisTransmit: Denied access to microphone');
+        return;
+      }
+
+      if (urlParsed.host && urlParsed.port) {
+        conn.connect(urlParsed.host, urlParsed.port);
+      }
     }
 
     public function start(iurl:String):void {
@@ -41,6 +48,12 @@ package com.axis.audioclient {
         trace('already connected');
         return;
       }
+
+      var mic:Microphone = Microphone.getMicrophone();
+      mic.rate = 8;
+      mic.setSilenceLevel(0, -1);
+      mic.addEventListener(StatusEvent.STATUS, onMicStatus);
+      mic.addEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
 
       this.urlParsed = url.parse(iurl);
 
@@ -51,6 +64,11 @@ package com.axis.audioclient {
       conn.addEventListener(IOErrorEvent.IO_ERROR, onError);
       conn.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 
+      if (true === mic.muted) {
+        trace('Not allowed access to microphone, delay connect');
+        return;
+      }
+
       conn.connect(urlParsed.host, urlParsed.port);
     }
 
@@ -60,6 +78,9 @@ package com.axis.audioclient {
         return;
       }
 
+      var mic:Microphone = Microphone.getMicrophone();
+      mic.removeEventListener(StatusEvent.STATUS, onMicStatus);
+      mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
       conn.close();
     }
 
@@ -78,7 +99,7 @@ package com.axis.audioclient {
             "POST",
             authOpts.digestRealm,
             urlParsed.urlpath,
-            authOpts.qop.split(','),
+            authOpts.qop,
             authOpts.nonce
           );
           break;
