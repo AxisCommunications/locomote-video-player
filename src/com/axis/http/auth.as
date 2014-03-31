@@ -21,7 +21,8 @@ package com.axis.http {
       uri:String,
       qop:String,
       nonce:String,
-      nc:String = '1'):String
+      nc:uint
+    ):String
     {
       /* NOTE: Unsupported: md5-sess and auth-int */
 

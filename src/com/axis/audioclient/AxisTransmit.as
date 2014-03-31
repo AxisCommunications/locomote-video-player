@@ -100,7 +100,8 @@ package com.axis.audioclient {
             authOpts.digestRealm,
             urlParsed.urlpath,
             authOpts.qop,
-            authOpts.nonce
+            authOpts.nonce,
+            1
           );
           break;
 

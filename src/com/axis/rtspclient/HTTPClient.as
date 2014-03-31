@@ -32,10 +32,9 @@ package com.axis.rtspclient {
     private var urlParsed:Object = {};
     private var sessioncookie:String = "";
 
-    private var getAuthState:String = "none";
-    private var postAuthState:String = "none";
-    private var getChannelAuthOpts:Object = {};
-    private var postChannelAuthOpts:Object = {};
+    private var authState:String = "none";
+    private var authOpts:Object = {};
+    private var digestNC:uint = 1;
 
     private var getChannelData:ByteArray;
     private var postChannelData:ByteArray;
@@ -61,7 +60,6 @@ package com.axis.rtspclient {
       postChannel.timeout = 5000;
       postChannel.addEventListener(Event.CONNECT, onPostChannelConnect);
       postChannel.addEventListener(Event.CLOSE, onPostChannelClose);
-      postChannel.addEventListener(ProgressEvent.SOCKET_DATA, onPostChannelData);
       postChannel.addEventListener(IOErrorEvent.IO_ERROR, onError);
       postChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 
@@ -126,16 +124,16 @@ package com.axis.rtspclient {
 
       if (401 === parsed.code) {
         /* Unauthorized, change authState and (possibly) try again */
-        getChannelAuthOpts = parsed.headers['www-authenticate'];
-        var newAuthState:String = auth.nextMethod(getAuthState, getChannelAuthOpts);
-        if (getAuthState === newAuthState) {
+        authOpts = parsed.headers['www-authenticate'];
+        var newAuthState:String = auth.nextMethod(authState, authOpts);
+        if (authState === newAuthState) {
           trace('GET: Exhausted all authentication methods.');
           trace('GET: Unable to authorize to ' + urlParsed.host);
           return;
         }
 
-        trace('GET: switching http-authorization from ' + getAuthState + ' to ' + newAuthState);
-        getAuthState = newAuthState;
+        trace('switching http-authorization from ' + authState + ' to ' + newAuthState);
+        authState = newAuthState;
         getChannelData = new ByteArray();
         getChannel.close();
         getChannel.connect(this.urlParsed.host, this.urlParsed.port);
@@ -151,40 +149,8 @@ package com.axis.rtspclient {
       postChannel.connect(this.urlParsed.host, this.urlParsed.port);
     }
 
-    private function onPostChannelData(event:ProgressEvent):void
+    private function writeAuthorizationHeader(method:String, channel:Socket):void
     {
-      var parsed:* = request.readHeaders(postChannel, postChannelData);
-      if (false === parsed) {
-        return;
-      }
-
-      if (401 === parsed.code) {
-        /* Unauthorized, change authState and (possibly) try again */
-        postChannelAuthOpts = parsed.headers['www-authenticate'];
-        var newAuthState:String = auth.nextMethod(postAuthState, postChannelAuthOpts);
-        if (postAuthState === newAuthState) {
-          trace('POST: Exhausted all authentication methods.');
-          trace('POST: Unable to authorize to ' + urlParsed.host);
-          return;
-        }
-
-        trace('POST: switching http-authorization from ' + postAuthState + ' to ' + newAuthState);
-        postAuthState = newAuthState;
-        postChannelData = new ByteArray();
-        postChannel.close();
-        postChannel.connect(this.urlParsed.host, this.urlParsed.port);
-        return;
-      }
-
-      trace("received invalid data on POST channel");
-    }
-
-    private function writeAuthorizationHeader(method:String):void
-    {
-      var authOpts:Object = ('GET' === method) ? getChannelAuthOpts : postChannelAuthOpts;
-      var channel:Socket = ('GET' === method) ? getChannel : postChannel;
-      var authState:String = ('GET' === method) ? getAuthState : postAuthState;
-
       var a:String = '';
       switch (authState) {
         case "basic":
@@ -198,8 +164,9 @@ package com.axis.rtspclient {
             method,
             authOpts.digestRealm,
             urlParsed.urlpath,
-            authOpts.qop.split(','),
-            authOpts.nonce
+            authOpts.qop,
+            authOpts.nonce,
+            digestNC++
           );
           break;
 
@@ -216,7 +183,7 @@ package com.axis.rtspclient {
       getChannel.writeUTFBytes("GET " + urlParsed.urlpath + " HTTP/1.0\r\n");
       getChannel.writeUTFBytes("X-Sessioncookie: " +  sessioncookie + "\r\n");
       getChannel.writeUTFBytes("Accept: application/x-rtsp-tunnelled\r\n");
-      writeAuthorizationHeader("GET");
+      writeAuthorizationHeader("GET", getChannel);
       getChannel.writeUTFBytes("\r\n");
       getChannel.flush();
     }
@@ -227,17 +194,9 @@ package com.axis.rtspclient {
       postChannel.writeUTFBytes("X-Sessioncookie: " + sessioncookie + "\r\n");
       postChannel.writeUTFBytes("Content-Length: 32767" + "\r\n");
       postChannel.writeUTFBytes("Content-Type: application/x-rtsp-tunnelled" + "\r\n");
-      writeAuthorizationHeader("POST");
+      writeAuthorizationHeader("POST", postChannel);
       postChannel.writeUTFBytes("\r\n");
       postChannel.flush();
-
-      if ("digest" === getAuthState && "none" === postAuthState) {
-        /* Digest was required for GET-channel. The same should be
-           require for POST-channel. Do not send connected here as
-           we should get Unauthorized for this request. We will dispatch
-           'connected' event when we do it with digest authorization. */
-        return;
-      l}
 
       dispatchEvent(new Event("connected"));
     }
