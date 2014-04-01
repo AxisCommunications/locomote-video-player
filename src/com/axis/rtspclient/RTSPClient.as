@@ -12,6 +12,8 @@ package com.axis.rtspclient {
   import com.axis.http.url;
 
   public class RTSPClient extends EventDispatcher {
+    private static var userAgent:String = "Slush";
+
     private static var STATE_INITIAL:int       = 1<<0;
     private static var STATE_DESCRIBE_SENT:int = 1<<1;
     private static var STATE_DESCRIBE_RCVD:int = 1<<2;
@@ -53,7 +55,7 @@ package com.axis.rtspclient {
 
     public function start():void {
       handle.onData(onGetData);
-      sendRequest(describeReq());
+      handle.writeUTFBytes(describeReq());
       state = STATE_DESCRIBE_SENT;
     }
 
@@ -144,16 +146,16 @@ package com.axis.rtspclient {
           session = matches[1];
         }
 
-
+        trace(tracks.length);
         if (0 !== tracks.length) {
           /* More tracks we must setup before playing */
           var block:Object = tracks.shift();
-          sendRequest(setupReq(block));
+          handle.writeUTFBytes(setupReq(block));
           return;
         }
 
         /* All tracks setup and ready to go! */
-        sendRequest(playReq());
+        handle.writeUTFBytes(playReq());
         state = STATE_PLAY_SENT;
         break;
 
@@ -208,9 +210,9 @@ package com.axis.rtspclient {
     }
 
     private function describeReq():String {
-      return getCommandHeader("DESCRIBE", urlParsed.urlpath) +
-             getCSeqHeader() +
-             getUserAgentHeader() +
+      return "DESCRIBE " + urlParsed.urlpath + " RTSP/1.0\r\n" +
+             "CSeq: " + (++cSeq) + "\r\n" +
+             "User-Agent: " + userAgent + "\r\n" +
              "Accept: application/sdp\r\n" +
              "\r\n";
     }
@@ -219,50 +221,29 @@ package com.axis.rtspclient {
       var interleavedChannels:String = interleaveChannelIndex++ + "-" + interleaveChannelIndex++;
 
       var p:String = url.isAbsolute(block.control) ? block.control : contentBase + block.control;
-      return getCommandHeader("SETUP", p) +
-             getCSeqHeader() +
-             getUserAgentHeader() +
-             getSessionHeader() +
+      return "SETUP " + p + " RTSP/1.0\r\n" +
+             "CSeq: " + (++cSeq) + "\r\n" +
+             "User-Agent: " + userAgent + "\r\n" +
+             (session ? ("Session: " + session + "\r\n") : "") +
              "Transport: RTP/AVP/TCP;unicast;interleaved=" + interleavedChannels + "\r\n" +
              "Date: " + new Date().toUTCString() + "\r\n" +
              "\r\n";
     }
 
-
     private function playReq():String {
-      return getCommandHeader("PLAY", contentBase) +
-             getCSeqHeader() +
-             getUserAgentHeader() +
-             getSessionHeader() +
+      return "PLAY " + contentBase + " RTSP/1.0\r\n" +
+             "CSeq: " + (++cSeq) + "\r\n" +
+             "User-Agent: " + userAgent + "\r\n" +
+             "Session: " + session + "\r\n" +
              "\r\n";
     }
 
     private function teardownReq():String {
-      return getCommandHeader("TEARDOWN", contentBase) +
-             getCSeqHeader() +
-             getUserAgentHeader() +
-             getSessionHeader() +
+      return "TEARDOWN" + contentBase + " RTSP/1.0\r\n"+
+             "CSeq: " + (++cSeq) + "\r\n" +
+             "User-Agent: " + userAgent + "\r\n" +
+             "Session: " + session + "\r\n" +
              "\r\n";
-    }
-
-    private function getCommandHeader(command:String, url:String):String {
-      return command + " " + url + " RTSP/1.0\r\n";
-    }
-
-    private function getCSeqHeader():String {
-      return "CSeq: " + (++cSeq) + "\r\n";
-    }
-
-    private function getUserAgentHeader():String {
-      return "User-Agent: Slush\r\n";
-    }
-
-    private function getSessionHeader():String {
-      return (session ? ("Session: " + session + "\r\n") : "");
-    }
-
-    private function sendRequest(request:String):void {
-      handle.writeUTFBytes(request);
     }
   }
 }
