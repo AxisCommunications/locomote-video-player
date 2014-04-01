@@ -1,10 +1,8 @@
 package com.axis.rtspclient {
 
-  import flash.events.ProgressEvent;
   import flash.events.EventDispatcher;
   import flash.utils.ByteArray;
   import flash.net.Socket;
-  import mx.utils.Base64Encoder;
   import flash.external.ExternalInterface;
 
   import com.axis.rtspclient.ByteArrayUtils;
@@ -25,8 +23,7 @@ package com.axis.rtspclient {
 
     private var state:int = STATE_INITIAL;
 
-    private var getChannel:Socket;
-    private var postChannel:Socket;
+    private var handle:IRTSPHandle;
 
     private var sdp:SDP;
     private var flvmux:FLVMux;
@@ -38,18 +35,16 @@ package com.axis.rtspclient {
     private var session:String;
     private var contentBase:String;
     private var interleaveChannelIndex:uint = 0;
-    private var base64encoder:Base64Encoder = new Base64Encoder();
 
     private var headers:ByteArray = new ByteArray();
-    private var getChannelData:ByteArray = new ByteArray();
+    private var data:ByteArray = new ByteArray();
     private var contentLength:int = -1;
     private var rtpLength:int = -1;
-    private var channel:int = -1;
+    private var rtpChannel:int = -1;
     private var tracks:Array;
 
-    public function RTSPClient(getChannel:Socket, postChannel:Socket, urlParsed:Object) {
-      this.getChannel = getChannel;
-      this.postChannel = postChannel;
+    public function RTSPClient(handle:IRTSPHandle, urlParsed:Object) {
+      this.handle = handle;
       this.urlParsed = urlParsed;
       this.sdp = new SDP();
       this.analu = new ANALU();
@@ -57,7 +52,7 @@ package com.axis.rtspclient {
     }
 
     public function start():void {
-      getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onGetData);
+      handle.onData(onGetData);
       sendRequest(describeReq());
       state = STATE_DESCRIBE_SENT;
     }
@@ -65,29 +60,29 @@ package com.axis.rtspclient {
     private function requestReset():void
     {
       var copy:ByteArray = new ByteArray();
-      getChannelData.readBytes(copy);
-      getChannelData.clear();
+      data.readBytes(copy);
+      data.clear();
 
-      copy.readBytes(getChannelData);
+      copy.readBytes(data);
 
       headers = new ByteArray();
       contentLength = -1;
       rtpLength     = -1;
-      channel       = -1;
+      rtpChannel    = -1;
     }
 
     private function readRequest(oHeaders:ByteArray, oBody:ByteArray):Boolean
     {
-      getChannel.readBytes(getChannelData);
+      handle.readBytes(data);
 
       if (-1 === contentLength) {
-        var headerEndPosition:int = ByteArrayUtils.indexOf(getChannelData, '\r\n\r\n');
+        var headerEndPosition:int = ByteArrayUtils.indexOf(data, '\r\n\r\n');
         if (-1 === headerEndPosition) {
           /* We don't have full header yet */
           return false;
         }
 
-        getChannelData.readBytes(headers, 0, headerEndPosition + 4);
+        data.readBytes(headers, 0, headerEndPosition + 4);
 
         var headersString:String = headers.toString();
         var matches:Array = headersString.match(/Content-Length: ([0-9]+)/i);
@@ -101,9 +96,9 @@ package com.axis.rtspclient {
         contentLength = parseInt(matches[1]);
       }
 
-      if (getChannelData.bytesAvailable >= contentLength) {
+      if (data.bytesAvailable >= contentLength) {
         headers.readBytes(oHeaders);
-        getChannelData.readBytes(oBody, 0, contentLength);
+        data.readBytes(oBody, 0, contentLength);
 
         requestReset();
         return true;
@@ -112,7 +107,7 @@ package com.axis.rtspclient {
       return false;
     }
 
-    private function onGetData(event:ProgressEvent):void {
+    private function onGetData():void {
       var headers:ByteArray = new ByteArray(), body:ByteArray = new ByteArray();
 
       if (!readRequest(headers, body)) {
@@ -169,8 +164,7 @@ package com.axis.rtspclient {
 
         this.flvmux = new FLVMux(this.sdp);
 
-        getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetData);
-        getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onPlayData);
+        handle.onData(onPlayData);
 
         addEventListener("VIDEO_PACKET", analu.onRTPPacket);
         addEventListener("AUDIO_PACKET", aaac.onRTPPacket);
@@ -180,27 +174,27 @@ package com.axis.rtspclient {
       }
     }
 
-    private function onPlayData(event:ProgressEvent):void
+    private function onPlayData():void
     {
-      getChannel.readBytes(getChannelData, getChannelData.length);
+      handle.readBytes(data, data.length);
 
-      if (-1 == rtpLength && 0x24 === getChannelData[0]) {
+      if (-1 == rtpLength && 0x24 === data[0]) {
         /* This is the beginning of a new RTP package */
-        getChannelData.readByte();
-        channel   = getChannelData.readByte();
-        rtpLength = getChannelData.readShort();
+        data.readByte();
+        rtpChannel   = data.readByte();
+        rtpLength = data.readShort();
       }
 
-      if (getChannelData.bytesAvailable < rtpLength) {
+      if (data.bytesAvailable < rtpLength) {
         /* The complete RTP package is not here yet, wait for more data */
         return;
       }
 
       var pkgData:ByteArray = new ByteArray();
 
-      getChannelData.readBytes(pkgData, 0, rtpLength);
+      data.readBytes(pkgData, 0, rtpLength);
 
-      if (channel === 0 || channel === 2) {
+      if (rtpChannel === 0 || rtpChannel === 2) {
         /* We're discarding the RTCP counter parts for now */
         var rtppkt:RTP = new RTP(pkgData, sdp);
         dispatchEvent(rtppkt);
@@ -208,8 +202,8 @@ package com.axis.rtspclient {
 
       requestReset();
 
-      if (0 < getChannelData.bytesAvailable) {
-        onPlayData(event);
+      if (0 < data.bytesAvailable) {
+        onPlayData();
       }
     }
 
@@ -251,13 +245,6 @@ package com.axis.rtspclient {
              "\r\n";
     }
 
-    private function base64encode(str:String):String {
-      base64encoder.reset();
-      base64encoder.insertNewLines = false;
-      base64encoder.encode(str);
-      return base64encoder.toString();
-    }
-
     private function getCommandHeader(command:String, url:String):String {
       return command + " " + url + " RTSP/1.0\r\n";
     }
@@ -275,8 +262,7 @@ package com.axis.rtspclient {
     }
 
     private function sendRequest(request:String):void {
-      postChannel.writeUTFBytes(base64encode(request));
-      postChannel.flush();
+      handle.writeUTFBytes(request);
     }
   }
 }

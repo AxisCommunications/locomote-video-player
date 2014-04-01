@@ -202,7 +202,8 @@ package com.axis.rtspclient {
     }
 
     private function onHTTPConnected(event:Event):void {
-      rtspClient = new RTSPClient(getChannel, postChannel, this.urlParsed);
+      var handle:IRTSPHandle = new RTSPoverHTTPHandle(getChannel, postChannel);
+      rtspClient = new RTSPClient(handle, this.urlParsed);
       rtspClient.start();
     }
   }
