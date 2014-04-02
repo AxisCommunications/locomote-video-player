@@ -3,16 +3,16 @@ package com.axis.rtspclient {
   import flash.events.EventDispatcher;
   import flash.utils.ByteArray;
   import flash.net.Socket;
-  import flash.external.ExternalInterface;
 
-  import com.axis.rtspclient.ByteArrayUtils;
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.SDP;
   import com.axis.http.url;
+  import com.axis.http.request;
+  import com.axis.http.auth;
 
   public class RTSPClient extends EventDispatcher {
-    private static var userAgent:String = "Slush";
+    private static var userAgent:String = "Slush 0.1";
 
     private static var STATE_INITIAL:int       = 1<<0;
     private static var STATE_DESCRIBE_SENT:int = 1<<1;
@@ -40,10 +40,13 @@ package com.axis.rtspclient {
 
     private var headers:ByteArray = new ByteArray();
     private var data:ByteArray = new ByteArray();
-    private var contentLength:int = -1;
     private var rtpLength:int = -1;
     private var rtpChannel:int = -1;
     private var tracks:Array;
+
+    private var authState:String = "none";
+    private var authOpts:Object = {};
+    private var digestNC:uint = 1;
 
     public function RTSPClient(handle:IRTSPHandle, urlParsed:Object) {
       this.handle = handle;
@@ -55,7 +58,7 @@ package com.axis.rtspclient {
 
     public function start():void {
       handle.onData(onGetData);
-      handle.writeUTFBytes(describeReq());
+      sendDescribeReq();
       state = STATE_DESCRIBE_SENT;
     }
 
@@ -68,53 +71,55 @@ package com.axis.rtspclient {
       copy.readBytes(data);
 
       headers = new ByteArray();
-      contentLength = -1;
       rtpLength     = -1;
       rtpChannel    = -1;
     }
 
-    private function readRequest(oHeaders:ByteArray, oBody:ByteArray):Boolean
+    private function readRequest(oBody:ByteArray):*
     {
-      handle.readBytes(data);
+      var parsed:* = request.readHeaders(handle, data);
+      if (false === parsed) {
+        return false;
+      }
 
-      if (-1 === contentLength) {
-        var headerEndPosition:int = ByteArrayUtils.indexOf(data, '\r\n\r\n');
-        if (-1 === headerEndPosition) {
-          /* We don't have full header yet */
+      if (401 === parsed.code) {
+        /* Unauthorized, change authState and (possibly) try again */
+        authOpts = parsed.headers['www-authenticate'];
+        var newAuthState:String = auth.nextMethod(authState, authOpts);
+        if (authState === newAuthState) {
+          trace('GET: Exhausted all authentication methods.');
+          trace('GET: Unable to authorize to ' + urlParsed.host);
           return false;
         }
 
-        data.readBytes(headers, 0, headerEndPosition + 4);
-
-        var headersString:String = headers.toString();
-        var matches:Array = headersString.match(/Content-Length: ([0-9]+)/i);
-        if (matches === null) {
-          /* No content length, request finished here */
-          headers.readBytes(oHeaders);
-          requestReset();
-          return true;
-        }
-
-        contentLength = parseInt(matches[1]);
+        trace('RTSPClient: switching http-authorization from ' + authState + ' to ' + newAuthState);
+        authState = newAuthState;
+        data = new ByteArray();
+        handle.reconnect();
+        return false;
       }
 
-      if (data.bytesAvailable >= contentLength) {
-        headers.readBytes(oHeaders);
-        data.readBytes(oBody, 0, contentLength);
-
-        requestReset();
-        return true;
+      if (data.bytesAvailable < parsed.headers['content-length']) {
+        return false;
       }
 
-      return false;
+      data.readBytes(oBody, 0, parsed.headers['content-length']);
+      requestReset();
+      return parsed;
     }
 
     private function onGetData():void {
-      var headers:ByteArray = new ByteArray(), body:ByteArray = new ByteArray();
+      var parsed:*, body:ByteArray = new ByteArray();
 
-      if (!readRequest(headers, body)) {
+      if (false === (parsed = readRequest(body))) {
         return;
       }
+
+      if (200 !== parsed.code) {
+        trace('RTSPClient: Invalid RTSP response - ', parsed.code, parsed.message);
+        return;
+      }
+
 
       switch (state) {
       case STATE_INITIAL:
@@ -131,8 +136,12 @@ package com.axis.rtspclient {
           return;
         }
 
-        var cbmatch:Array = headers.toString().match(/Content-Base: (.*)\r\n/);
-        contentBase = cbmatch[1];
+        if (!parsed.headers['content-base']) {
+          trace('RTSPClient: no content-base in describe reply');
+          return;
+        }
+
+        contentBase = parsed.headers['content-base'];
         tracks = sdp.getMediaBlockList();
 
         state = STATE_SETUP;
@@ -140,22 +149,19 @@ package com.axis.rtspclient {
       case STATE_SETUP:
         trace("RTSPClient: STATE_SETUP");
 
-        var headerString:String = headers.toString();
-        var matches:Array = headerString.match(/Session: ([^;\s]+)[;\s]{1}/);
-        if (null !== matches) {
-          session = matches[1];
+        if (parsed.headers['session']) {
+          session = parsed.headers['session'];
         }
 
-        trace(tracks.length);
         if (0 !== tracks.length) {
           /* More tracks we must setup before playing */
           var block:Object = tracks.shift();
-          handle.writeUTFBytes(setupReq(block));
+          sendSetupReq(block);
           return;
         }
 
         /* All tracks setup and ready to go! */
-        handle.writeUTFBytes(playReq());
+        sendPlayReq();
         state = STATE_PLAY_SENT;
         break;
 
@@ -209,41 +215,74 @@ package com.axis.rtspclient {
       }
     }
 
-    private function describeReq():String {
-      return "DESCRIBE " + urlParsed.urlpath + " RTSP/1.0\r\n" +
-             "CSeq: " + (++cSeq) + "\r\n" +
-             "User-Agent: " + userAgent + "\r\n" +
-             "Accept: application/sdp\r\n" +
-             "\r\n";
+    private function writeAuthorizationHeader(method:String):void
+    {
+      var a:String = '';
+      switch (authState) {
+        case "basic":
+          a = auth.basic(this.urlParsed.user, this.urlParsed.pass) + "\r\n";
+          break;
+
+        case "digest":
+          a = auth.digest(
+            this.urlParsed.user,
+            this.urlParsed.pass,
+            method,
+            authOpts.digestRealm,
+            urlParsed.urlpath,
+            authOpts.qop,
+            authOpts.nonce,
+            digestNC++
+          );
+          break;
+
+        default:
+        case "none":
+          return;
+      }
+
+      handle.writeUTFBytes('Authorization: ' + a + "\r\n");
     }
 
-    private function setupReq(block:Object):String {
+    private function sendDescribeReq():void {
+      handle.writeUTFBytes("DESCRIBE " + urlParsed.urlpath + " RTSP/1.0\r\n");
+      handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
+      handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
+      handle.writeUTFBytes("Accept: application/sdp\r\n");
+      writeAuthorizationHeader("DESCRIBE");
+      handle.writeUTFBytes("\r\n");
+    }
+
+    private function sendSetupReq(block:Object):void {
       var interleavedChannels:String = interleaveChannelIndex++ + "-" + interleaveChannelIndex++;
-
       var p:String = url.isAbsolute(block.control) ? block.control : contentBase + block.control;
-      return "SETUP " + p + " RTSP/1.0\r\n" +
-             "CSeq: " + (++cSeq) + "\r\n" +
-             "User-Agent: " + userAgent + "\r\n" +
-             (session ? ("Session: " + session + "\r\n") : "") +
-             "Transport: RTP/AVP/TCP;unicast;interleaved=" + interleavedChannels + "\r\n" +
-             "Date: " + new Date().toUTCString() + "\r\n" +
-             "\r\n";
+
+      handle.writeUTFBytes("SETUP " + p + " RTSP/1.0\r\n");
+      handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
+      handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
+      handle.writeUTFBytes(session ? ("Session: " + session + "\r\n") : "");
+      handle.writeUTFBytes("Transport: RTP/AVP/TCP;unicast;interleaved=" + interleavedChannels + "\r\n");
+      writeAuthorizationHeader("SETUP");
+      handle.writeUTFBytes("Date: " + new Date().toUTCString() + "\r\n");
+      handle.writeUTFBytes("\r\n");
     }
 
-    private function playReq():String {
-      return "PLAY " + contentBase + " RTSP/1.0\r\n" +
-             "CSeq: " + (++cSeq) + "\r\n" +
-             "User-Agent: " + userAgent + "\r\n" +
-             "Session: " + session + "\r\n" +
-             "\r\n";
+    private function sendPlayReq():void {
+      handle.writeUTFBytes("PLAY " + contentBase + " RTSP/1.0\r\n");
+      handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
+      handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
+      handle.writeUTFBytes("Session: " + session + "\r\n");
+      writeAuthorizationHeader("PLAY");
+      handle.writeUTFBytes("\r\n");
     }
 
-    private function teardownReq():String {
-      return "TEARDOWN" + contentBase + " RTSP/1.0\r\n"+
-             "CSeq: " + (++cSeq) + "\r\n" +
-             "User-Agent: " + userAgent + "\r\n" +
-             "Session: " + session + "\r\n" +
-             "\r\n";
+    private function sendTeardownReq():void {
+      handle.writeUTFBytes("TEARDOWN" + contentBase + " RTSP/1.0\r\n");
+      handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
+      handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
+      handle.writeUTFBytes("Session: " + session + "\r\n");
+      writeAuthorizationHeader("TEARDOWN");
+      handle.writeUTFBytes("\r\n");
     }
   }
 }

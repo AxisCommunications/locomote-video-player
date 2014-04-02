@@ -26,7 +26,7 @@ package com.axis.http {
     {
       /* NOTE: Unsupported: md5-sess and auth-int */
 
-      if ('auth' !== qop) {
+      if (qop && 'auth' !== qop) {
         trace('unsupported quality of protection: ' + qop);
         return "";
       }
@@ -34,23 +34,20 @@ package com.axis.http {
       var ha1:String = MD5.hash(user + ':' + realm + ':' + pass);
       var ha2:String = MD5.hash(httpmethod + ':' + uri);
       var cnonce:String = MD5.hash(GUID.create());
-      var resp:String = MD5.hash(
-        ha1 + ':' +
-        nonce + ':' +
-        nc + ':' +
-        cnonce + ':' +
-        qop + ':' +
-        ha2
-      );
+
+      var hashme:String = qop ?
+        (ha1 + ':' + nonce + ':' + nc + ':' + cnonce + ':' + qop + ':' + ha2) :
+        (ha1 + ':' + nonce + ':' + ha2)
+      var resp:String = MD5.hash(hashme);
 
       return 'Digest ' +
         'username="' + user + '", ' +
         'realm="' + realm + '", ' +
         'nonce="' + nonce + '", ' +
         'uri="' + uri + '", ' +
-        'qop="' + qop + '", ' +
         'nc="' + nc + '", ' +
-        'cnonce="' + cnonce + '", ' +
+        (qop ? ('qop="' + qop + '", ') : '') +
+        (qop ? ('cnonce="' + cnonce + '", ') : '') +
         'response="' + resp + '"'
         ;
     }

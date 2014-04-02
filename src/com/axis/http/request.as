@@ -7,7 +7,7 @@ package com.axis.http {
 
   public class request {
 
-    public static function readHeaders(socket:Socket, buffer:ByteArray):* {
+    public static function readHeaders(socket:*, buffer:ByteArray):* {
       socket.readBytes(buffer);
 
       var index:int = ByteArrayUtils.indexOf(buffer, "\r\n\r\n");
@@ -19,7 +19,14 @@ package com.axis.http {
       var dummy:ByteArray = new ByteArray();
       buffer.readBytes(dummy, 0, index + 4);
 
-      return parse(dummy.toString());
+      var parsed:Object = parse(dummy.toString());
+      if (parsed['content-length'] && int(parsed['content-length']) > buffer.bytesAvailable) {
+        /* Headers parsed fine, but full body is not here yet. */
+        buffer.position = 0;
+        return false;
+      }
+
+      return parsed;
     }
 
     public static function parse(data:String):Object
@@ -28,9 +35,10 @@ package com.axis.http {
 
       var lines:Array = data.split('\r\n');
 
-      var statusRegex:RegExp = /^HTTP\/(?P<version>[^ ]+) (?P<code>[0-9]+) (?P<message>.*)$/;
+      var statusRegex:RegExp = /^(?P<proto>[^\/]+)\/(?P<version>[^ ]+) (?P<code>[0-9]+) (?P<message>.*)$/;
       var status:Array = statusRegex.exec(lines.shift());
 
+      ret.proto = status.proto;
       ret.version = status.version;
       ret.code = uint(status.code);
       ret.messsage = status.message;
@@ -40,8 +48,8 @@ package com.axis.http {
         if (header.length === 0) continue;
 
         var t:Array = header.split(':');
-        var key:String = t[0].replace(/^[\s]*(.*)[\s]*$/, '$1').toLowerCase();
-        var val:String = t[1].replace(/^[\s]*(.*)[\s]*$/, '$1');
+        var key:String = t.shift().replace(/^[\s]*(.*)[\s]*$/, '$1').toLowerCase();
+        var val:String = t.join(':').replace(/^[\s]*(.*)[\s]*$/, '$1');
         parseMiddleware(key, val, ret.headers);
       }
 
@@ -55,18 +63,21 @@ package com.axis.http {
           if (!hdr['www-authenticate'])
             hdr['www-authenticate'] = {};
 
-          if (/basic realm/i.test(val)) {
+          if (/^basic/i.test(val)) {
             var basicRealm:RegExp = /basic realm=\"([^\"]+)\"/i;
             hdr['www-authenticate'].basicRealm = basicRealm.exec(val)[1];
           }
 
-          if (/digest realm/i.test(val)) {
-            var digestRealm:RegExp = /digest realm=\"([^\"]+)\"/i;
-            var nonce:RegExp = /nonce=\"([^\"]+)\"/i;
-            var qop:RegExp = /qop=\"([^\"]+)\"/i;
-            hdr['www-authenticate'].digestRealm = digestRealm.exec(val)[1];
-            hdr['www-authenticate'].nonce = nonce.exec(val)[1];
-            hdr['www-authenticate'].qop = qop.exec(val)[1];
+          if (/^digest/i.test(val)) {
+            var params:Array = val.substr(7).split(/,\s*/);
+            for each (var p:String in params) {
+              var kv:Array = p.split('=');
+              if (2 !== kv.length) continue;
+
+              if (kv[0].toLowerCase() === 'realm') kv[0] = 'digestRealm';
+              trace(kv[0]);
+              hdr['www-authenticate'][kv[0]] = kv[1].replace(/^"(.*)"$/, '$1');
+            }
           }
 
           break;

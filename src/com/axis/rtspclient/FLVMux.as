@@ -2,7 +2,6 @@ package com.axis.rtspclient {
 
   import flash.events.Event;
   import flash.events.EventDispatcher;
-  import flash.external.ExternalInterface;
   import flash.utils.ByteArray;
   import flash.net.NetStream;
   import flash.net.FileReference;
@@ -76,8 +75,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          ExternalInterface.call(HTTPClient.jsEventCallbackName,
-            "Unknown type in ECMA array: " + typeof contents[key]);
+          trace("Unknown type in ECMA array:", typeof contents[key]);
 
           break;
         }
@@ -381,35 +379,18 @@ package com.axis.rtspclient {
         break;
 
       default:
-        ExternalInterface.call(HTTPClient.jsEventCallbackName, "Unsupported NALU type: " + nalu.ntype);
+        trace("Unsupported NALU type: " + nalu.ntype);
         /* Return here as nothing was created, and thus nothing should be appended */
         return;
       }
 
       pushData();
-
-      /*
-      var ns:NetStream = Player.getNetStream();
-      ExternalInterface.call(HTTPClient.jsEventCallbackName,
-        "Video buffer: " + ns.info.videoBufferByteLength + " bytes, " +
-        ns.info.videoBufferLength + " seconds, " +
-        ns.info.droppedFrames + " frames dropped, " +
-        'FPS: ' + ns.currentFPS + ' frames/second.');
-        */
     }
 
     public function onAACFrame(aacframe:AACFrame):void
     {
       createAudioTag(aacframe);
       pushData();
-
-      /*
-      var ns:NetStream = Player.getNetStream();
-      ExternalInterface.call('console.log',
-        "Audio buffer: " + ns.info.audioBufferByteLength + " bytes, " +
-        ns.info.audioBufferLength + " seconds, " +
-        ns.info.audioLossRate + ' loss rate');
-        */
     }
 
     private function pushData():void

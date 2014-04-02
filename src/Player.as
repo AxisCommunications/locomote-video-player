@@ -1,9 +1,6 @@
 package {
 
-  import com.axis.rtspclient.HTTPClient;
-  import com.axis.audioclient.AxisTransmit;
   import flash.display.Sprite;
-  import flash.display.LoaderInfo;
   import flash.display.Stage;
   import flash.display.StageAlign;
   import flash.display.StageScaleMode;
@@ -22,13 +19,13 @@ package {
   import flash.system.Security;
   import flash.utils.getTimer;
 
+  import com.axis.rtspclient.*;
+  import com.axis.audioclient.AxisTransmit;
+  import com.axis.http.url;
+
   [SWF(frameRate="60")]
 
   public class Player extends Sprite {
-    private var jsEventCallbackName:String = "console.log";
-    private var client:HTTPClient = new HTTPClient();
-    private var transmit:Socket;
-
     private var vid:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private static var ns:NetStream;
@@ -41,9 +38,7 @@ package {
       ExternalInterface.marshallExceptions = true;
 
       /* Media player API */
-      ExternalInterface.addCallback("play", client.connect);
-      ExternalInterface.addCallback("pause", client.disconnect);
-      ExternalInterface.addCallback("stop", client.stop);
+      ExternalInterface.addCallback("play", play);
 
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
@@ -78,6 +73,30 @@ package {
       addChild(vid);
     }
 
+    public function play(iurl:String = null):void
+    {
+      var urlParsed:Object = url.parse(iurl);
+
+      var rtspHandle:IRTSPHandle = null;
+      switch (urlParsed.protocol) {
+      case 'rtsph':
+        /* RTSP over HTTP */
+        rtspHandle = new RTSPoverHTTPHandle(urlParsed);
+        break;
+
+      case 'rtsp':
+        /* Regular RTSP */
+        rtspHandle = new RTSPHandle(urlParsed);
+      }
+
+      var rtspClient:RTSPClient = new RTSPClient(rtspHandle, urlParsed);
+      rtspHandle.onConnect(function():void {
+        rtspClient.start();
+      });
+
+      rtspHandle.connect();
+    }
+
     public function audioTransmitStopInterface():void {
       audioTransmit.stop();
     }
@@ -87,7 +106,7 @@ package {
     }
 
     private function onStageAdded(e:Event):void {
-      client.sendLoadedEvent();
+      trace('stage added');
     }
 
     public static function getNetStream():NetStream
