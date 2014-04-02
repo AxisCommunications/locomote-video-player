@@ -41,7 +41,7 @@ package com.axis.http {
       ret.proto = status.proto;
       ret.version = status.version;
       ret.code = uint(status.code);
-      ret.messsage = status.message;
+      ret.message = status.message;
 
       ret.headers = {};
       for each (var header:String in lines) {
@@ -64,7 +64,7 @@ package com.axis.http {
             hdr['www-authenticate'] = {};
 
           if (/^basic/i.test(val)) {
-            var basicRealm:RegExp = /basic realm=\"([^\"]+)\"/i;
+            var basicRealm:RegExp = /realm=\"([^\"]+)\"/i;
             hdr['www-authenticate'].basicRealm = basicRealm.exec(val)[1];
           }
 
@@ -75,7 +75,6 @@ package com.axis.http {
               if (2 !== kv.length) continue;
 
               if (kv[0].toLowerCase() === 'realm') kv[0] = 'digestRealm';
-              trace(kv[0]);
               hdr['www-authenticate'][kv[0]] = kv[1].replace(/^"(.*)"$/, '$1');
             }
           }
