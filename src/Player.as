@@ -4,6 +4,7 @@ package {
   import flash.display.Stage;
   import flash.display.StageAlign;
   import flash.display.StageScaleMode;
+  import flash.display.StageDisplayState;
   import flash.events.Event;
   import flash.events.ErrorEvent;
   import flash.events.NetStatusEvent;
@@ -11,6 +12,7 @@ package {
   import flash.events.ProgressEvent;
   import flash.events.StatusEvent;
   import flash.events.SampleDataEvent;
+  import flash.events.MouseEvent;
   import flash.external.ExternalInterface;
   import flash.media.Video;
   import flash.net.NetStream;
@@ -24,10 +26,12 @@ package {
   import com.axis.http.url;
 
   [SWF(frameRate="60")]
+  [SWF(backgroundColor="#000000")]
 
   public class Player extends Sprite {
     private var vid:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
+    private var meta:Object = {};
     private static var ns:NetStream;
 
     public function Player() {
@@ -56,21 +60,45 @@ package {
       ns = new NetStream(nc);
       ns.bufferTime = 1;
       ns.client = new Object();
+      var self:Player = this;
       ns.client.onMetaData = function(item:Object):void {
-        vid.width  = Math.min(item.width,  stage.stageWidth);
-        vid.height = Math.min(item.height, stage.stageHeight);
-
-        vid.x = 0;
-        vid.y = 0;
-        if (item.width < stage.stageWidth || item.height < stage.stageHeight) {
-          vid.x = (stage.stageWidth - item.width) / 2;
-          vid.y = (stage.stageHeight - item.height) / 2;
-        }
+        self.meta = item;
+        videoResize();
       };
+
+      this.stage.doubleClickEnabled = true;
+      this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
+      this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
+        videoResize();
+      });
 
       ns.play(null);
       vid.attachNetStream(ns);
       addChild(vid);
+    }
+
+    public function fullscreen(event:MouseEvent):void
+    {
+      this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
+        StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
+    }
+
+    public function videoResize():void
+    {
+      var stagewidth:uint = (StageDisplayState.NORMAL === stage.displayState) ?
+        stage.stageWidth : stage.fullScreenWidth;
+      var stageheight:uint = (StageDisplayState.NORMAL === stage.displayState) ?
+        stage.stageHeight : stage.fullScreenHeight;
+
+      vid.width  = Math.min(meta.width,  stagewidth);
+      vid.height = Math.min(meta.height, stageheight);
+
+      vid.x = 0;
+      vid.y = 0;
+      if (meta.width < stagewidth || meta.height < stageheight) {
+        vid.x = (stagewidth - meta.width) / 2;
+        vid.y = (stageheight - meta.height) / 2;
+      }
     }
 
     public function play(iurl:String = null):void
