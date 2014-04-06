@@ -1,6 +1,7 @@
 package com.axis.rtspclient {
 
   import flash.events.EventDispatcher;
+  import flash.events.Event;
   import flash.utils.ByteArray;
   import flash.net.Socket;
 
@@ -57,7 +58,7 @@ package com.axis.rtspclient {
     }
 
     public function start():void {
-      handle.onData(onGetData);
+      handle.addEventListener('data', onGetData);
       sendDescribeReq();
       state = STATE_DESCRIBE_SENT;
     }
@@ -108,7 +109,7 @@ package com.axis.rtspclient {
       return parsed;
     }
 
-    private function onGetData():void {
+    private function onGetData(ev:Event):void {
       var parsed:*, body:ByteArray = new ByteArray();
 
       if (false === (parsed = readRequest(body))) {
@@ -172,7 +173,8 @@ package com.axis.rtspclient {
 
         this.flvmux = new FLVMux(this.sdp);
 
-        handle.onData(onPlayData);
+        handle.removeEventListener("data", onGetData);
+        handle.addEventListener("data", onPlayData);
 
         addEventListener("VIDEO_PACKET", analu.onRTPPacket);
         addEventListener("AUDIO_PACKET", aaac.onRTPPacket);
@@ -182,7 +184,7 @@ package com.axis.rtspclient {
       }
     }
 
-    private function onPlayData():void
+    private function onPlayData(ev:Event):void
     {
       handle.readBytes(data, data.length);
 
@@ -211,7 +213,7 @@ package com.axis.rtspclient {
       requestReset();
 
       if (0 < data.bytesAvailable) {
-        onPlayData();
+        onPlayData(ev);
       }
     }
 

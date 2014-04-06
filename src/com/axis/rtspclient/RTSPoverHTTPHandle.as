@@ -1,5 +1,6 @@
 package com.axis.rtspclient {
 
+  import flash.events.EventDispatcher;
   import flash.events.ErrorEvent;
   import flash.events.Event;
   import flash.events.IOErrorEvent;
@@ -14,7 +15,7 @@ package com.axis.rtspclient {
   import com.axis.http.auth;
   import com.axis.http.request;
 
-  public class RTSPoverHTTPHandle implements IRTSPHandle {
+  public class RTSPoverHTTPHandle extends EventDispatcher implements IRTSPHandle {
 
     private var getChannel:Socket = null;
     private var postChannel:Socket = null;
@@ -78,14 +79,6 @@ package com.axis.rtspclient {
       getChannel.readBytes(bytes, offset, length);
     }
 
-    public function onData(cb:Function):void {
-      this.datacb = cb;
-    }
-
-    public function onConnect(cb:Function):void {
-      this.connectcb = cb;
-    }
-
     private function onError(e:ErrorEvent):void {
       trace("HTTPClient socket error");
     }
@@ -106,7 +99,7 @@ package com.axis.rtspclient {
 
     public function reconnect():void
     {
-      trace('RTSPoverHTTPHandle: reconnect not implemented');
+      throw new Error('RTSPoverHTTPHandle: reconnect not implemented');
     }
 
     private function onGetChannelConnect(event:Event):void {
@@ -163,13 +156,10 @@ package com.axis.rtspclient {
       }
 
       getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetChannelData);
-      getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onGetChannelDataPassthroguh);
+      getChannel.addEventListener(ProgressEvent.SOCKET_DATA, function(ev:ProgressEvent):void {
+        dispatchEvent(new Event('data'));
+      });
       postChannel.connect(this.urlParsed.host, this.urlParsed.port);
-    }
-
-    private function onGetChannelDataPassthroguh(event:ProgressEvent):void
-    {
-      if (null !== this.datacb) this.datacb();
     }
 
     private function writeAuthorizationHeader(method:String, channel:Socket):void
@@ -221,7 +211,7 @@ package com.axis.rtspclient {
       postChannel.writeUTFBytes("\r\n");
       postChannel.flush();
 
-      if (null !== this.connectcb) connectcb();
+      dispatchEvent(new Event('connected'));
     }
   }
 }

@@ -113,12 +113,12 @@ package {
         break;
 
       case 'rtsp':
-        /* Regular RTSP */
-        rtspHandle = new RTSPHandle(urlParsed);
+        /* RTSP over TCP */
+        rtspHandle = new RTSPoverTCPHandle(urlParsed);
       }
 
       var rtspClient:RTSPClient = new RTSPClient(rtspHandle, urlParsed);
-      rtspHandle.onConnect(function():void {
+      rtspHandle.addEventListener('connected', function():void {
         rtspClient.start();
       });
 

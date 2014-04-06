@@ -1,14 +1,13 @@
 package com.axis.http {
 
   import flash.utils.ByteArray;
-  import flash.net.Socket;
 
   import com.axis.rtspclient.ByteArrayUtils;
 
   public class request {
 
-    public static function readHeaders(socket:*, buffer:ByteArray):* {
-      socket.readBytes(buffer);
+    public static function readHeaders(dataInput:*, buffer:ByteArray):* {
+      dataInput.readBytes(buffer);
 
       var index:int = ByteArrayUtils.indexOf(buffer, "\r\n\r\n");
       if (index === -1) {
