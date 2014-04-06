@@ -144,6 +144,7 @@ package com.axis.rtspclient {
 
         contentBase = parsed.headers['content-base'];
         tracks = sdp.getMediaBlockList();
+        trace('SDP contained ' + tracks.length + ' tracks. Calling SETUP for each.');
 
         state = STATE_SETUP;
         /* Fall through, it's time for setup */
@@ -217,41 +218,12 @@ package com.axis.rtspclient {
       }
     }
 
-    private function writeAuthorizationHeader(method:String):void
-    {
-      var a:String = '';
-      switch (authState) {
-        case "basic":
-          a = auth.basic(this.urlParsed.user, this.urlParsed.pass) + "\r\n";
-          break;
-
-        case "digest":
-          a = auth.digest(
-            this.urlParsed.user,
-            this.urlParsed.pass,
-            method,
-            authOpts.digestRealm,
-            urlParsed.urlpath,
-            authOpts.qop,
-            authOpts.nonce,
-            digestNC++
-          );
-          break;
-
-        default:
-        case "none":
-          return;
-      }
-
-      handle.writeUTFBytes('Authorization: ' + a + "\r\n");
-    }
-
     private function sendDescribeReq():void {
       handle.writeUTFBytes("DESCRIBE " + urlParsed.urlpath + " RTSP/1.0\r\n");
       handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
       handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
       handle.writeUTFBytes("Accept: application/sdp\r\n");
-      writeAuthorizationHeader("DESCRIBE");
+      auth.writeAuthorization(handle, "DESCRIBE", authState, authOpts, urlParsed, digestNC++);
       handle.writeUTFBytes("\r\n");
     }
 
@@ -259,12 +231,13 @@ package com.axis.rtspclient {
       var interleavedChannels:String = interleaveChannelIndex++ + "-" + interleaveChannelIndex++;
       var p:String = url.isAbsolute(block.control) ? block.control : contentBase + block.control;
 
+      trace('Setting up track: ' + p);
       handle.writeUTFBytes("SETUP " + p + " RTSP/1.0\r\n");
       handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
       handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
       handle.writeUTFBytes(session ? ("Session: " + session + "\r\n") : "");
       handle.writeUTFBytes("Transport: RTP/AVP/TCP;unicast;interleaved=" + interleavedChannels + "\r\n");
-      writeAuthorizationHeader("SETUP");
+      auth.writeAuthorization(handle, "SETUP", authState, authOpts, urlParsed, digestNC++);
       handle.writeUTFBytes("Date: " + new Date().toUTCString() + "\r\n");
       handle.writeUTFBytes("\r\n");
     }
@@ -274,7 +247,7 @@ package com.axis.rtspclient {
       handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
       handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
       handle.writeUTFBytes("Session: " + session + "\r\n");
-      writeAuthorizationHeader("PLAY");
+      auth.writeAuthorization(handle, "PLAY", authState, authOpts, urlParsed, digestNC++);
       handle.writeUTFBytes("\r\n");
     }
 
@@ -283,7 +256,7 @@ package com.axis.rtspclient {
       handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
       handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
       handle.writeUTFBytes("Session: " + session + "\r\n");
-      writeAuthorizationHeader("TEARDOWN");
+      auth.writeAuthorization(handle, "TEARDOWN", authState, authOpts, urlParsed, digestNC++);
       handle.writeUTFBytes("\r\n");
     }
   }

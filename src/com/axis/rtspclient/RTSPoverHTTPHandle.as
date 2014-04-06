@@ -162,41 +162,12 @@ package com.axis.rtspclient {
       postChannel.connect(this.urlParsed.host, this.urlParsed.port);
     }
 
-    private function writeAuthorizationHeader(method:String, channel:Socket):void
-    {
-      var a:String = '';
-      switch (authState) {
-        case "basic":
-          a = auth.basic(this.urlParsed.user, this.urlParsed.pass) + "\r\n";
-          break;
-
-        case "digest":
-          a = auth.digest(
-            this.urlParsed.user,
-            this.urlParsed.pass,
-            method,
-            authOpts.digestRealm,
-            urlParsed.urlpath,
-            authOpts.qop,
-            authOpts.nonce,
-            digestNC++
-          );
-          break;
-
-        default:
-        case "none":
-          return;
-      }
-
-      channel.writeUTFBytes('Authorization: ' + a + "\r\n");
-    }
-
     private function initializeGetChannel():void {
       trace("Sending: GET");
       getChannel.writeUTFBytes("GET " + urlParsed.urlpath + " HTTP/1.0\r\n");
       getChannel.writeUTFBytes("X-Sessioncookie: " +  sessioncookie + "\r\n");
       getChannel.writeUTFBytes("Accept: application/x-rtsp-tunnelled\r\n");
-      writeAuthorizationHeader("GET", getChannel);
+      auth.writeAuthorization(getChannel, "GET", authState, authOpts, urlParsed, digestNC++);
       getChannel.writeUTFBytes("\r\n");
       getChannel.flush();
     }
@@ -207,7 +178,7 @@ package com.axis.rtspclient {
       postChannel.writeUTFBytes("X-Sessioncookie: " + sessioncookie + "\r\n");
       postChannel.writeUTFBytes("Content-Length: 32767" + "\r\n");
       postChannel.writeUTFBytes("Content-Type: application/x-rtsp-tunnelled" + "\r\n");
-      writeAuthorizationHeader("POST", postChannel);
+      auth.writeAuthorization(postChannel, "POST", authState, authOpts, urlParsed, digestNC++);
       postChannel.writeUTFBytes("\r\n");
       postChannel.flush();
 

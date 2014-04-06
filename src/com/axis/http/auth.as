@@ -1,5 +1,6 @@
 package com.axis.http {
 
+  import flash.net.Socket;
   import mx.utils.Base64Encoder;
   import com.adobe.crypto.MD5;
   import com.axis.rtspclient.GUID;
@@ -75,6 +76,42 @@ package com.axis.http {
 
       /* Getting the same method as passed as current should be considered an error */
       return current;
+    }
+
+    public static function writeAuthorization(
+      socket:*,
+      method:String,
+      authState:String,
+      authOpts:Object,
+      urlParsed:Object,
+      digestNC:uint):Boolean
+    {
+      var a:String = '';
+      switch (authState) {
+        case "basic":
+          a = basic(urlParsed.user, urlParsed.pass) + "\r\n";
+          break;
+
+        case "digest":
+          a = digest(
+            urlParsed.user,
+            urlParsed.pass,
+            method,
+            authOpts.digestRealm,
+            urlParsed.urlpath,
+            authOpts.qop,
+            authOpts.nonce,
+            digestNC
+          );
+          break;
+
+        default:
+        case "none":
+          return false;
+      }
+
+      socket.writeUTFBytes('Authorization: ' + a + "\r\n");
+      return true;
     }
   }
 }
