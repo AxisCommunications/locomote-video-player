@@ -133,6 +133,7 @@ package com.axis.rtspclient {
       }
 
       if (401 === parsed.code) {
+        trace('Unauthorized using auth method: ' + authState);
         /* Unauthorized, change authState and (possibly) try again */
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);

@@ -1,6 +1,5 @@
 package com.axis.http {
 
-  import mx.utils.ObjectUtil;
   public class url {
 
     public static function parse(url:String):Object
@@ -10,6 +9,7 @@ package com.axis.http {
       var regex:RegExp = /^(?P<protocol>[^:]+):\/\/(?P<login>[^\/]+)(?P<urlpath>.*)$/;
       var result:Array = regex.exec(url);
 
+      ret.full = url;
       ret.protocol = result.protocol;
       ret.urlpath = result.urlpath;
 

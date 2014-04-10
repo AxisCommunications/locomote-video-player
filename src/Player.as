@@ -32,6 +32,7 @@ package {
     private var vid:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
+    private var client:RTSPClient;
     private static var ns:NetStream;
 
     public function Player() {
@@ -43,6 +44,9 @@ package {
 
       /* Media player API */
       ExternalInterface.addCallback("play", play);
+      ExternalInterface.addCallback("pause", pause);
+      ExternalInterface.addCallback("resume", resume);
+      ExternalInterface.addCallback("stop", stop);
 
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
@@ -117,12 +121,27 @@ package {
         rtspHandle = new RTSPoverTCPHandle(urlParsed);
       }
 
-      var rtspClient:RTSPClient = new RTSPClient(rtspHandle, urlParsed);
+      client = new RTSPClient(rtspHandle, urlParsed);
       rtspHandle.addEventListener('connected', function():void {
-        rtspClient.start();
+        client.start();
       });
 
       rtspHandle.connect();
+    }
+
+    public function pause():void
+    {
+      client.pause();
+    }
+
+    public function resume():void
+    {
+      client.resume();
+    }
+
+    public function stop():void
+    {
+      client.stop();
     }
 
     public function audioTransmitStopInterface():void {

@@ -7,7 +7,7 @@ package com.axis.http {
   public class request {
 
     public static function readHeaders(dataInput:*, buffer:ByteArray):* {
-      dataInput.readBytes(buffer);
+      dataInput.readBytes(buffer, buffer.length);
 
       var index:int = ByteArrayUtils.indexOf(buffer, "\r\n\r\n");
       if (index === -1) {
@@ -33,7 +33,6 @@ package com.axis.http {
       var ret:Object = {};
 
       var lines:Array = data.split('\r\n');
-
       var statusRegex:RegExp = /^(?P<proto>[^\/]+)\/(?P<version>[^ ]+) (?P<code>[0-9]+) (?P<message>.*)$/;
       var status:Array = statusRegex.exec(lines.shift());
 

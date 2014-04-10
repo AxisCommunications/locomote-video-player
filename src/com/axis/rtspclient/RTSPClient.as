@@ -15,14 +15,16 @@ package com.axis.rtspclient {
   public class RTSPClient extends EventDispatcher {
     private static var userAgent:String = "Slush 0.1";
 
-    private static var STATE_INITIAL:int       = 1<<0;
-    private static var STATE_DESCRIBE_SENT:int = 1<<1;
-    private static var STATE_DESCRIBE_RCVD:int = 1<<2;
-    private static var STATE_SETUP:int         = 1<<3;
-    private static var STATE_PLAY_SENT:int     = 1<<4;
-    private static var STATE_PLAYING:int       = 1<<5;
-    private static var STATE_TEARDOWN_SENT:int = 1<<6;
-    private static var STATE_TEARDOWN_RCVD:int = 1<<7;
+    private static var STATE_INITIAL:uint       = 1<<0;
+    private static var STATE_DESCRIBE_SENT:uint = 1<<1;
+    private static var STATE_DESCRIBE_RCVD:uint = 1<<2;
+    private static var STATE_SETUP:uint         = 1<<3;
+    private static var STATE_PLAY_SENT:uint     = 1<<4;
+    private static var STATE_PLAYING:uint       = 1<<5;
+    private static var STATE_PAUSE_SENT:uint    = 1<<6;
+    private static var STATE_PAUSED:uint        = 1<<7;
+    private static var STATE_TEARDOWN_SENT:uint = 1<<8;
+    private static var STATE_TEARDOWN_RCVD:uint = 1<<9;
 
     private var state:int = STATE_INITIAL;
 
@@ -55,12 +57,79 @@ package com.axis.rtspclient {
       this.sdp = new SDP();
       this.analu = new ANALU();
       this.aaac = new AAAC(sdp);
+      handle.addEventListener('data', onData);
+      state = STATE_INITIAL;
     }
 
-    public function start():void {
-      handle.addEventListener('data', onGetData);
-      sendDescribeReq();
+    public function start():Boolean {
+      trace('state:', state);
+      if (state !== STATE_INITIAL) {
+        trace('Cannot start unless in initial state.');
+        return false;
+      }
       state = STATE_DESCRIBE_SENT;
+      sendDescribeReq();
+      return true;
+    }
+
+    public function pause():Boolean
+    {
+      if (state !== STATE_PLAYING) {
+        trace('Unable to pause a stream if not playing');
+        return false;
+      }
+      state = STATE_PAUSE_SENT;
+      sendPauseReq();
+      return true;
+    }
+
+    public function resume():Boolean
+    {
+      if (state !== STATE_PAUSED) {
+        trace('Unable to resume a stream if not paused.');
+        return false;
+      }
+      state = STATE_PLAY_SENT;
+      sendPlayReq();
+      return true;
+    }
+
+    public function stop():Boolean
+    {
+      if (state < STATE_PLAY_SENT) {
+        trace('Unable to stop if we never reached play.');
+        return false;
+      }
+      state = STATE_TEARDOWN_SENT;
+      sendTeardownReq();
+      return true;
+    }
+
+    private function onData(event:Event):void
+    {
+      /* read one byte to determine destination */
+      if (0 < data.bytesAvailable) {
+        /* Determining byte have already been read. This is a continuation */
+      } else {
+        /* Read the determining byte */
+        handle.readBytes(data, 0, 1);
+      }
+
+      switch(data[0]) {
+        case 0x52:
+          /* ascii 'R', start of RTSP */
+          onRTSP();
+          break;
+
+        case 0x24:
+          /* ascii '$', start of interleaved packet */
+          onInterleavedData();
+          break;
+
+        default:
+          trace('Unknown determining byte:', data[0]);
+          break;
+      }
     }
 
     private function requestReset():void
@@ -95,6 +164,7 @@ package com.axis.rtspclient {
 
         trace('RTSPClient: switching http-authorization from ' + authState + ' to ' + newAuthState);
         authState = newAuthState;
+        state = STATE_INITIAL;
         data = new ByteArray();
         handle.reconnect();
         return false;
@@ -104,14 +174,14 @@ package com.axis.rtspclient {
         return false;
       }
 
+      /* RTSP commands contain no heavy body, so it's safe to read everything */
       data.readBytes(oBody, 0, parsed.headers['content-length']);
       requestReset();
       return parsed;
     }
 
-    private function onGetData(ev:Event):void {
+    private function onRTSP():void {
       var parsed:*, body:ByteArray = new ByteArray();
-
       if (false === (parsed = readRequest(body))) {
         return;
       }
@@ -120,7 +190,6 @@ package com.axis.rtspclient {
         trace('RTSPClient: Invalid RTSP response - ', parsed.code, parsed.message);
         return;
       }
-
 
       switch (state) {
       case STATE_INITIAL:
@@ -168,31 +237,47 @@ package com.axis.rtspclient {
         break;
 
       case STATE_PLAY_SENT:
-
         trace("RTSPClient: STATE_PLAY_SENT");
         state = STATE_PLAYING;
 
-        this.flvmux = new FLVMux(this.sdp);
+        if (this.flvmux) {
+          /* If the flvmux have been initialized don't do it again.
+             this is probably a resume after pause */
+          break;
+        }
 
-        handle.removeEventListener("data", onGetData);
-        handle.addEventListener("data", onPlayData);
+        this.flvmux = new FLVMux(this.sdp);
 
         addEventListener("VIDEO_PACKET", analu.onRTPPacket);
         addEventListener("AUDIO_PACKET", aaac.onRTPPacket);
         analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
         aaac.addEventListener(AACFrame.NEW_FRAME, flvmux.onAACFrame);
         break;
+
+      case STATE_PLAYING:
+        trace("RTSPClient: STATE_PLAYING");
+        break;
+
+      case STATE_PAUSE_SENT:
+        trace("RTSPClient: STATE_PAUSE_SENT");
+        state = STATE_PAUSED;
+        break;
+
+      case STATE_TEARDOWN_SENT:
+        trace('RTSPClient: STATE_TEARDOWN_SENT');
+        state = STATE_TEARDOWN_RCVD;
+        break;
       }
     }
 
-    private function onPlayData(ev:Event):void
+    private function onInterleavedData():void
     {
       handle.readBytes(data, data.length);
 
       if (-1 == rtpLength && 0x24 === data[0]) {
         /* This is the beginning of a new RTP package */
         data.readByte();
-        rtpChannel   = data.readByte();
+        rtpChannel = data.readByte();
         rtpLength = data.readShort();
       }
 
