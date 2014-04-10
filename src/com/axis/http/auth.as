@@ -78,22 +78,21 @@ package com.axis.http {
       return current;
     }
 
-    public static function writeAuthorization(
-      socket:*,
+    public static function authorizationHeader(
       method:String,
       authState:String,
       authOpts:Object,
       urlParsed:Object,
-      digestNC:uint):Boolean
+      digestNC:uint):String
     {
-      var a:String = '';
+      var content:String = '';
       switch (authState) {
         case "basic":
-          a = basic(urlParsed.user, urlParsed.pass) + "\r\n";
+          content = basic(urlParsed.user, urlParsed.pass) + "\r\n";
           break;
 
         case "digest":
-          a = digest(
+          content = digest(
             urlParsed.user,
             urlParsed.pass,
             method,
@@ -107,11 +106,10 @@ package com.axis.http {
 
         default:
         case "none":
-          return false;
+          return "";
       }
 
-      socket.writeUTFBytes('Authorization: ' + a + "\r\n");
-      return true;
+      return "Authorization: " + content + "\r\n"
     }
   }
 }

@@ -214,17 +214,20 @@ package com.axis.rtspclient {
       requestReset();
 
       if (0 < data.bytesAvailable) {
-        onPlayData(ev);
+        onData(null);
       }
     }
 
     private function sendDescribeReq():void {
-      handle.writeUTFBytes("DESCRIBE " + urlParsed.urlpath + " RTSP/1.0\r\n");
-      handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
-      handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
-      handle.writeUTFBytes("Accept: application/sdp\r\n");
-      auth.writeAuthorization(handle, "DESCRIBE", authState, authOpts, urlParsed, digestNC++);
-      handle.writeUTFBytes("\r\n");
+      var u:String = 'rtsp://' + urlParsed.host + ":" + urlParsed.port + urlParsed.urlpath;
+      var req:String =
+        "DESCRIBE " + u + " RTSP/1.0\r\n" +
+        "CSeq: " + (++cSeq) + "\r\n" +
+        "User-Agent: " + userAgent + "\r\n" +
+        "Accept: application/sdp\r\n" +
+        auth.authorizationHeader("DESCRIBE", authState, authOpts, urlParsed, digestNC++) +
+        "\r\n";
+      handle.writeUTFBytes(req);
     }
 
     private function sendSetupReq(block:Object):void {
@@ -232,32 +235,49 @@ package com.axis.rtspclient {
       var p:String = url.isAbsolute(block.control) ? block.control : contentBase + block.control;
 
       trace('Setting up track: ' + p);
-      handle.writeUTFBytes("SETUP " + p + " RTSP/1.0\r\n");
-      handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
-      handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
-      handle.writeUTFBytes(session ? ("Session: " + session + "\r\n") : "");
-      handle.writeUTFBytes("Transport: RTP/AVP/TCP;unicast;interleaved=" + interleavedChannels + "\r\n");
-      auth.writeAuthorization(handle, "SETUP", authState, authOpts, urlParsed, digestNC++);
-      handle.writeUTFBytes("Date: " + new Date().toUTCString() + "\r\n");
-      handle.writeUTFBytes("\r\n");
+      var req:String =
+        "SETUP " + p + " RTSP/1.0\r\n" +
+        "CSeq: " + (++cSeq) + "\r\n" +
+        "User-Agent: " + userAgent + "\r\n" +
+        (session ? ("Session: " + session + "\r\n") : "") +
+        "Transport: RTP/AVP/TCP;unicast;interleaved=" + interleavedChannels + "\r\n" +
+        auth.authorizationHeader("SETUP", authState, authOpts, urlParsed, digestNC++) +
+        "Date: " + new Date().toUTCString() + "\r\n" +
+        "\r\n";
+      handle.writeUTFBytes(req);
     }
 
     private function sendPlayReq():void {
-      handle.writeUTFBytes("PLAY " + contentBase + " RTSP/1.0\r\n");
-      handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
-      handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
-      handle.writeUTFBytes("Session: " + session + "\r\n");
-      auth.writeAuthorization(handle, "PLAY", authState, authOpts, urlParsed, digestNC++);
-      handle.writeUTFBytes("\r\n");
+      var req:String =
+        "PLAY " + contentBase + " RTSP/1.0\r\n" +
+        "CSeq: " + (++cSeq) + "\r\n" +
+        "User-Agent: " + userAgent + "\r\n" +
+        "Session: " + session + "\r\n" +
+        auth.authorizationHeader("PLAY", authState, authOpts, urlParsed, digestNC++) +
+        "\r\n";
+      handle.writeUTFBytes(req);
+    }
+
+    private function sendPauseReq():void {
+      var req:String =
+        "PAUSE " + contentBase + " RTSP/1.0\r\n" +
+        "CSeq: " + (++cSeq) + "\r\n" +
+        "User-Agent: " + userAgent + "\r\n" +
+        "Session: " + session + "\r\n" +
+        auth.authorizationHeader("PAUSE", authState, authOpts, urlParsed, digestNC++) +
+        "\r\n";
+      handle.writeUTFBytes(req);
     }
 
     private function sendTeardownReq():void {
-      handle.writeUTFBytes("TEARDOWN" + contentBase + " RTSP/1.0\r\n");
-      handle.writeUTFBytes("CSeq: " + (++cSeq) + "\r\n");
-      handle.writeUTFBytes("User-Agent: " + userAgent + "\r\n");
-      handle.writeUTFBytes("Session: " + session + "\r\n");
-      auth.writeAuthorization(handle, "TEARDOWN", authState, authOpts, urlParsed, digestNC++);
-      handle.writeUTFBytes("\r\n");
+      var req:String =
+        "TEARDOWN " + contentBase + " RTSP/1.0\r\n" +
+        "CSeq: " + (++cSeq) + "\r\n" +
+        "User-Agent: " + userAgent + "\r\n" +
+        "Session: " + session + "\r\n" +
+        auth.authorizationHeader("TEARDOWN", authState, authOpts, urlParsed, digestNC++) +
+        "\r\n";
+      handle.writeUTFBytes(req);
     }
   }
 }

@@ -167,7 +167,7 @@ package com.axis.rtspclient {
       getChannel.writeUTFBytes("GET " + urlParsed.urlpath + " HTTP/1.0\r\n");
       getChannel.writeUTFBytes("X-Sessioncookie: " +  sessioncookie + "\r\n");
       getChannel.writeUTFBytes("Accept: application/x-rtsp-tunnelled\r\n");
-      auth.writeAuthorization(getChannel, "GET", authState, authOpts, urlParsed, digestNC++);
+      getChannel.writeUTFBytes(auth.authorizationHeader("GET", authState, authOpts, urlParsed, digestNC++));
       getChannel.writeUTFBytes("\r\n");
       getChannel.flush();
     }
@@ -178,7 +178,7 @@ package com.axis.rtspclient {
       postChannel.writeUTFBytes("X-Sessioncookie: " + sessioncookie + "\r\n");
       postChannel.writeUTFBytes("Content-Length: 32767" + "\r\n");
       postChannel.writeUTFBytes("Content-Type: application/x-rtsp-tunnelled" + "\r\n");
-      auth.writeAuthorization(postChannel, "POST", authState, authOpts, urlParsed, digestNC++);
+      postChannel.writeUTFBytes(auth.authorizationHeader("POST", authState, authOpts, urlParsed, digestNC++));
       postChannel.writeUTFBytes("\r\n");
       postChannel.flush();
 
