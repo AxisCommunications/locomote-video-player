@@ -26,7 +26,7 @@ package {
   import com.axis.http.url;
 
   [SWF(frameRate="60")]
-  [SWF(backgroundColor="#000000")]
+  [SWF(backgroundColor="#efefef")]
 
   public class Player extends Sprite {
     private var vid:Video;
