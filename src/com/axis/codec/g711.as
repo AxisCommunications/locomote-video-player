@@ -1,7 +1,5 @@
 package com.axis.codec {
 
-  import flash.external.ExternalInterface;
-
   public class g711 {
 
     private static const exponentLookup:Array = [
