@@ -12,7 +12,7 @@ package com.axis.rtspclient {
     {
       this.src    = src;
       this.bitpos = 0;
-      this.byte   = 0; /* This should really be undefied, uint wont allow it though */
+      this.byte   = 0; /* This should really be undefined, uint wont allow it though */
     }
 
     public function readBits(length:uint):uint
@@ -47,7 +47,7 @@ package com.axis.rtspclient {
       if (bitsToRead >= 31) throw new Error("exp-golomb larger than 32 bits is unsupported.")
 
       var n:uint = readBits(bitsToRead); /* Read all bits part of this number */
-      n |= (0x1 << (bitsToRead)); /* Move in the 1 read by while above */
+      n |= (0x1 << (bitsToRead)); /* Move in the 1 read by while-statement above */
 
       return n - 1; /* Because result in exp golomb is one larger */
     }

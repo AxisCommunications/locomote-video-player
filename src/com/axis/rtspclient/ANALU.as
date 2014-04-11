@@ -36,7 +36,7 @@ package com.axis.rtspclient {
 
       if (28 != naltype) {
         /* Only support for FU-A at this time */
-        ExternalInterface.call('console.log', 'Unsupported NAL unit, type ' + naltype);
+        trace('Unsupported NAL unit, type: ' + naltype);
         return;
       }
 
