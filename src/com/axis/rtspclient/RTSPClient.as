@@ -16,27 +16,21 @@ package com.axis.rtspclient {
   public class RTSPClient extends EventDispatcher {
     private static var userAgent:String = "Slush 0.1";
 
-    private static var STATE_INITIAL:uint       = 1<<0;
-    private static var STATE_OPTIONS_SENT:uint  = 1<<1;
-    private static var STATE_OPTIONS_RCVD:uint  = 1<<2;
-    private static var STATE_DESCRIBE_SENT:uint = 1<<3;
-    private static var STATE_DESCRIBE_RCVD:uint = 1<<4;
-    private static var STATE_SETUP:uint         = 1<<5;
-    private static var STATE_PLAY_SENT:uint     = 1<<6;
-    private static var STATE_PLAYING:uint       = 1<<7;
-    private static var STATE_PAUSE_SENT:uint    = 1<<8;
-    private static var STATE_PAUSED:uint        = 1<<9;
-    private static var STATE_TEARDOWN_SENT:uint = 1<<10;
-    private static var STATE_TEARDOWN_RCVD:uint = 1<<11;
+    private static var STATE_INITIAL:uint   = 1 << 0;
+    private static var STATE_OPTIONS:uint   = 1 << 1;
+    private static var STATE_DESCRIBE:uint  = 1 << 2;
+    private static var STATE_SETUP:uint     = 1 << 3;
+    private static var STATE_PLAY:uint      = 1 << 4;
+    private static var STATE_PLAYING:uint   = 1 << 5;
+    private static var STATE_PAUSE:uint     = 1 << 6;
+    private static var STATE_PAUSED:uint    = 1 << 7;
+    private static var STATE_TEARDOWN:uint  = 1 << 8;
 
     private var state:int = STATE_INITIAL;
-
     private var handle:IRTSPHandle;
 
-    private var sdp:SDP;
+    private var sdp:SDP = new SDP();
     private var flvmux:FLVMux;
-    private var analu:ANALU;
-    private var aaac:AAAC;
 
     private var urlParsed:Object;
     private var cSeq:uint = 1;
@@ -44,7 +38,6 @@ package com.axis.rtspclient {
     private var contentBase:String;
     private var interleaveChannelIndex:uint = 0;
 
-    private var headers:ByteArray = new ByteArray();
     private var methods:Array = [];
     private var data:ByteArray = new ByteArray();
     private var rtpLength:int = -1;
@@ -58,9 +51,6 @@ package com.axis.rtspclient {
     public function RTSPClient(handle:IRTSPHandle, urlParsed:Object) {
       this.handle = handle;
       this.urlParsed = urlParsed;
-      this.sdp = new SDP();
-      this.analu = new ANALU();
-      this.aaac = new AAAC(sdp);
       handle.addEventListener('data', onData);
       state = STATE_INITIAL;
     }
@@ -74,11 +64,9 @@ package com.axis.rtspclient {
       if (0 === this.methods.length) {
         /* We don't know the options yet. Start with that. */
         sendOptionsReq();
-        state = STATE_OPTIONS_SENT;
       } else {
         /* Already queried the options (and perhaps got unauthorized on describe) */
         sendDescribeReq();
-        state = STATE_DESCRIBE_SENT;
       }
       return true;
     }
@@ -92,9 +80,8 @@ package com.axis.rtspclient {
 
       try {
         sendPauseReq();
-        state = STATE_PAUSE_SENT;
       } catch (err:Error) {
-        trace(err.message);
+        trace("Unable to pause: " + err.message);
         return false;
       }
 
@@ -109,18 +96,16 @@ package com.axis.rtspclient {
       }
 
       sendPlayReq();
-      state = STATE_PLAY_SENT;
       return true;
     }
 
     public function stop():Boolean
     {
-      if (state < STATE_PLAY_SENT) {
+      if (state < STATE_PLAY) {
         trace('Unable to stop if we never reached play.');
         return false;
       }
       sendTeardownReq();
-      state = STATE_TEARDOWN_SENT;
       return true;
     }
 
@@ -156,12 +141,10 @@ package com.axis.rtspclient {
       var copy:ByteArray = new ByteArray();
       data.readBytes(copy);
       data.clear();
-
       copy.readBytes(data);
 
-      headers = new ByteArray();
-      rtpLength     = -1;
-      rtpChannel    = -1;
+      rtpLength  = -1;
+      rtpChannel = -1;
     }
 
     private function readRequest(oBody:ByteArray):*
@@ -214,18 +197,14 @@ package com.axis.rtspclient {
       case STATE_INITIAL:
         trace("RTSPClient: STATE_INITIAL");
 
-      case STATE_OPTIONS_SENT:
-        trace("RTSPClient: STATE_DESCRIBE_SENT");
-        state = STATE_OPTIONS_RCVD;
+      case STATE_OPTIONS:
+        trace("RTSPClient: STATE_DESCRIBE");
         this.methods = parsed.headers.public.split(/[ ]*,[ ]*/);
-
         sendDescribeReq();
-        state = STATE_DESCRIBE_SENT;
 
         break;
-      case STATE_DESCRIBE_SENT:
-        trace("RTSPClient: STATE_DESCRIBE_SENT");
-        state = STATE_DESCRIBE_RCVD;
+      case STATE_DESCRIBE:
+        trace("RTSPClient: STATE_DESCRIBE");
 
         if (!sdp.parse(body)) {
           trace("RTSPClient:Failed to parse SDP file");
@@ -239,9 +218,13 @@ package com.axis.rtspclient {
 
         contentBase = parsed.headers['content-base'];
         tracks = sdp.getMediaBlockList();
-        trace('SDP contained ' + tracks.length + ' tracks. Calling SETUP for each.');
+        trace('SDP contained ' + tracks.length + ' track(s). Calling SETUP for each.');
 
-        state = STATE_SETUP;
+        if (0 === tracks.length) {
+          trace('No tracks in SDP file.');
+          return;
+        }
+
         /* Fall through, it's time for setup */
       case STATE_SETUP:
         trace("RTSPClient: STATE_SETUP");
@@ -259,11 +242,10 @@ package com.axis.rtspclient {
 
         /* All tracks setup and ready to go! */
         sendPlayReq();
-        state = STATE_PLAY_SENT;
         break;
 
-      case STATE_PLAY_SENT:
-        trace("RTSPClient: STATE_PLAY_SENT");
+      case STATE_PLAY:
+        trace("RTSPClient: STATE_PLAY");
         state = STATE_PLAYING;
 
         if (this.flvmux) {
@@ -273,9 +255,11 @@ package com.axis.rtspclient {
         }
 
         this.flvmux = new FLVMux(this.sdp);
+        var analu:ANALU = new ANALU();
+        var aaac:AAAC = new AAAC(sdp);
 
-        addEventListener("VIDEO_PACKET", analu.onRTPPacket);
-        addEventListener("AUDIO_PACKET", aaac.onRTPPacket);
+        this.addEventListener("VIDEO_PACKET", analu.onRTPPacket);
+        this.addEventListener("AUDIO_PACKET", aaac.onRTPPacket);
         analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
         aaac.addEventListener(AACFrame.NEW_FRAME, flvmux.onAACFrame);
         break;
@@ -284,14 +268,13 @@ package com.axis.rtspclient {
         trace("RTSPClient: STATE_PLAYING");
         break;
 
-      case STATE_PAUSE_SENT:
-        trace("RTSPClient: STATE_PAUSE_SENT");
+      case STATE_PAUSE:
+        trace("RTSPClient: STATE_PAUSE");
         state = STATE_PAUSED;
         break;
 
-      case STATE_TEARDOWN_SENT:
-        trace('RTSPClient: STATE_TEARDOWN_SENT');
-        state = STATE_TEARDOWN_RCVD;
+      case STATE_TEARDOWN:
+        trace('RTSPClient: STATE_TEARDOWN');
         break;
       }
     }
@@ -335,6 +318,7 @@ package com.axis.rtspclient {
     }
 
     private function sendOptionsReq():void {
+      state = STATE_OPTIONS;
       var req:String =
         "OPTIONS * RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
@@ -344,6 +328,7 @@ package com.axis.rtspclient {
     }
 
     private function sendDescribeReq():void {
+      state = STATE_DESCRIBE;
       var u:String = 'rtsp://' + urlParsed.host + ":" + urlParsed.port + urlParsed.urlpath;
       var req:String =
         "DESCRIBE " + u + " RTSP/1.0\r\n" +
@@ -356,6 +341,7 @@ package com.axis.rtspclient {
     }
 
     private function sendSetupReq(block:Object):void {
+      state = STATE_SETUP;
       var interleavedChannels:String = interleaveChannelIndex++ + "-" + interleaveChannelIndex++;
       var p:String = url.isAbsolute(block.control) ? block.control : contentBase + block.control;
 
@@ -378,6 +364,8 @@ package com.axis.rtspclient {
         Player.getNetStream().play(null);
       }
 
+      state = STATE_PLAY;
+
       var req:String =
         "PLAY " + contentBase + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
@@ -392,6 +380,8 @@ package com.axis.rtspclient {
       if (-1 === this.supportCommand("PAUSE")) {
         throw new Error('Pause is not supported by server.');
       }
+
+      state = STATE_PAUSE;
 
       /* NetStream must be closed here, otherwise it will think of this rtsp pause
          as a very bad connection and buffer a lot before playing again. Not
@@ -409,6 +399,7 @@ package com.axis.rtspclient {
     }
 
     private function sendTeardownReq():void {
+      state = STATE_TEARDOWN;
       var req:String =
         "TEARDOWN " + contentBase + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
