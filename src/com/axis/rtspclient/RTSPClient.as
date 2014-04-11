@@ -17,15 +17,17 @@ package com.axis.rtspclient {
     private static var userAgent:String = "Slush 0.1";
 
     private static var STATE_INITIAL:uint       = 1<<0;
-    private static var STATE_DESCRIBE_SENT:uint = 1<<1;
-    private static var STATE_DESCRIBE_RCVD:uint = 1<<2;
-    private static var STATE_SETUP:uint         = 1<<3;
-    private static var STATE_PLAY_SENT:uint     = 1<<4;
-    private static var STATE_PLAYING:uint       = 1<<5;
-    private static var STATE_PAUSE_SENT:uint    = 1<<6;
-    private static var STATE_PAUSED:uint        = 1<<7;
-    private static var STATE_TEARDOWN_SENT:uint = 1<<8;
-    private static var STATE_TEARDOWN_RCVD:uint = 1<<9;
+    private static var STATE_OPTIONS_SENT:uint  = 1<<1;
+    private static var STATE_OPTIONS_RCVD:uint  = 1<<2;
+    private static var STATE_DESCRIBE_SENT:uint = 1<<3;
+    private static var STATE_DESCRIBE_RCVD:uint = 1<<4;
+    private static var STATE_SETUP:uint         = 1<<5;
+    private static var STATE_PLAY_SENT:uint     = 1<<6;
+    private static var STATE_PLAYING:uint       = 1<<7;
+    private static var STATE_PAUSE_SENT:uint    = 1<<8;
+    private static var STATE_PAUSED:uint        = 1<<9;
+    private static var STATE_TEARDOWN_SENT:uint = 1<<10;
+    private static var STATE_TEARDOWN_RCVD:uint = 1<<11;
 
     private var state:int = STATE_INITIAL;
 
@@ -43,6 +45,7 @@ package com.axis.rtspclient {
     private var interleaveChannelIndex:uint = 0;
 
     private var headers:ByteArray = new ByteArray();
+    private var methods:Array = [];
     private var data:ByteArray = new ByteArray();
     private var rtpLength:int = -1;
     private var rtpChannel:int = -1;
@@ -67,19 +70,34 @@ package com.axis.rtspclient {
         trace('Cannot start unless in initial state.');
         return false;
       }
-      sendDescribeReq();
-      state = STATE_DESCRIBE_SENT;
+
+      if (0 === this.methods.length) {
+        /* We don't know the options yet. Start with that. */
+        sendOptionsReq();
+        state = STATE_OPTIONS_SENT;
+      } else {
+        /* Already queried the options (and perhaps got unauthorized on describe) */
+        sendDescribeReq();
+        state = STATE_DESCRIBE_SENT;
+      }
       return true;
     }
 
     public function pause():Boolean
     {
       if (state !== STATE_PLAYING) {
-        trace('Unable to pause a stream if not playing');
+        trace('Unable to pause a stream if not playing.');
         return false;
       }
-      sendPauseReq();
-      state = STATE_PAUSE_SENT;
+
+      try {
+        sendPauseReq();
+        state = STATE_PAUSE_SENT;
+      } catch (err:Error) {
+        trace(err.message);
+        return false;
+      }
+
       return true;
     }
 
@@ -89,6 +107,7 @@ package com.axis.rtspclient {
         trace('Unable to resume a stream if not paused.');
         return false;
       }
+
       sendPlayReq();
       state = STATE_PLAY_SENT;
       return true;
@@ -195,10 +214,17 @@ package com.axis.rtspclient {
       case STATE_INITIAL:
         trace("RTSPClient: STATE_INITIAL");
 
+      case STATE_OPTIONS_SENT:
+        trace("RTSPClient: STATE_DESCRIBE_SENT");
+        state = STATE_OPTIONS_RCVD;
+        this.methods = parsed.headers.public.split(/[ ]*,[ ]*/);
+
+        sendDescribeReq();
+        state = STATE_DESCRIBE_SENT;
+
         break;
       case STATE_DESCRIBE_SENT:
         trace("RTSPClient: STATE_DESCRIBE_SENT");
-
         state = STATE_DESCRIBE_RCVD;
 
         if (!sdp.parse(body)) {
@@ -303,6 +329,20 @@ package com.axis.rtspclient {
       }
     }
 
+    private function supportCommand(command:String):Boolean
+    {
+      return (-1 !== this.methods.indexOf(command));
+    }
+
+    private function sendOptionsReq():void {
+      var req:String =
+        "OPTIONS * RTSP/1.0\r\n" +
+        "CSeq: " + (++cSeq) + "\r\n" +
+        "User-Agent: " + userAgent + "\r\n" +
+        "\r\n";
+      handle.writeUTFBytes(req);
+    }
+
     private function sendDescribeReq():void {
       var u:String = 'rtsp://' + urlParsed.host + ":" + urlParsed.port + urlParsed.urlpath;
       var req:String =
@@ -349,6 +389,10 @@ package com.axis.rtspclient {
     }
 
     private function sendPauseReq():void {
+      if (-1 === this.supportCommand("PAUSE")) {
+        throw new Error('Pause is not supported by server.');
+      }
+
       /* NetStream must be closed here, otherwise it will think of this rtsp pause
          as a very bad connection and buffer a lot before playing again. Not
          excellent for live data. */
