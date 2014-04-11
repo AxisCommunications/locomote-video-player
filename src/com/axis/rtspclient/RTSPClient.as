@@ -4,7 +4,7 @@ package com.axis.rtspclient {
   import flash.events.Event;
   import flash.utils.ByteArray;
   import flash.net.Socket;
-  import mx.utils.ObjectUtil;
+  import mx.utils.StringUtil;
 
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
@@ -14,17 +14,18 @@ package com.axis.rtspclient {
   import com.axis.http.auth;
 
   public class RTSPClient extends EventDispatcher {
-    private static var userAgent:String = "Slush 0.1";
+    [Embed(source = "../../../../VERSION", mimeType = "application/octet-stream")] private var Version:Class;
+    private var userAgent:String;
 
-    private static var STATE_INITIAL:uint   = 1 << 0;
-    private static var STATE_OPTIONS:uint   = 1 << 1;
-    private static var STATE_DESCRIBE:uint  = 1 << 2;
-    private static var STATE_SETUP:uint     = 1 << 3;
-    private static var STATE_PLAY:uint      = 1 << 4;
-    private static var STATE_PLAYING:uint   = 1 << 5;
-    private static var STATE_PAUSE:uint     = 1 << 6;
-    private static var STATE_PAUSED:uint    = 1 << 7;
-    private static var STATE_TEARDOWN:uint  = 1 << 8;
+    private static var STATE_INITIAL:uint  = 1 << 0;
+    private static var STATE_OPTIONS:uint  = 1 << 1;
+    private static var STATE_DESCRIBE:uint = 1 << 2;
+    private static var STATE_SETUP:uint    = 1 << 3;
+    private static var STATE_PLAY:uint     = 1 << 4;
+    private static var STATE_PLAYING:uint  = 1 << 5;
+    private static var STATE_PAUSE:uint    = 1 << 6;
+    private static var STATE_PAUSED:uint   = 1 << 7;
+    private static var STATE_TEARDOWN:uint = 1 << 8;
 
     private var state:int = STATE_INITIAL;
     private var handle:IRTSPHandle;
@@ -49,6 +50,7 @@ package com.axis.rtspclient {
     private var digestNC:uint = 1;
 
     public function RTSPClient(handle:IRTSPHandle, urlParsed:Object) {
+      userAgent = "Slush " + StringUtil.trim(new Version().toString());
       this.handle = handle;
       this.urlParsed = urlParsed;
       handle.addEventListener('data', onData);
