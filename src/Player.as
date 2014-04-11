@@ -29,6 +29,9 @@ package {
   [SWF(backgroundColor="#efefef")]
 
   public class Player extends Sprite {
+    private var config:Object = {
+      'scaleUp' : false
+    };
     private var vid:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
@@ -94,15 +97,19 @@ package {
       var stageheight:uint = (StageDisplayState.NORMAL === stage.displayState) ?
         stage.stageHeight : stage.fullScreenHeight;
 
-      vid.width  = Math.min(meta.width,  stagewidth);
-      vid.height = Math.min(meta.height, stageheight);
+      var scale:Number = ((stagewidth / meta.width) > (stageheight / meta.height)) ?
+        (stageheight / meta.height) : (stagewidth / meta.width);
 
-      vid.x = 0;
-      vid.y = 0;
-      if (meta.width < stagewidth || meta.height < stageheight) {
-        vid.x = (stagewidth - meta.width) / 2;
-        vid.y = (stageheight - meta.height) / 2;
+      vid.width = meta.width;
+      vid.height = meta.height;
+      if ((scale < 1.0) || (scale > 1.0 && true === config.scaleUp)) {
+        trace('scaling video, scale:', scale.toFixed(2), ' (aspect ratio: ' +  (vid.width / vid.height).toFixed(2) + ')');
+        vid.width = meta.width * scale;
+        vid.height = meta.height * scale;
       }
+
+      vid.x = (stagewidth - vid.width) / 2;
+      vid.y = (stageheight - vid.height) / 2;
     }
 
     public function play(iurl:String = null):void
