@@ -4,6 +4,7 @@ package com.axis.rtspclient {
   import flash.events.Event;
   import flash.utils.ByteArray;
   import flash.net.Socket;
+  import mx.utils.ObjectUtil;
 
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
@@ -62,13 +63,12 @@ package com.axis.rtspclient {
     }
 
     public function start():Boolean {
-      trace('state:', state);
       if (state !== STATE_INITIAL) {
         trace('Cannot start unless in initial state.');
         return false;
       }
-      state = STATE_DESCRIBE_SENT;
       sendDescribeReq();
+      state = STATE_DESCRIBE_SENT;
       return true;
     }
 
@@ -78,8 +78,8 @@ package com.axis.rtspclient {
         trace('Unable to pause a stream if not playing');
         return false;
       }
-      state = STATE_PAUSE_SENT;
       sendPauseReq();
+      state = STATE_PAUSE_SENT;
       return true;
     }
 
@@ -89,8 +89,8 @@ package com.axis.rtspclient {
         trace('Unable to resume a stream if not paused.');
         return false;
       }
-      state = STATE_PLAY_SENT;
       sendPlayReq();
+      state = STATE_PLAY_SENT;
       return true;
     }
 
@@ -100,8 +100,8 @@ package com.axis.rtspclient {
         trace('Unable to stop if we never reached play.');
         return false;
       }
-      state = STATE_TEARDOWN_SENT;
       sendTeardownReq();
+      state = STATE_TEARDOWN_SENT;
       return true;
     }
 
@@ -333,6 +333,11 @@ package com.axis.rtspclient {
     }
 
     private function sendPlayReq():void {
+      if (state === STATE_PAUSED) {
+        /* NetStream was closed when pausing. Play it again if that is the case. */
+        Player.getNetStream().play(null);
+      }
+
       var req:String =
         "PLAY " + contentBase + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
@@ -344,6 +349,11 @@ package com.axis.rtspclient {
     }
 
     private function sendPauseReq():void {
+      /* NetStream must be closed here, otherwise it will think of this rtsp pause
+         as a very bad connection and buffer a lot before playing again. Not
+         excellent for live data. */
+      Player.getNetStream().close();
+
       var req:String =
         "PAUSE " + contentBase + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
