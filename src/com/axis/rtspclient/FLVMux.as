@@ -13,12 +13,13 @@ package com.axis.rtspclient {
   public class FLVMux {
 
     private var sdp:SDP;
+    private var ns:NetStream;
     private var container:ByteArray = new ByteArray();
     private var loggedBytes:ByteArray = new ByteArray();
     private var videoInitialTimestamp:int = -1;
     private var audioInitialTimestamp:int = -1;
 
-    public function FLVMux(sdp:SDP)
+    public function FLVMux(ns:NetStream, sdp:SDP)
     {
       container.writeByte(0x46); // 'F'
       container.writeByte(0x4C); // 'L'
@@ -32,6 +33,7 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(0x0) // Previous tag size: shall be 0
 
       this.sdp = sdp;
+      this.ns = ns;
 
       createMetaDataTag();
 
@@ -395,9 +397,8 @@ package com.axis.rtspclient {
 
     private function pushData():void
     {
-      var ns:NetStream = Player.getNetStream();
       container.position = 0;
-      ns.appendBytes(container);
+      this.ns.appendBytes(container);
       container.clear();
     }
   }

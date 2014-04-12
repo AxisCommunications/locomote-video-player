@@ -1,4 +1,5 @@
 DEST = build
+INSTALL = target
 MAIN = src/Player.as
 SRCS = $(shell find src/ -type f -name '*.as')
 SWF = $(DEST)/Player.swf
@@ -28,6 +29,8 @@ MXMLC_OPTIONS = \
 all: $(SWF)
 
 install: all
+	mkdir -p $(INSTALL)
+	cp $(SWF) $(INSTALL)
 
 clean:
 	rm -rf $(DEST)

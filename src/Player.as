@@ -6,39 +6,41 @@ package {
   import flash.display.StageScaleMode;
   import flash.display.StageDisplayState;
   import flash.events.Event;
-  import flash.events.ErrorEvent;
-  import flash.events.NetStatusEvent;
-  import flash.events.ActivityEvent;
-  import flash.events.ProgressEvent;
-  import flash.events.StatusEvent;
-  import flash.events.SampleDataEvent;
   import flash.events.MouseEvent;
   import flash.external.ExternalInterface;
   import flash.media.Video;
   import flash.net.NetStream;
   import flash.net.NetConnection;
-  import flash.net.Socket;
   import flash.system.Security;
-  import flash.utils.getTimer;
 
-  import com.axis.rtspclient.*;
-  import com.axis.audioclient.AxisTransmit;
   import com.axis.http.url;
+  import com.axis.IClient;
+
+  import com.axis.rtspclient.RTSPClient;
+  import com.axis.rtspclient.IRTSPHandle;
+  import com.axis.rtspclient.RTSPoverTCPHandle;
+  import com.axis.rtspclient.RTSPoverHTTPHandle;
+
+  import com.axis.httpclient.HTTPClient;
+
+  import com.axis.audioclient.AxisTransmit;
 
   [SWF(frameRate="60")]
   [SWF(backgroundColor="#efefef")]
 
   public class Player extends Sprite {
     private var config:Object = {
+      'buffer' : 0,
       'scaleUp' : false
     };
     private var vid:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
-    private var client:RTSPClient;
-    private static var ns:NetStream;
+    private var client:IClient;
+    private var ns:NetStream;
 
     public function Player() {
+      var self:Player = this;
 
       Security.allowDomain("*");
       Security.allowInsecureDomain("*");
@@ -62,26 +64,23 @@ package {
       var nc:NetConnection = new NetConnection();
       nc.connect(null);
 
-      vid = new Video(stage.stageWidth, stage.stageHeight);
-
       ns = new NetStream(nc);
-      ns.bufferTime = 1;
+      ns.bufferTime = config.buffer;
       ns.client = new Object();
-      var self:Player = this;
       ns.client.onMetaData = function(item:Object):void {
         self.meta = item;
         videoResize();
       };
+
+      vid = new Video(stage.stageWidth, stage.stageHeight);
+      vid.attachNetStream(ns);
+      addChild(vid);
 
       this.stage.doubleClickEnabled = true;
       this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
       this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
         videoResize();
       });
-
-      ns.play(null);
-      vid.attachNetStream(ns);
-      addChild(vid);
     }
 
     public function fullscreen(event:MouseEvent):void
@@ -116,24 +115,27 @@ package {
     {
       var urlParsed:Object = url.parse(iurl);
 
-      var rtspHandle:IRTSPHandle = null;
       switch (urlParsed.protocol) {
       case 'rtsph':
         /* RTSP over HTTP */
-        rtspHandle = new RTSPoverHTTPHandle(urlParsed);
+        client = new RTSPClient(this.ns, urlParsed, new RTSPoverHTTPHandle(urlParsed));
         break;
 
       case 'rtsp':
         /* RTSP over TCP */
-        rtspHandle = new RTSPoverTCPHandle(urlParsed);
+        client = new RTSPClient(this.ns, urlParsed, new RTSPoverTCPHandle(urlParsed));
+        break;
+
+      case 'http':
+        client = new HTTPClient(this.ns, urlParsed);
+        break;
+
+      default:
+        trace('Unknown streaming protocol:', urlParsed.protocol)
+        return;
       }
 
-      client = new RTSPClient(rtspHandle, urlParsed);
-      rtspHandle.addEventListener('connected', function():void {
-        client.start();
-      });
-
-      rtspHandle.connect();
+      client.start();
     }
 
     public function pause():void
@@ -161,11 +163,6 @@ package {
 
     private function onStageAdded(e:Event):void {
       trace('stage added');
-    }
-
-    public static function getNetStream():NetStream
-    {
-      return ns;
     }
   }
 }
