@@ -298,6 +298,7 @@ package com.axis.rtspclient {
 
       case STATE_TEARDOWN:
         trace('RTSPClient: STATE_TEARDOWN');
+        handle.disconnect();
         break;
       }
 

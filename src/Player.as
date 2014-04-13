@@ -149,6 +149,7 @@ package {
     {
       client.stop();
       video.clear();
+      client = null;
     }
 
     public function audioTransmitStopInterface():void {

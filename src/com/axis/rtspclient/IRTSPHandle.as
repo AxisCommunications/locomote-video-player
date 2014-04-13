@@ -9,5 +9,6 @@ package com.axis.rtspclient {
     function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void;
     function connect():void;
     function reconnect():void;
+    function disconnect():void;
   }
 }

@@ -84,10 +84,10 @@ package com.axis.rtspclient {
     }
 
     public function disconnect():void {
-      if (getChannel && getChannel.connected) {
+      if (getChannel.connected) {
         getChannel.close();
       }
-      if (postChannel && postChannel.connected) {
+      if (postChannel.connected) {
         postChannel.close();
       }
     }

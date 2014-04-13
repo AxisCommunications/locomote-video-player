@@ -46,5 +46,10 @@ package com.axis.rtspclient {
       channel.close();
       connect();
     }
+
+    public function disconnect():void
+    {
+      channel.close();
+    }
   }
 }
