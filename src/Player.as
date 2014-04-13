@@ -9,19 +9,18 @@ package {
   import flash.events.MouseEvent;
   import flash.external.ExternalInterface;
   import flash.media.Video;
-  import flash.net.NetStream;
-  import flash.net.NetConnection;
   import flash.system.Security;
 
   import com.axis.http.url;
   import com.axis.IClient;
+  import com.axis.ClientEvent;
 
   import com.axis.rtspclient.RTSPClient;
   import com.axis.rtspclient.IRTSPHandle;
   import com.axis.rtspclient.RTSPoverTCPHandle;
   import com.axis.rtspclient.RTSPoverHTTPHandle;
-
   import com.axis.httpclient.HTTPClient;
+  import com.axis.rtmpclient.RTMPClient;
 
   import com.axis.audioclient.AxisTransmit;
 
@@ -30,14 +29,13 @@ package {
 
   public class Player extends Sprite {
     private var config:Object = {
-      'buffer' : 0,
+      'buffer' : 1,
       'scaleUp' : false
     };
-    private var vid:Video;
+    private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
     private var client:IClient;
-    private var ns:NetStream;
 
     public function Player() {
       var self:Player = this;
@@ -61,20 +59,8 @@ package {
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
       addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
 
-      var nc:NetConnection = new NetConnection();
-      nc.connect(null);
-
-      ns = new NetStream(nc);
-      ns.bufferTime = config.buffer;
-      ns.client = new Object();
-      ns.client.onMetaData = function(item:Object):void {
-        self.meta = item;
-        videoResize();
-      };
-
-      vid = new Video(stage.stageWidth, stage.stageHeight);
-      vid.attachNetStream(ns);
-      addChild(vid);
+      video = new Video(stage.stageWidth, stage.stageHeight);
+      addChild(video);
 
       this.stage.doubleClickEnabled = true;
       this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
@@ -99,35 +85,46 @@ package {
       var scale:Number = ((stagewidth / meta.width) > (stageheight / meta.height)) ?
         (stageheight / meta.height) : (stagewidth / meta.width);
 
-      vid.width = meta.width;
-      vid.height = meta.height;
+      video.width = meta.width;
+      video.height = meta.height;
       if ((scale < 1.0) || (scale > 1.0 && true === config.scaleUp)) {
-        trace('scaling video, scale:', scale.toFixed(2), ' (aspect ratio: ' +  (vid.width / vid.height).toFixed(2) + ')');
-        vid.width = meta.width * scale;
-        vid.height = meta.height * scale;
+        trace('scaling video, scale:', scale.toFixed(2), ' (aspect ratio: ' +  (video.width / video.height).toFixed(2) + ')');
+        video.width = meta.width * scale;
+        video.height = meta.height * scale;
       }
 
-      vid.x = (stagewidth - vid.width) / 2;
-      vid.y = (stageheight - vid.height) / 2;
+      video.x = (stagewidth - video.width) / 2;
+      video.y = (stageheight - video.height) / 2;
     }
 
     public function play(iurl:String = null):void
     {
       var urlParsed:Object = url.parse(iurl);
 
+      if (client) {
+        client.stop();
+        video.clear();
+      }
+
       switch (urlParsed.protocol) {
       case 'rtsph':
         /* RTSP over HTTP */
-        client = new RTSPClient(this.ns, urlParsed, new RTSPoverHTTPHandle(urlParsed));
+        client = new RTSPClient(this.video, urlParsed, new RTSPoverHTTPHandle(urlParsed));
         break;
 
       case 'rtsp':
         /* RTSP over TCP */
-        client = new RTSPClient(this.ns, urlParsed, new RTSPoverTCPHandle(urlParsed));
+        client = new RTSPClient(this.video, urlParsed, new RTSPoverTCPHandle(urlParsed));
         break;
 
       case 'http':
-        client = new HTTPClient(this.ns, urlParsed);
+        /* Progressive download over HTTP */
+        client = new HTTPClient(this.video, urlParsed);
+        break;
+
+      case 'rtmp':
+        /* RTMP */
+        client = new RTMPClient(this.video, urlParsed);
         break;
 
       default:
@@ -135,6 +132,7 @@ package {
         return;
       }
 
+      client.addEventListener(ClientEvent.NETSTREAM_CREATED, onNetStreamCreated);
       client.start();
     }
 
@@ -163,6 +161,18 @@ package {
 
     private function onStageAdded(e:Event):void {
       trace('stage added');
+    }
+
+    public function onMetaData(item:Object):void
+    {
+      this.meta = item;
+      this.videoResize();
+    }
+
+    public function onNetStreamCreated(ev:ClientEvent):void
+    {
+      ev.data.ns.bufferTime = config.bufferTime;
+      ev.data.ns.client = this;
     }
   }
 }

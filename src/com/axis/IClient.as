@@ -1,5 +1,14 @@
 package com.axis {
-  public interface IClient {
+  import flash.events.IEventDispatcher;
+
+  /**
+   * The interface to implement for a client to be used by Player.
+   * In addidtion the the methods enforced in this interface, it should
+   * emit ClientEvent for certain actions:
+   *
+   *  - ClientEvent.NETSTREAM_CREATED for automatic video resizing and other goodies.
+   */
+  public interface IClient extends IEventDispatcher {
     /**
      * Called when the client should start the stream.
      * Any connections should be made at this point

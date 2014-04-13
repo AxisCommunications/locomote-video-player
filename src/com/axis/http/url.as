@@ -2,6 +2,17 @@ package com.axis.http {
 
   public class url {
 
+    /**
+     * Parses an URL.
+     * mx.utils.URLUtil is not good enough since it doesn't support
+     * authorization.
+     *
+     * @param url The URL represented as a string.
+     * @return An object with the following parameters set:
+     *         full, protocol, urlpath, user, pass, host, port.
+     *         If URL part is not in the specified url, the corresponding
+     *         value is null.
+     */
     public static function parse(url:String):Object
     {
       var ret:Object = {};
@@ -12,6 +23,10 @@ package com.axis.http {
       ret.full = url;
       ret.protocol = result.protocol;
       ret.urlpath = result.urlpath;
+
+      var parts:Array = result.urlpath.split('/');
+      ret.basename = parts.pop().split(/\?|#/)[0];
+      ret.basepath = parts.join('/');
 
       var loginSplit:Array = result['login'].split('@');
       var hostport:Array = loginSplit[0].split(':');
