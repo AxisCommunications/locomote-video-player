@@ -102,8 +102,7 @@ package {
       var urlParsed:Object = url.parse(iurl);
 
       if (client) {
-        client.stop();
-        video.clear();
+        stop();
       }
 
       switch (urlParsed.protocol) {
@@ -149,6 +148,7 @@ package {
     public function stop():void
     {
       client.stop();
+      video.clear();
     }
 
     public function audioTransmitStopInterface():void {
