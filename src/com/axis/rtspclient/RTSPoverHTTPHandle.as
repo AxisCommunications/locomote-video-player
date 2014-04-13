@@ -45,7 +45,6 @@ package com.axis.rtspclient {
       getChannel = new Socket();
       getChannel.timeout = 5000;
       getChannel.addEventListener(Event.CONNECT, onGetChannelConnect);
-      getChannel.addEventListener(Event.CLOSE, onGetChannelClose);
       getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onGetChannelData);
       getChannel.addEventListener(IOErrorEvent.IO_ERROR, onError);
       getChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
@@ -53,7 +52,6 @@ package com.axis.rtspclient {
       postChannel = new Socket();
       postChannel.timeout = 5000;
       postChannel.addEventListener(Event.CONNECT, onPostChannelConnect);
-      postChannel.addEventListener(Event.CLOSE, onPostChannelClose);
       postChannel.addEventListener(IOErrorEvent.IO_ERROR, onError);
       postChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 
@@ -90,6 +88,9 @@ package com.axis.rtspclient {
       if (postChannel.connected) {
         postChannel.close();
       }
+
+      /* should probably wait for close, but it doesn't seem to fire properly */
+      dispatchEvent(new Event('closed'));
     }
 
     public function connect():void {
@@ -103,27 +104,15 @@ package com.axis.rtspclient {
     }
 
     private function onGetChannelConnect(event:Event):void {
-      trace("get channel connected");
       initializeGetChannel();
     }
 
     private function onPostChannelConnect(event:Event):void {
-      trace("post channel connected");
       initializePostChannel();
     }
 
     public function stop():void {
       disconnect();
-    }
-
-    private function onGetChannelClose(event:Event):void
-    {
-      trace('GET channel closed');
-    }
-
-    private function onPostChannelClose(event:Event):void
-    {
-      trace('POST channel closed');
     }
 
     private function onGetChannelData(event:ProgressEvent):void {
@@ -164,7 +153,6 @@ package com.axis.rtspclient {
     }
 
     private function initializeGetChannel():void {
-      trace("Sending: GET");
       getChannel.writeUTFBytes("GET " + urlParsed.urlpath + " HTTP/1.0\r\n");
       getChannel.writeUTFBytes("X-Sessioncookie: " +  sessioncookie + "\r\n");
       getChannel.writeUTFBytes("Accept: application/x-rtsp-tunnelled\r\n");
@@ -174,7 +162,6 @@ package com.axis.rtspclient {
     }
 
     private function initializePostChannel():void {
-      trace("Sending: POST");
       postChannel.writeUTFBytes("POST " + urlParsed.urlpath + " HTTP/1.0\r\n");
       postChannel.writeUTFBytes("X-Sessioncookie: " + sessioncookie + "\r\n");
       postChannel.writeUTFBytes("Content-Length: 32767" + "\r\n");

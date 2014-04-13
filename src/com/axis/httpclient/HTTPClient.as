@@ -6,10 +6,12 @@ package com.axis.httpclient {
   import flash.net.NetConnection;
   import flash.net.NetStream;
   import flash.events.EventDispatcher;
+  import flash.events.NetStatusEvent;
 
   public class HTTPClient extends EventDispatcher implements IClient {
     private var urlParsed:Object;
     private var video:Video;
+    private var nc:NetConnection;
     private var ns:NetStream;
 
     public function HTTPClient(video:Video, urlParsed:Object)
@@ -22,8 +24,9 @@ package com.axis.httpclient {
     {
       trace('HTTPClient: playing:', urlParsed.full);
 
-      var nc:NetConnection = new NetConnection();
+      nc = new NetConnection();
       nc.connect(null);
+      nc.addEventListener(NetStatusEvent.NET_STATUS, onConnectionStatus);
 
       this.ns = new NetStream(nc);
       dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
@@ -37,7 +40,8 @@ package com.axis.httpclient {
     public function stop():Boolean
     {
       ns.dispose();
-      return false;
+      nc.close();
+      return true;
     }
 
     public function pause():Boolean
@@ -50,6 +54,15 @@ package com.axis.httpclient {
     {
       ns.resume();
       return true;
+    }
+
+    private function onConnectionStatus(event:NetStatusEvent):void
+    {
+      trace('HTTPClient: Connection status:', event.info.code);
+
+      if ('NetConnection.Connect.Closed' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+      }
     }
   }
 }

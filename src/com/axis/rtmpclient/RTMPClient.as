@@ -42,6 +42,7 @@ package com.axis.rtmpclient {
     public function stop():Boolean
     {
       ns.dispose();
+      nc.close();
       return true;
     }
 
@@ -60,11 +61,16 @@ package com.axis.rtmpclient {
     private function onConnectionStatus(event:NetStatusEvent):void
     {
       trace('RTMPClient: Connection status:', event.info.code);
+
       if ('NetConnection.Connect.Success' === event.info.code) {
         this.ns = new NetStream(this.nc);
         dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
         this.video.attachNetStream(this.ns);
         this.ns.play(this.streamId);
+      }
+
+      if ('NetConnection.Connect.Closed' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       }
     }
 

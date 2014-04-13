@@ -132,6 +132,7 @@ package {
       }
 
       client.addEventListener(ClientEvent.NETSTREAM_CREATED, onNetStreamCreated);
+      client.addEventListener(ClientEvent.STOPPED, onStopped);
       client.start();
     }
 
@@ -148,8 +149,6 @@ package {
     public function stop():void
     {
       client.stop();
-      video.clear();
-      client = null;
     }
 
     public function audioTransmitStopInterface():void {
@@ -174,6 +173,13 @@ package {
     {
       ev.data.ns.bufferTime = config.bufferTime;
       ev.data.ns.client = this;
+    }
+
+    private function onStopped(ev:ClientEvent):void
+    {
+      trace('video stopped');
+      video.clear();
+      client = null;
     }
   }
 }

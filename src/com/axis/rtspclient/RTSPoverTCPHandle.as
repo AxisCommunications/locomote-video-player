@@ -1,9 +1,10 @@
 package com.axis.rtspclient {
 
   import flash.net.Socket;
+  import flash.events.Event;
   import flash.events.EventDispatcher;
   import flash.events.ProgressEvent;
-  import flash.events.Event;
+  import flash.events.IOErrorEvent
   import flash.utils.ByteArray;
   import mx.utils.Base64Encoder;
 
@@ -22,6 +23,9 @@ package com.axis.rtspclient {
       });
       channel.addEventListener(ProgressEvent.SOCKET_DATA, function():void {
         dispatchEvent(new Event("data"));
+      });
+      channel.addEventListener(IOErrorEvent.IO_ERROR, function(ev:IOErrorEvent):void {
+        trace('io error');
       });
     }
 
@@ -50,6 +54,9 @@ package com.axis.rtspclient {
     public function disconnect():void
     {
       channel.close();
+
+      /* should probably wait for close, but it doesn't seem to fire properly */
+      dispatchEvent(new Event("closed"));
     }
   }
 }

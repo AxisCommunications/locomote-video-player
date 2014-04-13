@@ -75,6 +75,9 @@ package com.axis.rtspclient {
           return;
         }
 
+        /* If the handle closes, take care of it */
+        handle.addEventListener('closed', self.onClose);
+
         if (0 === self.methods.length) {
           /* We don't know the options yet. Start with that. */
           sendOptionsReq();
@@ -130,6 +133,15 @@ package com.axis.rtspclient {
       }
       sendTeardownReq();
       return true;
+    }
+
+    private function onClose(event:Event):void
+    {
+      if (state === STATE_TEARDOWN) {
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+      } else {
+        trace('RTSPClient: Handle unexpectedly closed.');
+      }
     }
 
     private function onData(event:Event):void
