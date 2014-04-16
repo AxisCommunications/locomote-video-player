@@ -58,8 +58,6 @@ package com.axis.httpclient {
 
     private function onConnectionStatus(event:NetStatusEvent):void
     {
-      trace('HTTPClient: Connection status:', event.info.code);
-
       if ('NetConnection.Connect.Closed' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       }

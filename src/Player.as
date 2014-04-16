@@ -9,6 +9,7 @@ package {
   import flash.events.MouseEvent;
   import flash.external.ExternalInterface;
   import flash.media.Video;
+  import flash.net.NetStream;
   import flash.system.Security;
 
   import com.axis.http.url;
@@ -36,6 +37,8 @@ package {
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
     private var client:IClient;
+    private var ns:NetStream;
+    private var urlParsed:Object;
 
     public function Player() {
       var self:Player = this;
@@ -99,12 +102,19 @@ package {
 
     public function play(iurl:String = null):void
     {
-      var urlParsed:Object = url.parse(iurl);
-
       if (client) {
-        stop();
+        urlParsed = url.parse(iurl);
+        /* Stop the client, and 'onStopped' will start the new stream. */
+        client.stop();
+        return;
       }
 
+      urlParsed = url.parse(iurl);
+      start();
+    }
+
+    private function start():void
+    {
       switch (urlParsed.protocol) {
       case 'rtsph':
         /* RTSP over HTTP */
@@ -148,6 +158,8 @@ package {
 
     public function stop():void
     {
+      urlParsed = null;
+      ns = null;
       client.stop();
     }
 
@@ -171,15 +183,18 @@ package {
 
     public function onNetStreamCreated(ev:ClientEvent):void
     {
-      ev.data.ns.bufferTime = config.bufferTime;
+      this.ns = ev.data.ns;
+      ev.data.ns.bufferTime = config.buffer;
       ev.data.ns.client = this;
     }
 
     private function onStopped(ev:ClientEvent):void
     {
-      trace('video stopped');
       video.clear();
       client = null;
+      if (urlParsed) {
+        start();
+      }
     }
   }
 }

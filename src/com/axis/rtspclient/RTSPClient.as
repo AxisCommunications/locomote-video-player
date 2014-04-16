@@ -60,7 +60,6 @@ package com.axis.rtspclient {
       this.userAgent = "Slush " + StringUtil.trim(new Version().toString());
       this.state = STATE_INITIAL;
       this.handle = handle;
-      this.ns = ns;
       this.video = video;
       this.urlParsed = urlParsed;
 
@@ -138,6 +137,7 @@ package com.axis.rtspclient {
     private function onClose(event:Event):void
     {
       if (state === STATE_TEARDOWN) {
+        this.ns.dispose();
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       } else {
         trace('RTSPClient: Handle unexpectedly closed.');
@@ -146,7 +146,6 @@ package com.axis.rtspclient {
 
     private function onData(event:Event):void
     {
-      /* read one byte to determine destination */
       if (0 < data.bytesAvailable) {
         /* Determining byte have already been read. This is a continuation */
       } else {
@@ -166,7 +165,8 @@ package com.axis.rtspclient {
           break;
 
         default:
-          trace('Unknown determining byte:', data[0]);
+          trace('Unknown determining byte:', '0x' + data[0].toString(16), '. Stopping stream.');
+          stop();
           break;
       }
     }
@@ -310,7 +310,7 @@ package com.axis.rtspclient {
 
       case STATE_TEARDOWN:
         trace('RTSPClient: STATE_TEARDOWN');
-        handle.disconnect();
+        this.handle.disconnect();
         break;
       }
 

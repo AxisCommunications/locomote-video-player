@@ -34,6 +34,7 @@ package com.axis.rtmpclient {
       this.streamId = urlParsed.basename;
       this.streamServer = urlParsed.protocol + '://' + urlParsed.host + urlParsed.basepath;
 
+      trace('RTMPClient: connecting to server: \'' + streamServer + '\'');
       nc.connect(streamServer);
 
       return true;
@@ -60,12 +61,12 @@ package com.axis.rtmpclient {
 
     private function onConnectionStatus(event:NetStatusEvent):void
     {
-      trace('RTMPClient: Connection status:', event.info.code);
-
       if ('NetConnection.Connect.Success' === event.info.code) {
+        trace('RTMPClient: connected');
         this.ns = new NetStream(this.nc);
         dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
         this.video.attachNetStream(this.ns);
+        trace('RTMPClient: starting stream: \'' + this.streamId + '\'');
         this.ns.play(this.streamId);
       }
 
