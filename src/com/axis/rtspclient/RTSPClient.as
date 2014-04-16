@@ -233,7 +233,7 @@ package com.axis.rtspclient {
         trace("RTSPClient: STATE_INITIAL");
 
       case STATE_OPTIONS:
-        trace("RTSPClient: STATE_DESCRIBE");
+        trace("RTSPClient: STATE_OPTIONS");
         this.methods = parsed.headers.public.split(/[ ]*,[ ]*/);
         sendDescribeReq();
 
