@@ -133,14 +133,22 @@ package com.axis.rtspclient {
       var pic_width_in_mbs_minus1:uint              = sps.readUnsignedExpGolomb();
       var pic_height_in_map_units_minus1:uint       = sps.readUnsignedExpGolomb();
       var pic_frame_mbs_only_flag:uint              = sps.readBits(1);
+      var direct_8x8_inference_flag:uint            = sps.readBits(1);
+      var frame_cropping_flag:uint                  = sps.readBits(1);
+      var frame_crop_left_offset:uint   = frame_cropping_flag ? sps.readUnsignedExpGolomb() : 0;
+      var frame_crop_right_offset:uint  = frame_cropping_flag ? sps.readUnsignedExpGolomb() : 0;
+      var frame_crop_top_offset:uint    = frame_cropping_flag ? sps.readUnsignedExpGolomb() : 0;
+      var frame_crop_bottom_offset:uint = frame_cropping_flag ? sps.readUnsignedExpGolomb() : 0;
 
-      /* There's more information here, but can't be bothered right now */
-
+      var w:uint = (pic_width_in_mbs_minus1 + 1) * 16 -
+        (frame_crop_left_offset * 2) - (frame_crop_right_offset * 2);
+      var h:uint = (2 - pic_frame_mbs_only_flag) * (pic_height_in_map_units_minus1 + 1) * 16 -
+        (frame_crop_top_offset * 2) - (frame_crop_bottom_offset * 2)
       return {
         'profile' : profile,
         'level'   : level / 10.0,
-        'width'   : (pic_width_in_mbs_minus1 + 1) * 16,
-        'height'  : (2 - pic_frame_mbs_only_flag) * (pic_height_in_map_units_minus1 + 1) * 16
+        'width'   : w,
+        'height'  : h
       };
     }
 
