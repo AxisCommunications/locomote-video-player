@@ -22,15 +22,15 @@ package com.axis.rtspclient {
     [Embed(source = "../../../../VERSION", mimeType = "application/octet-stream")] private var Version:Class;
     private var userAgent:String;
 
-    private static var STATE_INITIAL:uint  = 1 << 0;
-    private static var STATE_OPTIONS:uint  = 1 << 1;
-    private static var STATE_DESCRIBE:uint = 1 << 2;
-    private static var STATE_SETUP:uint    = 1 << 3;
-    private static var STATE_PLAY:uint     = 1 << 4;
-    private static var STATE_PLAYING:uint  = 1 << 5;
-    private static var STATE_PAUSE:uint    = 1 << 6;
-    private static var STATE_PAUSED:uint   = 1 << 7;
-    private static var STATE_TEARDOWN:uint = 1 << 8;
+    private static const STATE_INITIAL:uint  = 1 << 0;
+    private static const STATE_OPTIONS:uint  = 1 << 1;
+    private static const STATE_DESCRIBE:uint = 1 << 2;
+    private static const STATE_SETUP:uint    = 1 << 3;
+    private static const STATE_PLAY:uint     = 1 << 4;
+    private static const STATE_PLAYING:uint  = 1 << 5;
+    private static const STATE_PAUSE:uint    = 1 << 6;
+    private static const STATE_PAUSED:uint   = 1 << 7;
+    private static const STATE_TEARDOWN:uint = 1 << 8;
 
     private var state:int = STATE_INITIAL;
     private var handle:IRTSPHandle;
