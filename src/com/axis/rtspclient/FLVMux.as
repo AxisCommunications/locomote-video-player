@@ -381,7 +381,7 @@ package com.axis.rtspclient {
         break;
 
       default:
-        trace("Unsupported NALU type: " + nalu.ntype);
+        /* Unknown NAL unit, skip it */
         /* Return here as nothing was created, and thus nothing should be appended */
         return;
       }
