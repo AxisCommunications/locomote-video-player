@@ -19,7 +19,8 @@ package com.axis.http {
       buffer.readBytes(dummy, 0, index + 4);
 
       var parsed:Object = parse(dummy.toString());
-      if (parsed['content-length'] && int(parsed['content-length']) > buffer.bytesAvailable) {
+      if (parsed.headers['content-length'] &&
+          int(parsed.headers['content-length']) > buffer.bytesAvailable) {
         /* Headers parsed fine, but full body is not here yet. */
         buffer.position = 0;
         return false;
