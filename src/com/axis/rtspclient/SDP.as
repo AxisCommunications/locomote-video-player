@@ -79,7 +79,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          trace('Ignored unknown SDP type: ' + line.charAt(0) + '=');
+          trace('Ignored unknown SDP directive: ' + line);
           break;
         }
       }
@@ -91,20 +91,24 @@ package com.axis.rtspclient {
 
     private function parseVersion(line:String):Boolean
     {
-      var matches:Array = line.match(/^v=(0)$/);
+      var matches:Array = line.match(/^v=([0-9]+)$/);
       if (0 === matches.length) {
         trace('\'v=\' (Version) formatted incorrectly: ' + line);
         return false;
       }
 
-      version = 0;
+      version = matches[1];
+      if (0 !== version) {
+        trace('Unsupported SDP version:', version);
+        return false;
+      }
 
       return true;
     }
 
     private function parseOrigin(line:String):Boolean
     {
-      var matches:Array = line.match(/^o=([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$/);
+      var matches:Array = line.match(/^o=([^ ]+) ([0-9]+) ([0-9]+) (IN) (IP4|IP6) ([^ ]+)$/);
       if (0 === matches.length) {
         trace('\'o=\' (Origin) formatted incorrectly: ' + line);
         return false;
