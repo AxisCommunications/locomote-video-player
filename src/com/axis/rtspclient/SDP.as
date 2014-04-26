@@ -9,7 +9,8 @@ package com.axis.rtspclient {
     private var origin:Object;
     private var sessionName:String;
     private var timing:Object;
-    private var media:Object = new Object;
+    private var sessionBlock:Object = new Object();
+    private var media:Object = new Object();
 
     public function SDP()
     {
@@ -19,7 +20,7 @@ package com.axis.rtspclient {
     {
       var dataString:String = content.toString();
       var success:Boolean = true;
-      var currentMediaBlock:Object = null;
+      var currentMediaBlock:Object = sessionBlock;
 
       for each (var line:String in content.toString().split("\n")) {
         line = line.replace(/\r/, ''); /* Delimiter '\r\n' is allowed, if this is the case, remove '\r' too */
@@ -62,7 +63,7 @@ package com.axis.rtspclient {
           break;
 
         case 'm':
-          if (null !== currentMediaBlock) {
+          if (null !== currentMediaBlock && sessionBlock !== currentMediaBlock) {
             /* Complete previous block and store it */
             media[currentMediaBlock.type] = currentMediaBlock;
           }
@@ -225,6 +226,11 @@ package com.axis.rtspclient {
       }
 
       return true;
+    }
+
+    public function getSessionBlock():Object
+    {
+      return this.sessionBlock;
     }
 
     public function getMediaBlock(mediaType:String):Object

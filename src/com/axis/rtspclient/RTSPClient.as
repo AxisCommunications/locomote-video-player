@@ -246,11 +246,6 @@ package com.axis.rtspclient {
           return;
         }
 
-        if (!parsed.headers['content-base']) {
-          trace('RTSPClient: no content-base in describe reply');
-          return;
-        }
-
         contentBase = parsed.headers['content-base'];
         tracks = sdp.getMediaBlockList();
         trace('SDP contained ' + tracks.length + ' track(s). Calling SETUP for each.');
@@ -357,6 +352,43 @@ package com.axis.rtspclient {
       return (-1 !== this.methods.indexOf(command));
     }
 
+    private function getSetupURL(block:Object = null):*
+    {
+      var sessionBlock:Object = sdp.getSessionBlock();
+      if (url.isAbsolute(block.control)) {
+        return block.control;
+      } else if (url.isAbsolute(sessionBlock.control + block.control)) {
+        return sessionBlock.control + block.control;
+      } else if (url.isAbsolute(contentBase + block.control)) {
+        /* Should probably check session level control before this */
+        return contentBase + block.control;
+      }
+
+      trace('Can\'t determine track URL from ' +
+            'block.control:' + block.control + ', ' +
+            'session.control:' + sessionBlock.control + ', and ' +
+            'content-base:' + contentBase);
+      throw new Error('Unable to determine control URL.');
+    }
+
+    private function getControlURL():String
+    {
+      var sessCtrl:String = sdp.getSessionBlock().control;
+      var u:String = sessCtrl;
+      if (url.isAbsolute(u)) {
+        return u;
+      } else if ('*' === u) {
+        return contentBase;
+      } else {
+        return contentBase + u; /* If content base is not set, this will be session control only only */
+      }
+
+      trace('Can\'t determine control URL from ' +
+              'session.control:' + sessionBlock.control + ', and ' +
+              'content-base:' + contentBase);
+      throw new Error('Unable to determine control URL.');
+    }
+
     private function sendOptionsReq():void {
       state = STATE_OPTIONS;
       var req:String =
@@ -369,7 +401,7 @@ package com.axis.rtspclient {
 
     private function sendDescribeReq():void {
       state = STATE_DESCRIBE;
-      var u:String = 'rtsp://' + urlParsed.host + ":" + urlParsed.port + urlParsed.urlpath;
+      var u:String = 'rtsp://' + urlParsed.host + urlParsed.urlpath;
       var req:String =
         "DESCRIBE " + u + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
@@ -383,11 +415,11 @@ package com.axis.rtspclient {
     private function sendSetupReq(block:Object):void {
       state = STATE_SETUP;
       var interleavedChannels:String = interleaveChannelIndex++ + "-" + interleaveChannelIndex++;
-      var p:String = url.isAbsolute(block.control) ? block.control : contentBase + block.control;
+      var setupUrl:String = getSetupURL(block);
 
-      trace('Setting up track: ' + p);
+      trace('Setting up track: ' + setupUrl);
       var req:String =
-        "SETUP " + p + " RTSP/1.0\r\n" +
+        "SETUP " + setupUrl + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
         "User-Agent: " + userAgent + "\r\n" +
         (session ? ("Session: " + session + "\r\n") : "") +
@@ -405,7 +437,7 @@ package com.axis.rtspclient {
       state = STATE_PLAY;
 
       var req:String =
-        "PLAY " + contentBase + " RTSP/1.0\r\n" +
+        "PLAY " + getControlURL() + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
         "User-Agent: " + userAgent + "\r\n" +
         "Session: " + session + "\r\n" +
@@ -427,7 +459,7 @@ package com.axis.rtspclient {
       this.ns.close();
 
       var req:String =
-        "PAUSE " + contentBase + " RTSP/1.0\r\n" +
+        "PAUSE " + getControlURL() + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
         "User-Agent: " + userAgent + "\r\n" +
         "Session: " + session + "\r\n" +
@@ -439,7 +471,7 @@ package com.axis.rtspclient {
     private function sendTeardownReq():void {
       state = STATE_TEARDOWN;
       var req:String =
-        "TEARDOWN " + contentBase + " RTSP/1.0\r\n" +
+        "TEARDOWN " + getControlURL() + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
         "User-Agent: " + userAgent + "\r\n" +
         "Session: " + session + "\r\n" +
