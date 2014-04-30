@@ -10,6 +10,7 @@ package com.axis.http {
     public static function basic(user:String, pass:String):String
     {
       var b64:Base64Encoder = new Base64Encoder();
+      b64.insertNewLines = false;
       b64.encode(user + ':' + pass);
       return 'Basic ' + b64.toString();
     }
@@ -88,7 +89,7 @@ package com.axis.http {
       var content:String = '';
       switch (authState) {
         case "basic":
-          content = basic(urlParsed.user, urlParsed.pass) + "\r\n";
+          content = basic(urlParsed.user, urlParsed.pass);
           break;
 
         case "digest":
