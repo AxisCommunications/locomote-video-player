@@ -138,8 +138,3 @@ Dispatched when the player enters fullscreen mode.
 fullScreenExited
 -----------------------
 Dispatched when the player exits fullscreen mode.
-
-		
-To be investigated
---------------------------
-Can Flash detect if it has been removed from the dom? Can Flash send an event when this happens?
