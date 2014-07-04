@@ -1,8 +1,18 @@
+Getting started
+==================
+
+  * Download [Adobe Flex SDK](http://www.adobe.com/devnet/flex/flex-sdk-download.html).
+  * Extract it to some location.
+  * In `Locomote` folder, run `FLEX_HOME=<path to flex> make`.
+  * `Player.swf` should now be available in the `build` folder.
+
+
 Locomote API Specification
-===================
+==========================
 
 Actions
-=====
+=======
+
 play(url:String)
 ---------------------
 Starts playing video from url. Protocol is determined by url - rtsp://server:port/stream etc.
