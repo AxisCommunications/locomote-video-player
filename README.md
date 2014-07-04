@@ -94,7 +94,7 @@ on(eventName:String, callback:Function)
 ------------------------
 Starts listening for events with eventName.
 
-off(eventName:String)
+off(eventName:String, callback:Function)
 ------------------------
 Stops listening for events with eventName.
 
