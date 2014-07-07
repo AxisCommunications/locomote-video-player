@@ -1,5 +1,6 @@
-Getting started
-==================
+# Locomote Video Player
+
+## Getting started
 
   * Download [Adobe Flex SDK](http://www.adobe.com/devnet/flex/flex-sdk-download.html).
   * Extract it to some location.
@@ -7,147 +8,153 @@ Getting started
   * `Player.swf` should now be available in the `build` folder.
 
 
-Locomote API Specification
-==========================
+## API Specification
 
 **NB:** This API is only a draft, and parts of it are not implemented. Do not
 use this yet.
 
-Actions
-=======
+### Actions
 
-play(url:String)
----------------------
-Starts playing video from url. Protocol is determined by url - rtsp://server:port/stream etc.
+#### play(url:String)
+
+Starts playing video from url. Protocol is determined by url.
+Example: `rtsp://server:port/stream`.
 
 Supported protocols:
 
-- rtrsp
-- rtsph
-- rtmp, rtmpt, rtmps
-- http
+- `rtsp` - [RTSP over TCP](http://www.ietf.org/rfc/rfc2326.txt)
+- `rtsph` - [RTSP over HTTP](http://www.opensource.apple.com/source/QuickTimeStreamingServer/QuickTimeStreamingServer-412.42/Documentation/RTSP_Over_HTTP.pdf)
+- `rtmp` - [RTMP](http://www.adobe.com/devnet/rtmp.html)
+- `rtmpt` - RTMP over HTTP
+- `rtmps` - RTMP over SSL
+- `http` - Progressive download via HTTP
 
-stop()
---------
+#### stop()
+
 Stops video stream.
 
-pause()
------------
+#### pause()
+
 Pauses video stream.
 
-resume()
--------------
+#### resume()
+
 Resumes video from paused state.
 
-seek(timestamp)
-------------------------
-Seeks for timestamp in video stream. The current stream state is preserved - paused or playing. timestamp = ms from start of stream.
+#### seek(timestamp)
 
-playbackSpeed(speed)
----------------------------------
-Fast forward video stream with speed.
+Seeks to `timestamp` ms from  start of stream.
+The current stream state is preserved - paused or playing.
 
-streamStatus()
----------------------
+#### playbackSpeed(speed)
+
+Fast forward video stream with playback speed multiplied with `speed`.
+
+#### streamStatus()
+
 Returns a status object with the following data:
 
-- fps
-- resolution
-- playback speed
-- current time (ms from start of stream)
-- protocol
-- audio (bool)
-- video (bool)
-- state (playing, paused, stopped)
-- isSeekable (bool)
-- isPlaybackSpeedChangeable (bool)
-- streamURL
+- fps - frames per second.
+- resolution - the strean size `WIDTHxHEIGHT`.
+- playback speed - current playback speed. 1.0 is normal stream speed.
+- current time - ms from start of stream.
+- protocol - which high-level transport protocol is in use.
+- audio (bool) - if the stream contains audio.
+- video (bool) - if the stream contains video.
+- state - current playback state (playing, paused, stopped).
+- isSeekable (bool) - if it is possible to seek in the stream.
+- isPlaybackSpeedChangeable (bool) - if the playback speed can be altered.
+- streamURL - the source of the current media.
 
-playerStatus()
--------------------
+#### playerStatus()
+
 Returns a status object with the following data:
 
-- audio (bool)
+- audio (bool) - if the player playbacks audio
 - video (bool)
-- microphoneVolume
-- speakerVolume
-- microphoneMuted (bool)
-- speakerMuted (bool)
-- fullScreen (bool)
+- microphoneVolume - the volume of the microphone when capturing audio
+- speakerVolume - the volume of the speakers (i.e. the stream volume).
+- microphoneMuted (bool) - if the microphone is muted.
+- speakerMuted (bool) - if the speakers are muted.
+- fullScreen (bool) - if the player is currently in fullscreen mode.
 
-speakerVolume(vol=0.5)
------------------------------------
+#### speakerVolume(vol=0.5)
+
 Set video players volume from 0-1. Default value is 0.5.
 
-muteSpeaker()
----------------------
-Mutes the volume.
+#### muteSpeaker()
 
-unmuteSpeaker()
--------------------------
+Mutes the volume. This remembers the current volume and resets to it if the
+speakers are unmuted.
+
+#### unmuteSpeaker()
+
 Resets the volume to previous unmuted value.
 
-microphoneVolume(vol=0.5)
------------------------------------------
+#### microphoneVolume(vol=0.5)
+
 Set video players volume from 0-1. Default value is 0.5.
 
-muteMicrophone()
----------------------------
-Mutes the volume.
+#### muteMicrophone()
 
-unmuteMicrophone()
--------------------------------
+Mutes the volume. This remembers the current volume and resets to it if the
+microphone is unmuted.
+
+#### unmuteMicrophone()
+
 Resets the volume to previous unmuted value.
 
-setFullScreenAllowed(state)
-----------------------------------------
+#### setFullScreenAllowed(state)
+
 Sets if full screen mode by double clicking the player is allowed or not.
 
-on(eventName:String, callback:Function)
-------------------------
-Starts listening for events with eventName.
+#### on(eventName:String, callback:Function)
 
-off(eventName:String, callback:Function)
-------------------------
-Stops listening for events with eventName.
+Starts listening for events with `eventName`. Calls `callback` when event triggers.
 
-Events
-=====
-streamStarted
---------------------
+#### off(eventName:String, callback:Function)
+
+Stops listening for events with eventName. Calls `callback` when event triggers.
+
+### Events
+
+#### streamStarted
+
 Dispatched when video streams starts.
 
-streamStopped
-----------------------
+#### streamStopped
+
 Dispatched when stream stops.
 
-streamError(errorCode, error)
-------------------------------------------
-Dispatched when video stream fails. Error code and message can be either protocol error code (rtsp etc) or Locomote internal error code. Includes socket and seek errors. error is a generic object.
+#### streamError(errorCode, error)
 
-streamPaused(reason)
---------------------------------
-Dispatched when video stream is paused. reason can have the following values:
+Dispatched when video stream fails. Error code and message can be either
+protocol error code (rtsp etc) or Locomote internal error code.
+Includes socket and seek errors. error is a generic object.
 
-- user (stream was paused by user)
-- buffering (stream has stopped for buffering)
+#### streamPaused(reason)
 
-streamResumed
------------------------
+Dispatched when video stream is paused. `reason` can have the following values:
+
+- `user` - stream was paused by user.
+- `buffering` - stream has stopped for buffering.
+
+#### streamResumed
+
 Dispatched when stream playing is resumed after pause.
 
 seekCompleted
------------------------
+
 Dispatched when seek has completed.
 
-streamEnded
--------------------
+#### streamEnded
+
 Dispatched when fixed length video stream reaches end of stream.
 
-fullScreenEntered
--------------------------
+#### fullScreenEntered
+
 Dispatched when the player enters fullscreen mode.
 
-fullScreenExited
------------------------
+#### fullScreenExited
+
 Dispatched when the player exits fullscreen mode.
