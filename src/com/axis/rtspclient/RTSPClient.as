@@ -207,12 +207,15 @@ package com.axis.rtspclient {
         return false;
       }
 
-      if (data.bytesAvailable < parsed.headers['content-length']) {
-        return false;
+      if (parsed.headers['content-length']) {
+        if (data.bytesAvailable < parsed.headers['content-length']) {
+          return false;
+        }
+
+        /* RTSP commands contain no heavy body, so it's safe to read everything */
+        data.readBytes(oBody, 0, parsed.headers['content-length']);
       }
 
-      /* RTSP commands contain no heavy body, so it's safe to read everything */
-      data.readBytes(oBody, 0, parsed.headers['content-length']);
       requestReset();
       return parsed;
     }
