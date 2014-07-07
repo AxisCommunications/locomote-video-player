@@ -10,6 +10,9 @@ Getting started
 Locomote API Specification
 ==========================
 
+**NB:** This API is only a draft, and parts of it are not implemented. Do not
+use this yet.
+
 Actions
 =======
 
