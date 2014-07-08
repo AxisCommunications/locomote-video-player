@@ -11,7 +11,7 @@ package {
   import flash.media.Video;
   import flash.net.NetStream;
   import flash.system.Security;
-
+  
   import com.axis.http.url;
   import com.axis.IClient;
   import com.axis.ClientEvent;
@@ -124,6 +124,8 @@ package {
       case 'rtsp':
         /* RTSP over TCP */
         client = new RTSPClient(this.video, urlParsed, new RTSPoverTCPHandle(urlParsed));
+		
+		ExternalInterface.call("locomote('" +  root.loaderInfo.parameters.id + "').streamStarted");
         break;
 
       case 'http':
@@ -149,11 +151,15 @@ package {
     public function pause():void
     {
       client.pause();
+	  
+	  ExternalInterface.call("locomote('" +  root.loaderInfo.parameters.id + "').streamPaused");
     }
 
     public function resume():void
     {
       client.resume();
+	  
+	  ExternalInterface.call("locomote('" +  root.loaderInfo.parameters.id + "').streamResumed");
     }
 
     public function stop():void
@@ -161,6 +167,8 @@ package {
       urlParsed = null;
       ns = null;
       client.stop();
+	  
+	  ExternalInterface.call("locomote('" +  root.loaderInfo.parameters.id + "').streamStopped");
     }
 
     public function audioTransmitStopInterface():void {
