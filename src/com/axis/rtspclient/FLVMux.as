@@ -50,6 +50,8 @@ package com.axis.rtspclient {
       if (sdp.getMediaBlock('audio')) {
         createAudioSpecificConfigTag(ByteArrayUtils.createFromHexstring(sdp.getMediaBlock('audio').fmtp['config']));
       }
+
+      pushData();
     }
 
     private function writeECMAArray(contents:Object):uint
