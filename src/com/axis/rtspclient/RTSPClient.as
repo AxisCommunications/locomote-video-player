@@ -150,7 +150,7 @@ package com.axis.rtspclient {
         /* Determining byte have already been read. This is a continuation */
       } else {
         /* Read the determining byte */
-        handle.readBytes(data, 0, 1);
+        handle.readBytes(data, data.position, 1);
       }
 
       switch(data[0]) {
@@ -322,19 +322,23 @@ package com.axis.rtspclient {
       handle.readBytes(data, data.length);
 
       if (-1 == rtpLength && 0x24 === data[0]) {
-        /* This is the beginning of a new RTP package */
-        data.readByte();
-        rtpChannel = data.readByte();
-        rtpLength = data.readShort();
+        /* This is the beginning of a new RTP package. We can't read data
+           from buffer here, as we may not have enough for complete RTP packet
+           and we need to be able to determine that this is an interleaved
+           packet when `onData` is called again. */
+        rtpChannel = data[1];
+        rtpLength = data[2] << 8 | data[3];
       }
 
-      if (data.bytesAvailable < rtpLength) {
+      if (data.bytesAvailable < rtpLength + 4) { /* add 4 for interleaved header */
         /* The complete RTP package is not here yet, wait for more data */
         return;
       }
 
-      var pkgData:ByteArray = new ByteArray();
+      /* Discard the interleaved header. It was extracted previously. */
+      data.readUnsignedInt();
 
+      var pkgData:ByteArray = new ByteArray();
       data.readBytes(pkgData, 0, rtpLength);
 
       if (rtpChannel === 0 || rtpChannel === 2) {
