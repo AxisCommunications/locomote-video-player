@@ -4,8 +4,8 @@ function Locomote(id) {
     Author: "Axis Communications"
   };
 
-  if (!window.locomote.callbacks)
-    window.locomote.callbacks = {};
+  if (!window.Locomote.callbacks)
+    window.Locomote.callbacks = {};
 
   if (id) {
     // return a new Locomote object if we're in the wrong scope
@@ -45,45 +45,45 @@ Locomote.prototype = {
   },
 
   on: function(eventName, callback) {
-    if (!window.locomote.callbacks[this.id]) {
-      window.locomote.callbacks[this.id] = {};
+    if (!window.Locomote.callbacks[this.id]) {
+      window.Locomote.callbacks[this.id] = {};
     }
 
-    window.locomote.callbacks[this.id][eventName] = callback;
+    window.Locomote.callbacks[this.id][eventName] = callback;
   },
 
   off: function(eventName, callback) {
-    if (window.locomote.callbacks[this.id]) {
-      if (window.locomote.callbacks[this.id][eventName]) {
-        delete window.locomote.callbacks[this.id][eventName];
+    if (window.Locomote.callbacks[this.id]) {
+      if (window.Locomote.callbacks[this.id][eventName]) {
+        delete window.Locomote.callbacks[this.id][eventName];
       }
     }
   },
 
   streamStarted: function() {
-    if (window.locomote.callbacks[this.id]['streamStarted']) {
-      var callback = window.locomote.callbacks[this.id]['streamStarted'];
+    if (window.Locomote.callbacks[this.id]['streamStarted']) {
+      var callback = window.Locomote.callbacks[this.id]['streamStarted'];
       callback.call();
     }
   },
 
   streamStopped: function() {
-    if (window.locomote.callbacks[this.id]['streamStopped']) {
-      var callback = window.locomote.callbacks[this.id]['streamStopped'];
+    if (window.Locomote.callbacks[this.id]['streamStopped']) {
+      var callback = window.Locomote.callbacks[this.id]['streamStopped'];
       callback.call();
     }
   },
 
   streamPaused: function() {
-    if (window.locomote.callbacks[this.id]['streamPaused']) {
-      var callback = window.locomote.callbacks[this.id]['streamPaused'];
+    if (window.Locomote.callbacks[this.id]['streamPaused']) {
+      var callback = window.Locomote.callbacks[this.id]['streamPaused'];
       callback.call();
     }
   },
 
   streamResumed: function() {
-    if (window.locomote.callbacks[this.id]['streamResumed']) {
-      var callback = window.locomote.callbacks[this.id]['streamResumed'];
+    if (window.Locomote.callbacks[this.id]['streamResumed']) {
+      var callback = window.Locomote.callbacks[this.id]['streamResumed'];
       callback.call();
     }
   },
