@@ -1,0 +1,408 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"c",
+				"callbacks"
+			],
+			[
+				"ca",
+				"callback"
+			],
+			[
+				"call",
+				"callback"
+			],
+			[
+				"cal",
+				"callback"
+			],
+			[
+				"error",
+				"errorCode"
+			],
+			[
+				"fon",
+				"font-size"
+			],
+			[
+				"tex",
+				"text-align"
+			],
+			[
+				"back",
+				"background-color"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "html-template/index.template.html",
+			"settings":
+			{
+				"buffer_size": 8329,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "/*\n|--------------------------------------------------------------------------\n| Global\n|--------------------------------------------------------------------------\n*/\n\nhtml, body\n{\n	background-color: #fff;\n}\n\ninput\n{\n	width: 510px;\n	height: 20px;\n\n	margin: 10px 0px 10px 10px;\n	padding: 5px;\n}\n\n.left-pos\n{\n	float: left;\n}\n\n.video-box\n{\n	float: left;\n\n	margin: 20px;\n	padding: 0px;\n}\n\n.control-box\n{\n	clear: both;\n	\n	width: 640px;\n}\n\n.control-button\n{\n	width: 100px;\n	height: 30px;\n	\n	margin: 10px 0px 0px 0px;\n	padding: 0px;\n\n	background-color: #999;\n\n	color: #fff;\n\n	cursor: pointer;\n}\n\n.control-button p\n{\n	width: 90px;\n\n	margin: 0px;\n	padding: 5px;\n	\n	color: #fff;\n	text-align: center;\n	font-size: 1em;\n}",
+			"file": "html-assets/locomote.css",
+			"file_size": -1,
+			"file_write_time": -1,
+			"settings":
+			{
+				"buffer_size": 708,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "html-assets/locomote.js",
+			"settings":
+			{
+				"buffer_size": 2204,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "/C/Users/larslm/Desktop/spin.js",
+			"settings":
+			{
+				"buffer_size": 10025,
+				"line_ending": "Windows",
+				"name": "/**"
+			}
+		},
+		{
+			"file": "html-assets/player.js",
+			"settings":
+			{
+				"buffer_size": 2117,
+				"line_ending": "Windows"
+			}
+		}
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 380.0,
+		"selected_items":
+		[
+			[
+				"pack",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 400.0
+	},
+	"console":
+	{
+		"height": 126.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = '7183a2d3e96f11eeadd761d777e62404' + 'e330c659d4bb41d3bdf022e94cab3cd0'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/C/Users/larslm/Documents/GitHub/locomote-video-player/html-assets/player.js",
+		"/C/Users/larslm/Documents/GitHub/locomote-video-player/html-assets/locomote.css",
+		"/C/Users/larslm/Documents/GitHub/locomote-video-player/html-assets/locomote.js",
+		"/C/Users/larslm/Documents/GitHub/locomote-video-player/README.md",
+		"/C/Users/larslm/Documents/GitHub/locomote-video-player/html-template/index.template.html",
+		"/C/Users/larslm/Desktop/flowplayer-master/lib/flowplayer.js",
+		"/C/Users/larslm/Desktop/flowplayer-master/index.html",
+		"/C/Users/larslm/Downloads/flowplayer-master.zip",
+		"/C/Users/larslm/Documents/GitHub/locomote-video-player/html-template/locomote.js",
+		"/C/Users/larslm/Documents/GitHub/locomote-video-player/html-template/locomote.css",
+		"/C/Users/larslm/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings"
+	],
+	"find":
+	{
+		"height": 28.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"stop"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 1,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "html-template/index.template.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 8329,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								713,
+								713
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "html-assets/locomote.css",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 708,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/CSS/CSS.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 1,
+			"sheets":
+			[
+				{
+					"buffer": 2,
+					"file": "html-assets/locomote.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2204,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								387,
+								387
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/C/Users/larslm/Desktop/spin.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 10025,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1079,
+								1079
+							]
+						],
+						"settings":
+						{
+							"auto_name": "/**",
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "html-assets/player.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2117,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": -0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 28.0
+	},
+	"input":
+	{
+		"height": 37.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			0.5,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"project": "locomote.sublime-project",
+	"replace":
+	{
+		"height": 52.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 232.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
