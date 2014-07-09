@@ -46,45 +46,59 @@ Locomote.prototype = {
 
   on: function(eventName, callback) {
     if (!window.Locomote.callbacks[this.id]) {
-      window.Locomote.callbacks[this.id] = {};
+      window.Locomote.callbacks[this.id] = [];
     }
 
-    window.Locomote.callbacks[this.id][eventName] = callback;
+    window.Locomote.callbacks[this.id].push({ eventName: eventName, callback: callback });
   },
 
   off: function(eventName, callback) {
     if (window.Locomote.callbacks[this.id]) {
-      if (window.Locomote.callbacks[this.id][eventName]) {
-        delete window.Locomote.callbacks[this.id][eventName];
+      for (var i in window.Locomote.callbacks[this.id]) {
+        if ((window.Locomote.callbacks[this.id][i].eventName === eventName) && (window.Locomote.callbacks[this.id][i].callback === callback)) {
+          window.Locomote.callbacks[this.id].splice(i, 1);
+        }
       }
     }
   },
 
   __streamStarted: function() {
-    if (window.Locomote.callbacks[this.id]['streamStarted']) {
-      var callback = window.Locomote.callbacks[this.id]['streamStarted'];
-      callback.call();
+    if (window.Locomote.callbacks[this.id]) {
+      for (var i in window.Locomote.callbacks[this.id]) {
+        if (window.Locomote.callbacks[this.id][i].eventName === 'streamStarted') {
+          window.Locomote.callbacks[this.id][i].callback.call();
+        }
+      }
     }
   },
 
   __streamStopped: function() {
-    if (window.Locomote.callbacks[this.id]['streamStopped']) {
-      var callback = window.Locomote.callbacks[this.id]['streamStopped'];
-      callback.call();
+    if (window.Locomote.callbacks[this.id]) {
+      for (var i in window.Locomote.callbacks[this.id]) {
+        if (window.Locomote.callbacks[this.id][i].eventName === 'streamStopped') {
+          window.Locomote.callbacks[this.id][i].callback.call();
+        }
+      }
     }
   },
 
   __streamPaused: function() {
-    if (window.Locomote.callbacks[this.id]['streamPaused']) {
-      var callback = window.Locomote.callbacks[this.id]['streamPaused'];
-      callback.call();
+    if (window.Locomote.callbacks[this.id]) {
+      for (var i in window.Locomote.callbacks[this.id]) {
+        if (window.Locomote.callbacks[this.id][i].eventName === 'streamPaused') {
+          window.Locomote.callbacks[this.id][i].callback.call();
+        }
+      }
     }
   },
 
   __streamResumed: function() {
-    if (window.Locomote.callbacks[this.id]['streamResumed']) {
-      var callback = window.Locomote.callbacks[this.id]['streamResumed'];
-      callback.call();
+    if (window.Locomote.callbacks[this.id]) {
+      for (var i in window.Locomote.callbacks[this.id]) {
+        if (window.Locomote.callbacks[this.id][i].eventName === 'streamResumed') {
+          window.Locomote.callbacks[this.id][i].callback.call();
+        }
+      }
     }
   },
 
