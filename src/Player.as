@@ -124,7 +124,7 @@ package {
       case 'rtsp':
         /* RTSP over TCP */
         client = new RTSPClient(this.video, urlParsed, new RTSPoverTCPHandle(urlParsed));
-        ExternalInterface.call("Locomote('" +  root.loaderInfo.parameters.id + "').streamStarted");
+        ExternalInterface.call("Locomote('" +  root.loaderInfo.parameters.id + "').__streamStarted");
         break;
 
       case 'http':
@@ -150,13 +150,13 @@ package {
     public function pause():void
     {
       client.pause();
-      ExternalInterface.call("Locomote('" +  root.loaderInfo.parameters.id + "').streamPaused");
+      ExternalInterface.call("Locomote('" +  root.loaderInfo.parameters.id + "').__streamPaused");
     }
 
     public function resume():void
     {
       client.resume();
-      ExternalInterface.call("Locomote('" +  root.loaderInfo.parameters.id + "').streamResumed");
+      ExternalInterface.call("Locomote('" +  root.loaderInfo.parameters.id + "').__streamResumed");
     }
 
     public function stop():void
@@ -164,7 +164,7 @@ package {
       urlParsed = null;
       ns = null;
       client.stop();
-      ExternalInterface.call("Locomote('" +  root.loaderInfo.parameters.id + "').streamStopped");
+      ExternalInterface.call("Locomote('" +  root.loaderInfo.parameters.id + "').__streamStopped");
     }
 
     public function audioTransmitStopInterface():void {

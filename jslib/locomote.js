@@ -60,35 +60,35 @@ Locomote.prototype = {
     }
   },
 
-  streamStarted: function() {
+  __streamStarted: function() {
     if (window.Locomote.callbacks[this.id]['streamStarted']) {
       var callback = window.Locomote.callbacks[this.id]['streamStarted'];
       callback.call();
     }
   },
 
-  streamStopped: function() {
+  __streamStopped: function() {
     if (window.Locomote.callbacks[this.id]['streamStopped']) {
       var callback = window.Locomote.callbacks[this.id]['streamStopped'];
       callback.call();
     }
   },
 
-  streamPaused: function() {
+  __streamPaused: function() {
     if (window.Locomote.callbacks[this.id]['streamPaused']) {
       var callback = window.Locomote.callbacks[this.id]['streamPaused'];
       callback.call();
     }
   },
 
-  streamResumed: function() {
+  __streamResumed: function() {
     if (window.Locomote.callbacks[this.id]['streamResumed']) {
       var callback = window.Locomote.callbacks[this.id]['streamResumed'];
       callback.call();
     }
   },
 
-  streamError: function(errorCode, error) {
+  __streamError: function(errorCode, error) {
     console.log(this.e + '->streamError, errorCode: ' + errorCode + ', error: ' + error);
   }
 };
