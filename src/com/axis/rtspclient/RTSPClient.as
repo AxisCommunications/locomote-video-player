@@ -321,6 +321,12 @@ package com.axis.rtspclient {
     {
       handle.readBytes(data, data.length);
 
+      if (data.bytesAvailable < 4) {
+        /* Not enough data even for interleaved header. Try again when
+           more data is available */
+        return;
+      }
+
       if (-1 == rtpLength && 0x24 === data[0]) {
         /* This is the beginning of a new RTP package. We can't read data
            from buffer here, as we may not have enough for complete RTP packet
