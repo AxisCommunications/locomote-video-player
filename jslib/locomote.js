@@ -62,47 +62,13 @@ Locomote.prototype = {
     }
   },
 
-  __streamStarted: function() {
+  __playerEvent: function(eventName) {
     if (window.Locomote.callbacks[this.id]) {
       for (var i in window.Locomote.callbacks[this.id]) {
-        if (window.Locomote.callbacks[this.id][i].eventName === 'streamStarted') {
+        if (window.Locomote.callbacks[this.id][i].eventName === eventName) {
           window.Locomote.callbacks[this.id][i].callback.call();
         }
       }
     }
   },
-
-  __streamStopped: function() {
-    if (window.Locomote.callbacks[this.id]) {
-      for (var i in window.Locomote.callbacks[this.id]) {
-        if (window.Locomote.callbacks[this.id][i].eventName === 'streamStopped') {
-          window.Locomote.callbacks[this.id][i].callback.call();
-        }
-      }
-    }
-  },
-
-  __streamPaused: function() {
-    if (window.Locomote.callbacks[this.id]) {
-      for (var i in window.Locomote.callbacks[this.id]) {
-        if (window.Locomote.callbacks[this.id][i].eventName === 'streamPaused') {
-          window.Locomote.callbacks[this.id][i].callback.call();
-        }
-      }
-    }
-  },
-
-  __streamResumed: function() {
-    if (window.Locomote.callbacks[this.id]) {
-      for (var i in window.Locomote.callbacks[this.id]) {
-        if (window.Locomote.callbacks[this.id][i].eventName === 'streamResumed') {
-          window.Locomote.callbacks[this.id][i].callback.call();
-        }
-      }
-    }
-  },
-
-  __streamError: function(errorCode, error) {
-    console.log(this.e + '->streamError, errorCode: ' + errorCode + ', error: ' + error);
-  }
 };
