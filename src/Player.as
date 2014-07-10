@@ -53,6 +53,17 @@ package {
       ExternalInterface.addCallback("pause", pause);
       ExternalInterface.addCallback("resume", resume);
       ExternalInterface.addCallback("stop", stop);
+      ExternalInterface.addCallback("seek", seek);
+      ExternalInterface.addCallback("playbackSpeed", playbackSpeed);
+      ExternalInterface.addCallback("streamStatus", streamStatus);
+      ExternalInterface.addCallback("playerStatus", playerStatus);
+      ExternalInterface.addCallback("speakerVolume", speakerVolume);
+      ExternalInterface.addCallback("muteSpeaker", muteSpeaker);
+      ExternalInterface.addCallback("unmuteSpeaker", unmuteSpeaker);
+      ExternalInterface.addCallback("microphoneVolume", microphoneVolume);
+      ExternalInterface.addCallback("muteMicrophone", muteMicrophone);
+      ExternalInterface.addCallback("unmuteMicrophone", unmuteMicrophone);
+      ExternalInterface.addCallback("setFullscreenAllowed", setFullscreenAllowed);
 
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
@@ -165,6 +176,50 @@ package {
       ns = null;
       client.stop();
       this.callAPI('streamStopped');
+    }
+
+    public function seek(timestamp:String):void {
+      trace('seek, timestamp->' + timestamp);
+    }
+
+    public function playbackSpeed(speed:Number):void {
+      trace('playbackSpeed, speed->' + speed);  
+    }
+
+    public function streamStatus():void {
+      trace('streamStatus');
+    }
+
+    public function playerStatus():void {
+      trace('playerStatus');
+    }
+
+    public function speakerVolume(volume:Number):void {
+      trace('speakerVolume, volume->' + volume);
+    }
+
+    public function muteSpeaker():void {
+      trace('muteSpeaker');
+    }
+
+    public function unmuteSpeaker():void {
+      trace('unmuteSpeaker');
+    }
+
+    public function microphoneVolume(volume:Number):void {
+      trace('microphoneVolume, volume->' + volume);
+    }
+
+    public function muteMicrophone():void {
+      trace('muteMicrophone');
+    }
+
+    public function unmuteMicrophone():void {
+      trace('unmuteMicrophone');
+    }
+
+    public function setFullscreenAllowed(state:Boolean):void {
+      trace('setFullscreenAllowed, state->' + state);
     }
 
     public function audioTransmitStopInterface():void {
