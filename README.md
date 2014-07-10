@@ -143,7 +143,7 @@ Dispatched when video stream is paused. `reason` can have the following values:
 
 Dispatched when stream playing is resumed after pause.
 
-### seekCompleted
+#### seekCompleted
 
 Dispatched when seek has completed.
 
