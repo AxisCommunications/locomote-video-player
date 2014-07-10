@@ -212,13 +212,5 @@ package {
         }
       }
     }
-
-    private function debug(message:String, data:Object = null):void {
-      if (data) {
-        ExternalInterface.call("console.log", message, data);
-      } else {
-        ExternalInterface.call("console.log", message);
-      }
-    }
   }
 }
