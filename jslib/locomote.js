@@ -57,22 +57,22 @@ Locomote.prototype = {
       return;
     }
 
-    for (var i in window.Locomote.callbacks[this.id]) {
-      if ((window.Locomote.callbacks[this.id][i].eventName === eventName) && (window.Locomote.callbacks[this.id][i].callback === callback)) {
-        window.Locomote.callbacks[this.id].splice(i, 1);
+    window.Locomote.callbacks[this.id].forEach(function(element, index, array) {
+      if((element.eventName === eventName) && (element.callback === callback)) {
+        array.splice(index, 1);
       }
-    }
+    });
   },
 
   __playerEvent: function(eventName) {
     if (!window.Locomote.callbacks[this.id]) {
       return;
     }
-     
-    for (var i in window.Locomote.callbacks[this.id]) {
-      if (window.Locomote.callbacks[this.id][i].eventName === eventName) {
-        window.Locomote.callbacks[this.id][i].callback.call();
+    
+    window.Locomote.callbacks[this.id].forEach(function(element, index, array) {
+      if (element.eventName === eventName) {
+        element.callback.call();
       }
-    }
+    });
   },
 };
