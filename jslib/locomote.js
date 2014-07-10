@@ -61,15 +61,18 @@ Locomote.prototype = {
   },
 
   speakerVolume: function(volume) {
-    console.log('speakerVolume, volume->' + volume);
+    this.e.speakerVolume(volume);
+    return this;
   },
 
   muteSpeaker: function() {
-    console.log('muteSpeaker');
+    this.e.muteSpeaker();
+    return this;
   },
 
   unmuteSpeaker: function() {
-    console.log('unmuteSpeaker');
+    this.e.unmuteSpeaker();
+    return this;
   },
 
   microphoneVolume: function(volume) {
