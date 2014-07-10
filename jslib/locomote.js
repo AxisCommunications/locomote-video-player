@@ -44,6 +44,50 @@ Locomote.prototype = {
     return this;
   },
 
+  seek: function(timestamp) {
+    console.log('seek, timestamp->' + timestamp);
+  },
+
+  playbackSpeed: function(speed) {
+    console.log('playbackSpeed, speed->' + speed);
+  },
+
+  streamStatus: function() {
+    console.log('streamStatus');
+  },
+
+  playerStatus: function() {
+    console.log('playerStatus');
+  },
+
+  speakerVolume: function(volume) {
+    console.log('speakerVolume, volume->' + volume);
+  },
+
+  muteSpeaker: function() {
+    console.log('muteSpeaker');
+  },
+
+  unmuteSpeaker: function() {
+    console.log('unmuteSpeaker');
+  },
+
+  microphoneVolume: function(volume) {
+    console.log('microphoneVolume, volume->' + volume);
+  },
+
+  muteMicrophone: function() {
+    console.log('muteMicrophone');
+  },
+
+  unmuteMicrophone: function() {
+    console.log('unmuteMicrophone');
+  },
+
+  setFullScreenAllowed: function(state) {
+    console.log('setFullscreenAllowed, state->' + state);
+  },
+
   on: function(eventName, callback) {
     if (!window.Locomote.callbacks[this.id]) {
       window.Locomote.callbacks[this.id] = [];
