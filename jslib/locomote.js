@@ -63,7 +63,7 @@ Locomote.prototype = {
   },
 
   __playerEvent: function(eventName) {
-    if (window.Locomote.callbacks[this.id]) {
+    if (!window.Locomote.callbacks[this.id]) {
       return
     }
      
