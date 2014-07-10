@@ -46,49 +46,33 @@ Locomote.prototype = {
 
   on: function(eventName, callback) {
     if (!window.Locomote.callbacks[this.id]) {
-      window.Locomote.callbacks[this.id] = {};
+      window.Locomote.callbacks[this.id] = [];
     }
 
-    window.Locomote.callbacks[this.id][eventName] = callback;
+    window.Locomote.callbacks[this.id].push({ eventName: eventName, callback: callback });
   },
 
   off: function(eventName, callback) {
-    if (window.Locomote.callbacks[this.id]) {
-      if (window.Locomote.callbacks[this.id][eventName]) {
-        delete window.Locomote.callbacks[this.id][eventName];
+    if (!window.Locomote.callbacks[this.id]) {
+      return;
+    }
+
+    window.Locomote.callbacks[this.id].forEach(function(element, index, array) {
+      if((element.eventName === eventName) && (element.callback === callback)) {
+        array.splice(index, 1);
       }
-    }
+    });
   },
 
-  streamStarted: function() {
-    if (window.Locomote.callbacks[this.id]['streamStarted']) {
-      var callback = window.Locomote.callbacks[this.id]['streamStarted'];
-      callback.call();
+  __playerEvent: function(eventName) {
+    if (!window.Locomote.callbacks[this.id]) {
+      return;
     }
+    
+    window.Locomote.callbacks[this.id].forEach(function(element, index, array) {
+      if (element.eventName === eventName) {
+        element.callback.call();
+      }
+    });
   },
-
-  streamStopped: function() {
-    if (window.Locomote.callbacks[this.id]['streamStopped']) {
-      var callback = window.Locomote.callbacks[this.id]['streamStopped'];
-      callback.call();
-    }
-  },
-
-  streamPaused: function() {
-    if (window.Locomote.callbacks[this.id]['streamPaused']) {
-      var callback = window.Locomote.callbacks[this.id]['streamPaused'];
-      callback.call();
-    }
-  },
-
-  streamResumed: function() {
-    if (window.Locomote.callbacks[this.id]['streamResumed']) {
-      var callback = window.Locomote.callbacks[this.id]['streamResumed'];
-      callback.call();
-    }
-  },
-
-  streamError: function(errorCode, error) {
-    console.log(this.e + '->streamError, errorCode: ' + errorCode + ', error: ' + error);
-  }
 };
