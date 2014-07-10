@@ -64,10 +64,12 @@ Locomote.prototype = {
 
   __playerEvent: function(eventName) {
     if (window.Locomote.callbacks[this.id]) {
-      for (var i in window.Locomote.callbacks[this.id]) {
-        if (window.Locomote.callbacks[this.id][i].eventName === eventName) {
-          window.Locomote.callbacks[this.id][i].callback.call();
-        }
+      return
+    }
+     
+    for (var i in window.Locomote.callbacks[this.id]) {
+      if (window.Locomote.callbacks[this.id][i].eventName === eventName) {
+        window.Locomote.callbacks[this.id][i].callback.call();
       }
     }
   },
