@@ -126,11 +126,11 @@ Dispatched when video streams starts.
 
 Dispatched when stream stops.
 
-#### streamError(error:Object)
+#### streamError(error)
 
 Dispatched when video stream fails. `error` can be either
 protocol error (rtsp etc) or Locomote internal error.
-Includes socket and seek errors.
+Includes socket and seek errors.`error` is a generic object.
 
 #### streamPaused(reason)
 
