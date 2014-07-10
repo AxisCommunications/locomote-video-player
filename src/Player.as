@@ -203,13 +203,16 @@ package {
 
     private function callAPI(eventName:String, data:Object = null):void
     {
-      if (ExternalInterface.available) {
-        var functionName:String = "Locomote('" + ExternalInterface.objectID + "').__playerEvent";
-        if (data) {
-          ExternalInterface.call(functionName, eventName, data);
-        } else {
-          ExternalInterface.call(functionName, eventName);
-        }
+      if (!ExternalInterface.available) {
+        trace("ExternalInterface is not available!");
+        return;
+      }
+       
+      var functionName:String = "Locomote('" + ExternalInterface.objectID + "').__playerEvent";
+      if (data) {
+        ExternalInterface.call(functionName, eventName, data);
+      } else {
+        ExternalInterface.call(functionName, eventName);
       }
     }
   }
