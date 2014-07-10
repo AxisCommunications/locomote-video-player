@@ -53,18 +53,20 @@ Locomote.prototype = {
   },
 
   off: function(eventName, callback) {
-    if (window.Locomote.callbacks[this.id]) {
-      for (var i in window.Locomote.callbacks[this.id]) {
-        if ((window.Locomote.callbacks[this.id][i].eventName === eventName) && (window.Locomote.callbacks[this.id][i].callback === callback)) {
-          window.Locomote.callbacks[this.id].splice(i, 1);
-        }
+    if (!window.Locomote.callbacks[this.id]) {
+      return;
+    }
+
+    for (var i in window.Locomote.callbacks[this.id]) {
+      if ((window.Locomote.callbacks[this.id][i].eventName === eventName) && (window.Locomote.callbacks[this.id][i].callback === callback)) {
+        window.Locomote.callbacks[this.id].splice(i, 1);
       }
     }
   },
 
   __playerEvent: function(eventName) {
     if (!window.Locomote.callbacks[this.id]) {
-      return
+      return;
     }
      
     for (var i in window.Locomote.callbacks[this.id]) {
