@@ -204,12 +204,20 @@ package {
     private function callAPI(eventName:String, data:Object = null):void
     {
       if (ExternalInterface.available) {
-        var functionName:String = "Locomote('" +  ExternalInterface.objectID + "').__playerEvent";
+        var functionName:String = "Locomote('" + ExternalInterface.objectID + "').__playerEvent";
         if (data) {
           ExternalInterface.call(functionName, eventName, data);
         } else {
           ExternalInterface.call(functionName, eventName);
         }
+      }
+    }
+
+    private function debug(message:String, data:Object = null):void {
+      if (data) {
+        ExternalInterface.call("console.log", message, data);
+      } else {
+        ExternalInterface.call("console.log", message);
       }
     }
   }
