@@ -66,7 +66,7 @@ package {
       ExternalInterface.addCallback("microphoneVolume", microphoneVolume);
       ExternalInterface.addCallback("muteMicrophone", muteMicrophone);
       ExternalInterface.addCallback("unmuteMicrophone", unmuteMicrophone);
-      ExternalInterface.addCallback("setFullscreenAllowed", setFullscreenAllowed);
+      ExternalInterface.addCallback("allowFullscreen", allowFullscreen);
 
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
@@ -232,7 +232,7 @@ package {
       mic.gain = this.savedMicrophoneVolume;
     }
 
-    public function setFullscreenAllowed(state:Boolean):void {
+    public function allowFullscreen(state:Boolean):void {
       this.fullscreenAllowed = state;
 
       if (!state)
