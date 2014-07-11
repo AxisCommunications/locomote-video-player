@@ -1,5 +1,4 @@
 package {
-
   import com.axis.ClientEvent;
   import com.axis.IClient;
   import com.axis.audioclient.AxisTransmit;
@@ -19,6 +18,7 @@ package {
   import flash.events.Event;
   import flash.events.MouseEvent;
   import flash.external.ExternalInterface;
+  import flash.media.Microphone;
   import flash.media.SoundMixer;
   import flash.media.SoundTransform;
   import flash.media.Video;
@@ -30,8 +30,8 @@ package {
 
   public class Player extends Sprite {
     private var config:Object = {
-      'buffer' : 1,
-      'scaleUp' : false
+      'buffer': 1,
+      'scaleUp': false
     };
     private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
@@ -40,7 +40,9 @@ package {
     private var ns:NetStream;
     private var urlParsed:Object;
     private var savedSpeakerVolume:Number;
-
+    private var savedMicrophoneVolume:Number;
+    private var fullscreenAllowed:Boolean = true;
+    
     public function Player() {
       var self:Player = this;
 
@@ -70,15 +72,22 @@ package {
       ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
       ExternalInterface.addCallback("stopAudioTransmit", audioTransmitStopInterface);
 
+      /* Set default speaker volume */
       this.speakerVolume(0.5);
+
+      /* Set default microphone volume */
+      this.microphoneVolume(50);
       
+      /* Stage setup */
       this.stage.align = StageAlign.TOP_LEFT;
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
       addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
 
+      /* Video object setup */
       video = new Video(stage.stageWidth, stage.stageHeight);
       addChild(video);
 
+      /* Fullscreen support setup */
       this.stage.doubleClickEnabled = true;
       this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
       this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
@@ -86,14 +95,13 @@ package {
       });
     }
 
-    public function fullscreen(event:MouseEvent):void
-    {
-      this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
-        StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
+    public function fullscreen(event:MouseEvent):void {
+      if (this.fullscreenAllowed)
+        this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
+          StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
     }
 
-    public function videoResize():void
-    {
+    public function videoResize():void {
       var stagewidth:uint = (StageDisplayState.NORMAL === stage.displayState) ?
         stage.stageWidth : stage.fullScreenWidth;
       var stageheight:uint = (StageDisplayState.NORMAL === stage.displayState) ?
@@ -114,8 +122,7 @@ package {
       video.y = (stageheight - video.height) / 2;
     }
 
-    public function play(iurl:String = null):void
-    {
+    public function play(iurl:String = null):void {
       if (client) {
         urlParsed = url.parse(iurl);
         /* Stop the client, and 'onStopped' will start the new stream. */
@@ -127,8 +134,7 @@ package {
       start();
     }
 
-    private function start():void
-    {
+    private function start():void {
       switch (urlParsed.protocol) {
       case 'rtsph':
         /* RTSP over HTTP */
@@ -161,20 +167,17 @@ package {
       client.start();
     }
 
-    public function pause():void
-    {
+    public function pause():void {
       client.pause();
       this.callAPI('streamPaused');
     }
 
-    public function resume():void
-    {
+    public function resume():void {
       client.resume();
       this.callAPI('streamResumed');
     }
 
-    public function stop():void
-    {
+    public function stop():void {
       urlParsed = null;
       ns = null;
       client.stop();
@@ -214,19 +217,26 @@ package {
     }
 
     public function microphoneVolume(volume:Number):void {
-      trace('microphoneVolume, volume->' + volume);
+      this.savedMicrophoneVolume = volume;
+      var mic:Microphone = Microphone.getMicrophone();
+      mic.gain = volume;
     }
 
     public function muteMicrophone():void {
-      trace('muteMicrophone');
+      var mic:Microphone = Microphone.getMicrophone();
+      mic.gain = 0;
     }
 
     public function unmuteMicrophone():void {
-      trace('unmuteMicrophone');
+      var mic:Microphone = Microphone.getMicrophone();
+      mic.gain = this.savedMicrophoneVolume;
     }
 
     public function setFullscreenAllowed(state:Boolean):void {
-      trace('setFullscreenAllowed, state->' + state);
+      this.fullscreenAllowed = state;
+
+      if (!state)
+        this.stage.displayState = StageDisplayState.NORMAL;
     }
 
     public function audioTransmitStopInterface():void {
@@ -241,21 +251,18 @@ package {
       trace('stage added');
     }
 
-    public function onMetaData(item:Object):void
-    {
+    public function onMetaData(item:Object):void {
       this.meta = item;
       this.videoResize();
     }
 
-    public function onNetStreamCreated(ev:ClientEvent):void
-    {
+    public function onNetStreamCreated(ev:ClientEvent):void {
       this.ns = ev.data.ns;
       ev.data.ns.bufferTime = config.buffer;
       ev.data.ns.client = this;
     }
 
-    private function onStopped(ev:ClientEvent):void
-    {
+    private function onStopped(ev:ClientEvent):void {
       video.clear();
       client = null;
       if (urlParsed) {
@@ -263,8 +270,7 @@ package {
       }
     }
 
-    private function callAPI(eventName:String, data:Object = null):void
-    {
+    private function callAPI(eventName:String, data:Object = null):void {
       if (!ExternalInterface.available) {
         trace("ExternalInterface is not available!");
         return;
