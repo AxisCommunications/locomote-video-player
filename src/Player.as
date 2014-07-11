@@ -30,8 +30,8 @@ package {
 
   public class Player extends Sprite {
     private var config:Object = {
-      'buffer' : 1,
-      'scaleUp' : false
+      'buffer': 1,
+      'scaleUp': false
     };
     private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
@@ -98,7 +98,7 @@ package {
     public function fullscreen(event:MouseEvent):void {
       if (this.fullscreenAllowed)
         this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
-        StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
+          StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
     }
 
     public function videoResize():void {
@@ -202,18 +202,18 @@ package {
 
     public function speakerVolume(volume:Number):void {
       this.savedSpeakerVolume = volume;
-	    var transform:SoundTransform = new SoundTransform(volume);
-	    flash.media.SoundMixer.soundTransform = transform;
+      var transform:SoundTransform = new SoundTransform(volume);
+      flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function muteSpeaker():void {
-		  var transform:SoundTransform = new SoundTransform(0);
-		  flash.media.SoundMixer.soundTransform = transform;
+      var transform:SoundTransform = new SoundTransform(0);
+      flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function unmuteSpeaker():void {
-		  var transform:SoundTransform = new SoundTransform(this.savedSpeakerVolume);
-		  flash.media.SoundMixer.soundTransform = transform;
+      var transform:SoundTransform = new SoundTransform(this.savedSpeakerVolume);
+      flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function microphoneVolume(volume:Number):void {
