@@ -90,8 +90,9 @@ Locomote.prototype = {
     return this;
   },
 
-  setFullScreenAllowed: function(state) {
-    console.log('setFullscreenAllowed, state->' + state);
+  setFullscreenAllowed: function(state) {
+    this.e.setFullscreenAllowed(state);
+    return this;
   },
 
   on: function(eventName, callback) {

@@ -42,7 +42,7 @@ package {
     private var urlParsed:Object;
     private var savedSpeakerVolume:Number;
     private var savedMicrophoneVolume:Number;
-
+    private var fullscreenAllowed:Boolean = true;
     public function Player() {
       var self:Player = this;
 
@@ -92,7 +92,8 @@ package {
 
     public function fullscreen(event:MouseEvent):void
     {
-      this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
+      if (this.fullscreenAllowed)
+        this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
         StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
     }
 
@@ -234,7 +235,10 @@ package {
     }
 
     public function setFullscreenAllowed(state:Boolean):void {
-      trace('setFullscreenAllowed, state->' + state);
+      this.fullscreenAllowed = state;
+
+      if (!state)
+        this.stage.displayState = StageDisplayState.NORMAL;
     }
 
     public function audioTransmitStopInterface():void {
