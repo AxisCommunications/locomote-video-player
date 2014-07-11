@@ -55,7 +55,7 @@ Fast forward video stream with playback speed multiplied with `speed`.
 Returns a status object with the following data:
 
 - fps - frames per second.
-- resolution - the strean size `WIDTHxHEIGHT`.
+- resolution - the stream size `WIDTHxHEIGHT`.
 - playback speed - current playback speed. 1.0 is normal stream speed.
 - current time - ms from start of stream.
 - protocol - which high-level transport protocol is in use.
@@ -70,8 +70,6 @@ Returns a status object with the following data:
 
 Returns a status object with the following data:
 
-- audio (bool) - if the player playbacks audio
-- video (bool)
 - microphoneVolume - the volume of the microphone when capturing audio
 - speakerVolume - the volume of the speakers (i.e. the stream volume).
 - microphoneMuted (bool) - if the microphone is muted.
@@ -104,7 +102,7 @@ microphone is unmuted.
 
 Resets the volume to previous unmuted value.
 
-#### setFullScreenAllowed(state)
+#### allowFullscreen(state)
 
 Sets if full screen mode by double clicking the player is allowed or not.
 
