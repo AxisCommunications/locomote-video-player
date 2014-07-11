@@ -196,8 +196,18 @@ package {
       trace('streamStatus');
     }
 
-    public function playerStatus():void {
-      trace('playerStatus');
+    public function playerStatus():Object {
+      var mic:Microphone = Microphone.getMicrophone();
+
+      var status:Object = {
+        'microphoneVolume': this.savedMicrophoneVolume,
+        'speakerVolume': this.savedSpeakerVolume,
+        'microphoneMuted': (mic.gain === 0),
+        'speakerMuted': (flash.media.SoundMixer.soundTransform.volume === 0),
+        'fullscreen': (StageDisplayState.FULL_SCREEN === stage.displayState)
+      };
+
+      return status;
     }
 
     public function speakerVolume(volume:Number):void {
