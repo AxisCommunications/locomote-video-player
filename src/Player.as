@@ -199,18 +199,18 @@ package {
 
     public function speakerVolume(volume:Number):void {
       this.savedSpeakerVolume = volume;
-	    var transform:SoundTransform = new SoundTransform(volume);
-	    flash.media.SoundMixer.soundTransform = transform;
+      var transform:SoundTransform = new SoundTransform(volume);
+      flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function muteSpeaker():void {
-		  var transform:SoundTransform = new SoundTransform(0);
-		  flash.media.SoundMixer.soundTransform = transform;
+      var transform:SoundTransform = new SoundTransform(0);
+      flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function unmuteSpeaker():void {
-		  var transform:SoundTransform = new SoundTransform(this.savedSpeakerVolume);
-		  flash.media.SoundMixer.soundTransform = transform;
+      var transform:SoundTransform = new SoundTransform(this.savedSpeakerVolume);
+      flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function microphoneVolume(volume:Number):void {
