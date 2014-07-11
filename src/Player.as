@@ -9,7 +9,7 @@ package {
   import com.axis.rtspclient.RTSPClient;
   import com.axis.rtspclient.RTSPoverHTTPHandle;
   import com.axis.rtspclient.RTSPoverTCPHandle;
-  
+
   import flash.display.Sprite;
   import flash.display.Stage;
   import flash.display.StageAlign;
@@ -42,7 +42,7 @@ package {
     private var savedSpeakerVolume:Number;
     private var savedMicrophoneVolume:Number;
     private var fullscreenAllowed:Boolean = true;
-    
+
     public function Player() {
       var self:Player = this;
 
@@ -66,7 +66,7 @@ package {
       ExternalInterface.addCallback("microphoneVolume", microphoneVolume);
       ExternalInterface.addCallback("muteMicrophone", muteMicrophone);
       ExternalInterface.addCallback("unmuteMicrophone", unmuteMicrophone);
-      ExternalInterface.addCallback("setFullscreenAllowed", setFullscreenAllowed);
+      ExternalInterface.addCallback("allowFullscreen", allowFullscreen);
 
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
@@ -77,7 +77,7 @@ package {
 
       /* Set default microphone volume */
       this.microphoneVolume(50);
-      
+
       /* Stage setup */
       this.stage.align = StageAlign.TOP_LEFT;
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -189,7 +189,7 @@ package {
     }
 
     public function playbackSpeed(speed:Number):void {
-      trace('playbackSpeed, speed->' + speed);  
+      trace('playbackSpeed, speed->' + speed);
     }
 
     public function streamStatus():void {
@@ -242,7 +242,7 @@ package {
       mic.gain = this.savedMicrophoneVolume;
     }
 
-    public function setFullscreenAllowed(state:Boolean):void {
+    public function allowFullscreen(state:Boolean):void {
       this.fullscreenAllowed = state;
 
       if (!state)
@@ -285,7 +285,7 @@ package {
         trace("ExternalInterface is not available!");
         return;
       }
-       
+
       var functionName:String = "Locomote('" + ExternalInterface.objectID + "').__playerEvent";
       if (data) {
         ExternalInterface.call(functionName, eventName, data);
