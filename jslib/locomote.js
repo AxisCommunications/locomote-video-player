@@ -76,15 +76,18 @@ Locomote.prototype = {
   },
 
   microphoneVolume: function(volume) {
-    console.log('microphoneVolume, volume->' + volume);
+    this.e.microphoneVolume(volume);
+    return this;
   },
 
   muteMicrophone: function() {
-    console.log('muteMicrophone');
+    this.e.muteMicrophone();
+    return this;
   },
 
   unmuteMicrophone: function() {
-    console.log('unmuteMicrophone');
+    this.e.unmuteMicrophone();
+    return this;
   },
 
   setFullScreenAllowed: function(state) {

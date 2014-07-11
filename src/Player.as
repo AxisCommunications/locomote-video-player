@@ -24,6 +24,7 @@ package {
   import flash.media.Video;
   import flash.net.NetStream;
   import flash.system.Security;
+  import flash.media.Microphone;
 
   [SWF(frameRate="60")]
   [SWF(backgroundColor="#efefef")]
@@ -40,6 +41,7 @@ package {
     private var ns:NetStream;
     private var urlParsed:Object;
     private var savedSpeakerVolume:Number;
+    private var savedMicrophoneVolume:Number;
 
     public function Player() {
       var self:Player = this;
@@ -71,6 +73,8 @@ package {
       ExternalInterface.addCallback("stopAudioTransmit", audioTransmitStopInterface);
 
       this.speakerVolume(0.5);
+
+      this.microphoneVolume(50);
       
       this.stage.align = StageAlign.TOP_LEFT;
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -214,15 +218,19 @@ package {
     }
 
     public function microphoneVolume(volume:Number):void {
-      trace('microphoneVolume, volume->' + volume);
+      this.savedMicrophoneVolume = volume;
+      var mic:Microphone = Microphone.getMicrophone();
+      mic.gain = volume;
     }
 
     public function muteMicrophone():void {
-      trace('muteMicrophone');
+      var mic:Microphone = Microphone.getMicrophone();
+      mic.gain = 0;
     }
 
     public function unmuteMicrophone():void {
-      trace('unmuteMicrophone');
+      var mic:Microphone = Microphone.getMicrophone();
+      mic.gain = this.savedMicrophoneVolume;
     }
 
     public function setFullscreenAllowed(state:Boolean):void {
