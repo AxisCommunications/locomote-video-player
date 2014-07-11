@@ -55,7 +55,7 @@ Fast forward video stream with playback speed multiplied with `speed`.
 Returns a status object with the following data:
 
 - fps - frames per second.
-- resolution - the strean size `WIDTHxHEIGHT`.
+- resolution - the stream size `WIDTHxHEIGHT`.
 - playback speed - current playback speed. 1.0 is normal stream speed.
 - current time - ms from start of stream.
 - protocol - which high-level transport protocol is in use.
