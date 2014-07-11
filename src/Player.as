@@ -1,29 +1,29 @@
 package {
 
+  import com.axis.ClientEvent;
+  import com.axis.IClient;
+  import com.axis.audioclient.AxisTransmit;
+  import com.axis.http.url;
+  import com.axis.httpclient.HTTPClient;
+  import com.axis.rtmpclient.RTMPClient;
+  import com.axis.rtspclient.IRTSPHandle;
+  import com.axis.rtspclient.RTSPClient;
+  import com.axis.rtspclient.RTSPoverHTTPHandle;
+  import com.axis.rtspclient.RTSPoverTCPHandle;
+  
   import flash.display.Sprite;
   import flash.display.Stage;
   import flash.display.StageAlign;
-  import flash.display.StageScaleMode;
   import flash.display.StageDisplayState;
+  import flash.display.StageScaleMode;
   import flash.events.Event;
   import flash.events.MouseEvent;
   import flash.external.ExternalInterface;
+  import flash.media.SoundMixer;
+  import flash.media.SoundTransform;
   import flash.media.Video;
   import flash.net.NetStream;
   import flash.system.Security;
-
-  import com.axis.http.url;
-  import com.axis.IClient;
-  import com.axis.ClientEvent;
-
-  import com.axis.rtspclient.RTSPClient;
-  import com.axis.rtspclient.IRTSPHandle;
-  import com.axis.rtspclient.RTSPoverTCPHandle;
-  import com.axis.rtspclient.RTSPoverHTTPHandle;
-  import com.axis.httpclient.HTTPClient;
-  import com.axis.rtmpclient.RTMPClient;
-
-  import com.axis.audioclient.AxisTransmit;
 
   [SWF(frameRate="60")]
   [SWF(backgroundColor="#efefef")]
@@ -39,6 +39,7 @@ package {
     private var client:IClient;
     private var ns:NetStream;
     private var urlParsed:Object;
+    private var savedSpeakerVolume:Number;
 
     public function Player() {
       var self:Player = this;
@@ -69,6 +70,8 @@ package {
       ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
       ExternalInterface.addCallback("stopAudioTransmit", audioTransmitStopInterface);
 
+      this.speakerVolume(0.5);
+      
       this.stage.align = StageAlign.TOP_LEFT;
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
       addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
@@ -195,15 +198,19 @@ package {
     }
 
     public function speakerVolume(volume:Number):void {
-      trace('speakerVolume, volume->' + volume);
+      this.savedSpeakerVolume = volume;
+	    var transform:SoundTransform = new SoundTransform(volume);
+	    flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function muteSpeaker():void {
-      trace('muteSpeaker');
+		  var transform:SoundTransform = new SoundTransform(0);
+		  flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function unmuteSpeaker():void {
-      trace('unmuteSpeaker');
+		  var transform:SoundTransform = new SoundTransform(this.savedSpeakerVolume);
+		  flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function microphoneVolume(volume:Number):void {
