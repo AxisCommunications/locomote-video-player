@@ -102,7 +102,7 @@ microphone is unmuted.
 
 Resets the volume to previous unmuted value.
 
-#### setFullScreenAllowed(state)
+#### allowFullscreen(state)
 
 Sets if full screen mode by double clicking the player is allowed or not.
 
