@@ -31,6 +31,7 @@ all: $(SWF)
 install: all
 	mkdir -p $(INSTALL)
 	cp $(SWF) $(INSTALL)
+	cp jslib/locomote.js $(INSTALL)
 
 clean:
 	rm -rf $(DEST)
