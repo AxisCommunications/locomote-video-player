@@ -70,8 +70,6 @@ Returns a status object with the following data:
 
 Returns a status object with the following data:
 
-- audio (bool) - if the player playbacks audio
-- video (bool)
 - microphoneVolume - the volume of the microphone when capturing audio
 - speakerVolume - the volume of the speakers (i.e. the stream volume).
 - microphoneMuted (bool) - if the microphone is muted.
