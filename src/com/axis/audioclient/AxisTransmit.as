@@ -50,7 +50,7 @@ package com.axis.audioclient {
       }
 
       var mic:Microphone = Microphone.getMicrophone();
-      mic.rate = 8;
+      mic.rate = 16;
       mic.setSilenceLevel(0, -1);
       mic.addEventListener(StatusEvent.STATUS, onMicStatus);
       mic.addEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
@@ -116,7 +116,7 @@ package com.axis.audioclient {
 
     private function onConnected(event:Event):void {
       conn.writeUTFBytes("POST " + this.urlParsed.urlpath + " HTTP/1.0\r\n");
-      conn.writeUTFBytes("Content-Type: audio/basic\r\n");
+      conn.writeUTFBytes("Content-Type: audio/axis-mulaw-128\r\n");
       conn.writeUTFBytes("Content-Length: 9999999\r\n");
       conn.writeUTFBytes("Connection: Keep-Alive\r\n");
       conn.writeUTFBytes("Cache-Control: no-cache\r\n");
