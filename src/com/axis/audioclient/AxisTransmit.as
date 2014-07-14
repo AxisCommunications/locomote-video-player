@@ -24,6 +24,8 @@ package com.axis.audioclient {
     private var authState:String = 'none';
     private var authOpts:Object = {};
 
+    private var savedUrl:String = null;
+
     public function AxisTransmit() {
     }
 
@@ -43,11 +45,20 @@ package com.axis.audioclient {
       }
     }
 
-    public function start(iurl:String):void {
+    public function start(iurl:String = null):void {
       if (conn.connected) {
         trace('already connected');
         return;
       }
+
+      var currentUrl:String = (iurl) ? iurl : savedUrl;
+
+      if (!currentUrl) {
+        trace("no url provided");
+        return;
+      }
+
+      this.savedUrl = currentUrl;
 
       var mic:Microphone = Microphone.getMicrophone();
       mic.rate = 16;
@@ -55,7 +66,7 @@ package com.axis.audioclient {
       mic.addEventListener(StatusEvent.STATUS, onMicStatus);
       mic.addEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
 
-      this.urlParsed = url.parse(iurl);
+      this.urlParsed = url.parse(currentUrl);
 
       conn = new Socket();
       conn.addEventListener(Event.CONNECT, onConnected);
