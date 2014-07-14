@@ -102,6 +102,14 @@ microphone is unmuted.
 
 Resets the volume to previous unmuted value.
 
+#### startAudioTransmit(url)
+
+Starts transmitting microphone input to the camera speaker. `url` should be in the format - `http://server:port/axis-cgi/audio/transmit.cgi`
+
+#### stopAudioTransmit()
+
+Stops transmitting microphone input to the camera speaker.
+
 #### allowFullscreen(state)
 
 Sets if full screen mode by double clicking the player is allowed or not.
