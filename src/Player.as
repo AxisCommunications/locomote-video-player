@@ -69,8 +69,8 @@ package {
       ExternalInterface.addCallback("allowFullscreen", allowFullscreen);
 
       /* Audio Transmission API */
-      ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
-      ExternalInterface.addCallback("stopAudioTransmit", audioTransmitStopInterface);
+      ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
+      ExternalInterface.addCallback("stopAudioTransmit", stopAudioTransmit);
 
       /* Set default speaker volume */
       this.speakerVolume(0.5);
@@ -242,19 +242,19 @@ package {
       mic.gain = this.savedMicrophoneVolume;
     }
 
+    public function startAudioTransmit(url:String = null):void {
+      audioTransmit.start(url);
+    }
+
+    public function stopAudioTransmit():void {
+      audioTransmit.stop();
+    }
+
     public function allowFullscreen(state:Boolean):void {
       this.fullscreenAllowed = state;
 
       if (!state)
         this.stage.displayState = StageDisplayState.NORMAL;
-    }
-
-    public function audioTransmitStopInterface():void {
-      audioTransmit.stop();
-    }
-
-    public function audioTransmitStartInterface(url:String = null):void {
-      audioTransmit.start(url);
     }
 
     private function onStageAdded(e:Event):void {
