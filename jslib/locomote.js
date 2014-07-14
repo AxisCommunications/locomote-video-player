@@ -57,7 +57,7 @@ Locomote.prototype = {
   },
 
   playerStatus: function() {
-    return this.e.playerStatus();;
+    return this.e.playerStatus();
   },
 
   speakerVolume: function(volume) {
