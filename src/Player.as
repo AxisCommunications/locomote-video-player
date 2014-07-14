@@ -227,19 +227,23 @@ package {
     }
 
     public function microphoneVolume(volume:Number):void {
+      audioTransmit.stop();
       this.savedMicrophoneVolume = volume;
       var mic:Microphone = Microphone.getMicrophone();
       mic.gain = volume;
+      audioTransmit.start();
     }
 
     public function muteMicrophone():void {
       var mic:Microphone = Microphone.getMicrophone();
       mic.gain = 0;
+      audioTransmit.stop();
     }
 
     public function unmuteMicrophone():void {
       var mic:Microphone = Microphone.getMicrophone();
       mic.gain = this.savedMicrophoneVolume;
+      audioTransmit.start();
     }
 
     public function startAudioTransmit(url:String = null):void {
