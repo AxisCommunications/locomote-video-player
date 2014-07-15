@@ -188,8 +188,21 @@ package {
       trace('playbackSpeed, speed->' + speed);
     }
 
-    public function streamStatus():void {
-      trace('streamStatus');
+    public function streamStatus():Object {
+      var status:Object = {
+        'fps': 0,
+        'resolution': meta.width + 'x' + meta.height,
+        'playbackSpeed': 1.0,
+        'protocol': this.urlParsed.protocol,
+        'audio': true,
+        'video': true,
+        'state': 'playing',
+        'isSeekable': false,
+        'isPlaybackSpeedChangeable': false,
+        'streamURL': this.urlParsed.full
+      };
+
+      return status;
     }
 
     public function playerStatus():Object {
