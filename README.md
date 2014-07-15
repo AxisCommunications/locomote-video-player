@@ -102,6 +102,7 @@ microphone is unmuted.
 
 Resets the volume to previous unmuted value.
 
+<<<<<<< HEAD
 #### startAudioTransmit(url, type)
 
 Starts transmitting microphone input to the camera speaker. The optional `type` parameter can be used for future implementations of other protocols, currently only the Axis audio transmit api is supported. For Axis cameras the `url` parameter should be in the format - `http://server:port/axis-cgi/audio/transmit.cgi`.
@@ -110,9 +111,13 @@ Starts transmitting microphone input to the camera speaker. The optional `type` 
 
 Stops transmitting microphone input to the camera speaker.
 
-#### allowFullscreen(state)
+#### config(config)
 
-Sets if full screen mode by double clicking the player is allowed or not.
+Sets configuration values of the player. `config` is a javascript object that can have the following optional values:
+
+`buffer` - The number of seconds that should be buffered. The default value is `1`.
+`scaleUp` - Specifies if the video can be scaled up or not. The default value is `false`.
+´allowFullscreen´ - Specifices if fullscreen mode is allowed or not. The default value is `true`.
 
 #### on(eventName:String, callback:Function)
 
