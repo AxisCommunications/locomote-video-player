@@ -73,7 +73,7 @@ package {
       ExternalInterface.addCallback("stopAudioTransmit", stopAudioTransmit);
 
       /* Set default speaker volume */
-      this.speakerVolume(0.5);
+      this.speakerVolume(50);
 
       /* Set default microphone volume */
       this.microphoneVolume(50);
@@ -212,7 +212,7 @@ package {
 
     public function speakerVolume(volume:Number):void {
       this.savedSpeakerVolume = volume;
-      var transform:SoundTransform = new SoundTransform(volume);
+      var transform:SoundTransform = new SoundTransform(volume / 100.0);
       flash.media.SoundMixer.soundTransform = transform;
     }
 
@@ -222,7 +222,10 @@ package {
     }
 
     public function unmuteSpeaker():void {
-      var transform:SoundTransform = new SoundTransform(this.savedSpeakerVolume);
+      if (flash.media.SoundMixer.soundTransform.volume !== 0)
+        return;
+
+      var transform:SoundTransform = new SoundTransform(this.savedSpeakerVolume / 100.0);
       flash.media.SoundMixer.soundTransform = transform;
     }
 
