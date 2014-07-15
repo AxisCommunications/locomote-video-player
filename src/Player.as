@@ -190,7 +190,7 @@ package {
 
     public function streamStatus():Object {
       var status:Object = {
-        'fps': 0,
+        'fps': Math.floor(this.ns.currentFPS + 0.5),
         'resolution': meta.width + 'x' + meta.height,
         'playbackSpeed': 1.0,
         'protocol': this.urlParsed.protocol,
