@@ -242,6 +242,10 @@ package {
 
     public function unmuteMicrophone():void {
       var mic:Microphone = Microphone.getMicrophone();
+
+      if (mic.gain !== 0)
+        return;
+
       mic.gain = this.savedMicrophoneVolume;
       audioTransmit.start();
     }
