@@ -250,8 +250,12 @@ package {
       audioTransmit.start();
     }
 
-    public function startAudioTransmit(url:String = null):void {
-      audioTransmit.start(url);
+    public function startAudioTransmit(url:String = null, type:String = 'axis'):void {
+      if (type === 'axis') {
+        audioTransmit.start(url);
+      } else {
+        trace("unsupported type");
+      }
     }
 
     public function stopAudioTransmit():void {
