@@ -90,8 +90,8 @@ Locomote.prototype = {
     return this;
   },
 
-  startAudioTransmit: function(url, type='axis') {
-    this.e.startAudioTransmit(url, type);
+  startAudioTransmit: function(url, type) {
+    this.e.startAudioTransmit(url, type || 'axis');
     return this;
   },
 

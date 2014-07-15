@@ -102,7 +102,7 @@ microphone is unmuted.
 
 Resets the volume to previous unmuted value.
 
-#### startAudioTransmit(url, type='axis')
+#### startAudioTransmit(url, type)
 
 Starts transmitting microphone input to the camera speaker. The optional `type` parameter can be used for future implementations of other protocols, currently only the Axis audio transmit api is supported. For Axis cameras the `url` parameter should be in the format - `http://server:port/axis-cgi/audio/transmit.cgi`.
 
