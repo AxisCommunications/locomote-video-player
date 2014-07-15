@@ -26,7 +26,12 @@ package com.axis.audioclient {
 
     private var savedUrl:String = null;
 
+    private var mic:Microphone = Microphone.getMicrophone();
+    private var _microphoneVolume:Number;
+
     public function AxisTransmit() {
+      /* Set default microphone volume */
+      this.microphoneVolume = 50;
     }
 
     private function onMicStatus(event:StatusEvent):void {
@@ -89,7 +94,6 @@ package com.axis.audioclient {
         return;
       }
 
-      var mic:Microphone = Microphone.getMicrophone();
       mic.removeEventListener(StatusEvent.STATUS, onMicStatus);
       mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
       conn.close();
@@ -182,6 +186,31 @@ package com.axis.audioclient {
 
     private function onError(e:ErrorEvent):void {
       trace('axis transmit error');
+    }
+
+    public function get microphoneVolume():Number {
+      return _microphoneVolume;
+    }
+
+    public function set microphoneVolume(volume:Number):void {
+      _microphoneVolume = volume;
+      mic.gain = volume;
+
+      if (volume && savedUrl)
+        start();
+    }
+
+    public function muteMicrophone():void {
+      mic.gain = 0;
+      stop();
+    }
+
+    public function unmuteMicrophone():void {
+      if (mic.gain !== 0)
+        return;
+
+      mic.gain = this.microphoneVolume;
+      start();
     }
   }
 }

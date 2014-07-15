@@ -40,7 +40,6 @@ package {
     private var ns:NetStream;
     private var urlParsed:Object;
     private var savedSpeakerVolume:Number;
-    private var savedMicrophoneVolume:Number;
     private var fullscreenAllowed:Boolean = true;
 
     public function Player() {
@@ -74,9 +73,6 @@ package {
 
       /* Set default speaker volume */
       this.speakerVolume(50);
-
-      /* Set default microphone volume */
-      this.microphoneVolume(50);
 
       /* Stage setup */
       this.stage.align = StageAlign.TOP_LEFT;
@@ -200,7 +196,7 @@ package {
       var mic:Microphone = Microphone.getMicrophone();
 
       var status:Object = {
-        'microphoneVolume': this.savedMicrophoneVolume,
+        'microphoneVolume': audioTransmit.microphoneVolume,
         'speakerVolume': this.savedSpeakerVolume,
         'microphoneMuted': (mic.gain === 0),
         'speakerMuted': (flash.media.SoundMixer.soundTransform.volume === 0),
@@ -230,27 +226,15 @@ package {
     }
 
     public function microphoneVolume(volume:Number):void {
-      audioTransmit.stop();
-      this.savedMicrophoneVolume = volume;
-      var mic:Microphone = Microphone.getMicrophone();
-      mic.gain = volume;
-      audioTransmit.start();
+      audioTransmit.microphoneVolume = volume;
     }
 
     public function muteMicrophone():void {
-      var mic:Microphone = Microphone.getMicrophone();
-      mic.gain = 0;
-      audioTransmit.stop();
+      audioTransmit.muteMicrophone();
     }
 
     public function unmuteMicrophone():void {
-      var mic:Microphone = Microphone.getMicrophone();
-
-      if (mic.gain !== 0)
-        return;
-
-      mic.gain = this.savedMicrophoneVolume;
-      audioTransmit.start();
+      audioTransmit.unmuteMicrophone();
     }
 
     public function startAudioTransmit(url:String = null, type:String = 'axis'):void {
