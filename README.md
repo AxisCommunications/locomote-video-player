@@ -76,31 +76,39 @@ Returns a status object with the following data:
 - speakerMuted (bool) - if the speakers are muted.
 - fullScreen (bool) - if the player is currently in fullscreen mode.
 
-#### speakerVolume(vol=0.5)
+#### speakerVolume(vol)
 
-Set video players volume from 0-1. Default value is 0.5.
+Sets speaker volume from 0-100. The default value is 50.
 
 #### muteSpeaker()
 
-Mutes the volume. This remembers the current volume and resets to it if the
+Mutes the speaker volume. Remembers the current volume and resets to it if the
 speakers are unmuted.
 
 #### unmuteSpeaker()
 
 Resets the volume to previous unmuted value.
 
-#### microphoneVolume(vol=0.5)
+#### microphoneVolume(vol)
 
-Set video players volume from 0-1. Default value is 0.5.
+Sets microphone volume from 0-100. The default value is 50.
 
 #### muteMicrophone()
 
-Mutes the volume. This remembers the current volume and resets to it if the
+Mutes the microphone. Remembers the current volume and resets to it if the
 microphone is unmuted.
 
 #### unmuteMicrophone()
 
 Resets the volume to previous unmuted value.
+
+#### startAudioTransmit(url, type)
+
+Starts transmitting microphone input to the camera speaker. The optional `type` parameter can be used for future implementations of other protocols, currently only the Axis audio transmit api is supported. For Axis cameras the `url` parameter should be in the format - `http://server:port/axis-cgi/audio/transmit.cgi`.
+
+#### stopAudioTransmit()
+
+Stops transmitting microphone input to the camera speaker.
 
 #### allowFullscreen(state)
 

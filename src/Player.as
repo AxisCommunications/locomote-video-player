@@ -40,7 +40,6 @@ package {
     private var ns:NetStream;
     private var urlParsed:Object;
     private var savedSpeakerVolume:Number;
-    private var savedMicrophoneVolume:Number;
     private var fullscreenAllowed:Boolean = true;
 
     public function Player() {
@@ -69,14 +68,11 @@ package {
       ExternalInterface.addCallback("allowFullscreen", allowFullscreen);
 
       /* Audio Transmission API */
-      ExternalInterface.addCallback("startAudioTransmit", audioTransmitStartInterface);
-      ExternalInterface.addCallback("stopAudioTransmit", audioTransmitStopInterface);
+      ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
+      ExternalInterface.addCallback("stopAudioTransmit", stopAudioTransmit);
 
       /* Set default speaker volume */
-      this.speakerVolume(0.5);
-
-      /* Set default microphone volume */
-      this.microphoneVolume(50);
+      this.speakerVolume(50);
 
       /* Stage setup */
       this.stage.align = StageAlign.TOP_LEFT;
@@ -200,7 +196,7 @@ package {
       var mic:Microphone = Microphone.getMicrophone();
 
       var status:Object = {
-        'microphoneVolume': this.savedMicrophoneVolume,
+        'microphoneVolume': audioTransmit.microphoneVolume,
         'speakerVolume': this.savedSpeakerVolume,
         'microphoneMuted': (mic.gain === 0),
         'speakerMuted': (flash.media.SoundMixer.soundTransform.volume === 0),
@@ -212,7 +208,7 @@ package {
 
     public function speakerVolume(volume:Number):void {
       this.savedSpeakerVolume = volume;
-      var transform:SoundTransform = new SoundTransform(volume);
+      var transform:SoundTransform = new SoundTransform(volume / 100.0);
       flash.media.SoundMixer.soundTransform = transform;
     }
 
@@ -222,24 +218,35 @@ package {
     }
 
     public function unmuteSpeaker():void {
-      var transform:SoundTransform = new SoundTransform(this.savedSpeakerVolume);
+      if (flash.media.SoundMixer.soundTransform.volume !== 0)
+        return;
+
+      var transform:SoundTransform = new SoundTransform(this.savedSpeakerVolume / 100.0);
       flash.media.SoundMixer.soundTransform = transform;
     }
 
     public function microphoneVolume(volume:Number):void {
-      this.savedMicrophoneVolume = volume;
-      var mic:Microphone = Microphone.getMicrophone();
-      mic.gain = volume;
+      audioTransmit.microphoneVolume = volume;
     }
 
     public function muteMicrophone():void {
-      var mic:Microphone = Microphone.getMicrophone();
-      mic.gain = 0;
+      audioTransmit.muteMicrophone();
     }
 
     public function unmuteMicrophone():void {
-      var mic:Microphone = Microphone.getMicrophone();
-      mic.gain = this.savedMicrophoneVolume;
+      audioTransmit.unmuteMicrophone();
+    }
+
+    public function startAudioTransmit(url:String = null, type:String = 'axis'):void {
+      if (type === 'axis') {
+        audioTransmit.start(url);
+      } else {
+        trace("unsupported type");
+      }
+    }
+
+    public function stopAudioTransmit():void {
+      audioTransmit.stop();
     }
 
     public function allowFullscreen(state:Boolean):void {
@@ -247,14 +254,6 @@ package {
 
       if (!state)
         this.stage.displayState = StageDisplayState.NORMAL;
-    }
-
-    public function audioTransmitStopInterface():void {
-      audioTransmit.stop();
-    }
-
-    public function audioTransmitStartInterface(url:String = null):void {
-      audioTransmit.start(url);
     }
 
     private function onStageAdded(e:Event):void {

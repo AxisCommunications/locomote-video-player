@@ -57,7 +57,7 @@ Locomote.prototype = {
   },
 
   playerStatus: function() {
-    return this.e.playerStatus();;
+    return this.e.playerStatus();
   },
 
   speakerVolume: function(volume) {
@@ -90,6 +90,16 @@ Locomote.prototype = {
     return this;
   },
 
+  startAudioTransmit: function(url, type) {
+    this.e.startAudioTransmit(url, type || 'axis');
+    return this;
+  },
+
+  stopAudioTransmit: function() {
+    this.e.stopAudioTransmit();
+    return this;
+  },
+
   allowFullscreen: function(state) {
     this.e.allowFullscreen(state);
     return this;
@@ -119,7 +129,7 @@ Locomote.prototype = {
     if (!window.Locomote.callbacks[this.id]) {
       return;
     }
-    
+
     window.Locomote.callbacks[this.id].forEach(function(element, index, array) {
       if (element.eventName === eventName) {
         element.callback.call();
