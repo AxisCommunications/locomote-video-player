@@ -12,12 +12,13 @@ package com.axis.audioclient {
   import flash.media.SoundCodec;
   import flash.utils.ByteArray;
 
+  import com.axis.audioclient.IAudioClient;
   import com.axis.codec.g711;
   import com.axis.http.url;
   import com.axis.http.auth;
   import com.axis.http.request;
 
-  public class AxisTransmit {
+  public class AxisTransmit implements IAudioClient {
     private var urlParsed:Object = {};
     private var conn:Socket = new Socket();
 
