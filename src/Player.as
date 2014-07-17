@@ -41,6 +41,7 @@ package {
     private var urlParsed:Object;
     private var savedSpeakerVolume:Number;
     private var fullscreenAllowed:Boolean = true;
+    private var currentState:String = "Stopped";
 
     public function Player() {
       var self:Player = this;
@@ -141,6 +142,7 @@ package {
         /* RTSP over TCP */
         client = new RTSPClient(this.video, urlParsed, new RTSPoverTCPHandle(urlParsed));
         this.callAPI('streamStarted');
+        this.currentState = "Playing";
         break;
 
       case 'http':
@@ -166,6 +168,7 @@ package {
     public function pause():void {
       client.pause();
       this.callAPI('streamPaused');
+      this.currentState = "Paused";
     }
 
     public function resume():void {
@@ -178,6 +181,7 @@ package {
       ns = null;
       client.stop();
       this.callAPI('streamStopped');
+      this.currentState = "Stopped";
     }
 
     public function seek(timestamp:String):void {
@@ -190,16 +194,16 @@ package {
 
     public function streamStatus():Object {
       var status:Object = {
-        'fps': Math.floor(this.ns.currentFPS + 0.5),
-        'resolution': meta.width + 'x' + meta.height,
-        'playbackSpeed': 1.0,
-        'protocol': this.urlParsed.protocol,
-        'audio': true,
-        'video': true,
-        'state': 'playing',
+        'fps': (this.ns) ? Math.floor(this.ns.currentFPS + 0.5) : null,
+        'resolution': (this.ns) ? (meta.width + 'x' + meta.height) : null,
+        'playbackSpeed': (this.ns) ? 1.0 : null,
+        'protocol': (this.urlParsed) ? this.urlParsed.protocol: null,
+        'audio': null,
+        'video': null,
+        'state': this.currentState,
         'isSeekable': false,
         'isPlaybackSpeedChangeable': false,
-        'streamURL': this.urlParsed.full
+        'streamURL': (this.urlParsed) ? this.urlParsed.full : null
       };
 
       return status;
