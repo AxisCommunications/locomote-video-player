@@ -39,7 +39,9 @@ package com.axis.http {
       ret.user = userpass[0];
       ret.pass = userpass[1];
       ret.host = hostport[0];
+
       ret.port = (null == hostport[1]) ? protocolDefaultPort(ret.protocol) : hostport[1];
+      ret.portDefined = (null != hostport[1]);
 
       return ret;
     }
@@ -52,6 +54,7 @@ package com.axis.http {
     private static function protocolDefaultPort(protocol:String):uint
     {
       switch (protocol) {
+        case 'rtmp': return 1935;
         case 'rtsp': return 554;
         case 'http': return 80;
         case 'https': return 443;
