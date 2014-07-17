@@ -30,9 +30,12 @@ package com.axis.rtmpclient {
       nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);
       nc.client = this;
 
-
       this.streamId = urlParsed.basename;
-      this.streamServer = urlParsed.protocol + '://' + urlParsed.host + urlParsed.basepath;
+      this.streamServer  = urlParsed.protocol + '://';
+      this.streamServer += urlParsed.host;
+      this.streamServer += ((urlParsed.portDefined) ? (':' + urlParsed.port) : '')
+      this.streamServer += urlParsed.basepath;
+      trace(this.streamServer);
 
       trace('RTMPClient: connecting to server: \'' + streamServer + '\'');
       nc.connect(streamServer);
@@ -90,4 +93,3 @@ package com.axis.rtmpclient {
     }
   }
 }
-
