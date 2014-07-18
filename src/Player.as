@@ -122,6 +122,8 @@ package {
     }
 
     public function play(iurl:String = null):void {
+      this.streamHasAudio = false;
+      this.streamHasVideo = false;
       if (client) {
         urlParsed = url.parse(iurl);
         /* Stop the client, and 'onStopped' will start the new stream. */
@@ -129,8 +131,6 @@ package {
         return;
       }
 
-      this.streamHasAudio = false;
-      this.streamHasVideo = false;
       urlParsed = url.parse(iurl);
       start();
     }
