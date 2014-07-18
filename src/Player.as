@@ -41,6 +41,9 @@ package {
     private var urlParsed:Object;
     private var savedSpeakerVolume:Number;
     private var fullscreenAllowed:Boolean = true;
+    private var currentState:String = "stopped";
+    private var streamHasAudio:Boolean = false;
+    private var streamHasVideo:Boolean = false;
 
     public function Player() {
       var self:Player = this;
@@ -119,6 +122,8 @@ package {
     }
 
     public function play(iurl:String = null):void {
+      this.streamHasAudio = false;
+      this.streamHasVideo = false;
       if (client) {
         urlParsed = url.parse(iurl);
         /* Stop the client, and 'onStopped' will start the new stream. */
@@ -160,12 +165,14 @@ package {
 
       client.addEventListener(ClientEvent.NETSTREAM_CREATED, onNetStreamCreated);
       client.addEventListener(ClientEvent.STOPPED, onStopped);
+      client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.start();
     }
 
     public function pause():void {
       client.pause();
       this.callAPI('streamPaused');
+      this.currentState = "paused";
     }
 
     public function resume():void {
@@ -178,6 +185,9 @@ package {
       ns = null;
       client.stop();
       this.callAPI('streamStopped');
+      this.currentState = "stopped";
+      this.streamHasAudio = false;
+      this.streamHasVideo = false;
     }
 
     public function seek(timestamp:String):void {
@@ -188,8 +198,25 @@ package {
       trace('playbackSpeed, speed->' + speed);
     }
 
-    public function streamStatus():void {
-      trace('streamStatus');
+    public function streamStatus():Object {
+      if (this.currentState === 'playing') {
+        this.streamHasAudio = (this.streamHasAudio || this.ns.info.audioBufferByteLength);
+        this.streamHasVideo = (this.streamHasVideo || this.ns.info.videoBufferByteLength);
+      }
+      var status:Object = {
+        'fps': (this.ns) ? Math.floor(this.ns.currentFPS + 0.5) : null,
+        'resolution': (this.ns) ? { width: meta.width, height: meta.height } : null,
+        'playbackSpeed': (this.ns) ? 1.0 : null,
+        'protocol': (this.urlParsed) ? this.urlParsed.protocol: null,
+        'audio': (this.ns) ? this.streamHasAudio : null,
+        'video': (this.ns) ? this.streamHasVideo : null,
+        'state': this.currentState,
+        'isSeekable': false,
+        'isPlaybackSpeedChangeable': false,
+        'streamURL': (this.urlParsed) ? this.urlParsed.full : null
+      };
+
+      return status;
     }
 
     public function playerStatus():Object {
@@ -277,6 +304,14 @@ package {
       if (urlParsed) {
         start();
       }
+    }
+
+    private function onStartPlay(ev:ClientEvent):void {
+      this.currentState = "playing";
+    }
+
+    public function onPlayStatus(ev:Object):void {
+      this.currentState = "stopped";
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

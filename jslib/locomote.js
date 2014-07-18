@@ -53,7 +53,7 @@ Locomote.prototype = {
   },
 
   streamStatus: function() {
-    console.log('streamStatus');
+    return this.e.streamStatus();
   },
 
   playerStatus: function() {

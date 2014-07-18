@@ -96,8 +96,7 @@ package com.axis.rtspclient {
       return true;
     }
 
-    public function pause():Boolean
-    {
+    public function pause():Boolean {
       if (state !== STATE_PLAYING) {
         trace('Unable to pause a stream if not playing.');
         return false;
@@ -113,8 +112,7 @@ package com.axis.rtspclient {
       return true;
     }
 
-    public function resume():Boolean
-    {
+    public function resume():Boolean {
       if (state !== STATE_PAUSED) {
         trace('Unable to resume a stream if not paused.');
         return false;
@@ -124,8 +122,7 @@ package com.axis.rtspclient {
       return true;
     }
 
-    public function stop():Boolean
-    {
+    public function stop():Boolean {
       if (state < STATE_PLAY) {
         trace('Unable to stop if we never reached play.');
         return false;
@@ -134,8 +131,7 @@ package com.axis.rtspclient {
       return true;
     }
 
-    private function onClose(event:Event):void
-    {
+    private function onClose(event:Event):void {
       if (state === STATE_TEARDOWN) {
         this.ns.dispose();
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
@@ -144,8 +140,7 @@ package com.axis.rtspclient {
       }
     }
 
-    private function onData(event:Event):void
-    {
+    private function onData(event:Event):void {
       if (0 < data.bytesAvailable) {
         /* Determining byte have already been read. This is a continuation */
       } else {
@@ -171,8 +166,7 @@ package com.axis.rtspclient {
       }
     }
 
-    private function requestReset():void
-    {
+    private function requestReset():void {
       var copy:ByteArray = new ByteArray();
       data.readBytes(copy);
       data.clear();
@@ -182,8 +176,7 @@ package com.axis.rtspclient {
       rtpChannel = -1;
     }
 
-    private function readRequest(oBody:ByteArray):*
-    {
+    private function readRequest(oBody:ByteArray):* {
       var parsed:* = request.readHeaders(handle, data);
       if (false === parsed) {
         return false;
@@ -317,8 +310,7 @@ package com.axis.rtspclient {
       }
     }
 
-    private function onInterleavedData():void
-    {
+    private function onInterleavedData():void {
       handle.readBytes(data, data.length);
 
       if (data.bytesAvailable < 4) {
@@ -360,13 +352,11 @@ package com.axis.rtspclient {
       }
     }
 
-    private function supportCommand(command:String):Boolean
-    {
+    private function supportCommand(command:String):Boolean {
       return (-1 !== this.methods.indexOf(command));
     }
 
-    private function getSetupURL(block:Object = null):*
-    {
+    private function getSetupURL(block:Object = null):* {
       var sessionBlock:Object = sdp.getSessionBlock();
       if (url.isAbsolute(block.control)) {
         return block.control;
@@ -384,8 +374,7 @@ package com.axis.rtspclient {
       throw new Error('Unable to determine control URL.');
     }
 
-    private function getControlURL():String
-    {
+    private function getControlURL():String {
       var sessCtrl:String = sdp.getSessionBlock().control;
       var u:String = sessCtrl;
       if (url.isAbsolute(u)) {
@@ -448,6 +437,7 @@ package com.axis.rtspclient {
       this.ns.play(null);
 
       state = STATE_PLAY;
+      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
 
       var req:String =
         "PLAY " + getControlURL() + " RTSP/1.0\r\n" +

@@ -14,14 +14,12 @@ package com.axis.httpclient {
     private var nc:NetConnection;
     private var ns:NetStream;
 
-    public function HTTPClient(video:Video, urlParsed:Object)
-    {
+    public function HTTPClient(video:Video, urlParsed:Object) {
       this.urlParsed = urlParsed;
       this.video = video;
     }
 
-    public function start():Boolean
-    {
+    public function start():Boolean {
       trace('HTTPClient: playing:', urlParsed.full);
 
       nc = new NetConnection();
@@ -34,30 +32,28 @@ package com.axis.httpclient {
       this.video.attachNetStream(this.ns);
 
       ns.play(urlParsed.full);
+      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
     }
 
-    public function stop():Boolean
-    {
+    public function stop():Boolean {
       ns.dispose();
       nc.close();
       return true;
     }
 
-    public function pause():Boolean
-    {
+    public function pause():Boolean {
       ns.pause();
       return true;
     }
 
-    public function resume():Boolean
-    {
+    public function resume():Boolean {
       ns.resume();
+      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
     }
 
-    private function onConnectionStatus(event:NetStatusEvent):void
-    {
+    private function onConnectionStatus(event:NetStatusEvent):void {
       if ('NetConnection.Connect.Closed' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       }
