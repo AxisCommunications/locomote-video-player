@@ -205,7 +205,7 @@ package {
       }
       var status:Object = {
         'fps': (this.ns) ? Math.floor(this.ns.currentFPS + 0.5) : null,
-        'resolution': (this.ns) ? (meta.width + 'x' + meta.height) : null,
+        'resolution': (this.ns) ? { width: meta.width, height: meta.height } : null,
         'playbackSpeed': (this.ns) ? 1.0 : null,
         'protocol': (this.urlParsed) ? this.urlParsed.protocol: null,
         'audio': (this.ns) ? this.streamHasAudio : null,
