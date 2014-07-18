@@ -17,14 +17,12 @@ package com.axis.rtmpclient {
     private var streamServer:String;
     private var streamId:String;
 
-    public function RTMPClient(video:Video, urlParsed:Object)
-    {
+    public function RTMPClient(video:Video, urlParsed:Object) {
       this.video = video;
       this.urlParsed = urlParsed;
     }
 
-    public function start():Boolean
-    {
+    public function start():Boolean {
       this.nc = new NetConnection();
       nc.addEventListener(NetStatusEvent.NET_STATUS, onConnectionStatus);
       nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);
@@ -43,27 +41,24 @@ package com.axis.rtmpclient {
       return true;
     }
 
-    public function stop():Boolean
-    {
+    public function stop():Boolean {
       ns.dispose();
       nc.close();
       return true;
     }
 
-    public function pause():Boolean
-    {
+    public function pause():Boolean {
       ns.pause();
       return true;
     }
 
-    public function resume():Boolean
-    {
+    public function resume():Boolean {
       ns.resume();
+      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
     }
 
-    private function onConnectionStatus(event:NetStatusEvent):void
-    {
+    private function onConnectionStatus(event:NetStatusEvent):void {
       if ('NetConnection.Connect.Success' === event.info.code) {
         trace('RTMPClient: connected');
         this.ns = new NetStream(this.nc);
@@ -71,6 +66,7 @@ package com.axis.rtmpclient {
         this.video.attachNetStream(this.ns);
         trace('RTMPClient: starting stream: \'' + this.streamId + '\'');
         this.ns.play(this.streamId);
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       }
 
       if ('NetConnection.Connect.Closed' === event.info.code) {
@@ -78,18 +74,15 @@ package com.axis.rtmpclient {
       }
     }
 
-    private function asyncErrorHandler(event:AsyncErrorEvent):void
-    {
+    private function asyncErrorHandler(event:AsyncErrorEvent):void {
       trace('RTMPClient: Async Error Event:', event.error);
     }
 
-    public function onBWDone():void
-    {
+    public function onBWDone(arg:*):void {
       /* Why is this enforced by NetConnection? */
     }
 
-    public function onFCSubscribe(info:Object):void
-    {
+    public function onFCSubscribe(info:Object):void {
     }
   }
 }
