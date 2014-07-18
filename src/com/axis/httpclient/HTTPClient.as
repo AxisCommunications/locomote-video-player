@@ -34,6 +34,7 @@ package com.axis.httpclient {
       this.video.attachNetStream(this.ns);
 
       ns.play(urlParsed.full);
+      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
     }
 
@@ -53,6 +54,7 @@ package com.axis.httpclient {
     public function resume():Boolean
     {
       ns.resume();
+      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
     }
 

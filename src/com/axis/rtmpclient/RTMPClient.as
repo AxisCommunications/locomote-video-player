@@ -59,6 +59,7 @@ package com.axis.rtmpclient {
     public function resume():Boolean
     {
       ns.resume();
+      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
     }
 
@@ -71,6 +72,7 @@ package com.axis.rtmpclient {
         this.video.attachNetStream(this.ns);
         trace('RTMPClient: starting stream: \'' + this.streamId + '\'');
         this.ns.play(this.streamId);
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       }
 
       if ('NetConnection.Connect.Closed' === event.info.code) {
@@ -83,7 +85,7 @@ package com.axis.rtmpclient {
       trace('RTMPClient: Async Error Event:', event.error);
     }
 
-    public function onBWDone():void
+    public function onBWDone(arg:*):void
     {
       /* Why is this enforced by NetConnection? */
     }
