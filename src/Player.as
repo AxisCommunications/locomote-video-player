@@ -42,6 +42,8 @@ package {
     private var savedSpeakerVolume:Number;
     private var fullscreenAllowed:Boolean = true;
     private var currentState:String = "Stopped";
+    private var streamHasAudio:Boolean = false;
+    private var streamHasVideo:Boolean = false;
 
     public function Player() {
       var self:Player = this;
@@ -142,7 +144,6 @@ package {
         /* RTSP over TCP */
         client = new RTSPClient(this.video, urlParsed, new RTSPoverTCPHandle(urlParsed));
         this.callAPI('streamStarted');
-        this.currentState = "Playing";
         break;
 
       case 'http':
@@ -162,6 +163,7 @@ package {
 
       client.addEventListener(ClientEvent.NETSTREAM_CREATED, onNetStreamCreated);
       client.addEventListener(ClientEvent.STOPPED, onStopped);
+      client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.start();
     }
 
@@ -193,13 +195,17 @@ package {
     }
 
     public function streamStatus():Object {
+      if (this.currentState === 'Playing') {
+        this.streamHasAudio = (this.ns.info.audioBufferByteLength);
+        this.streamHasVideo = (this.ns.info.videoBufferByteLength);
+      }
       var status:Object = {
         'fps': (this.ns) ? Math.floor(this.ns.currentFPS + 0.5) : null,
         'resolution': (this.ns) ? (meta.width + 'x' + meta.height) : null,
         'playbackSpeed': (this.ns) ? 1.0 : null,
         'protocol': (this.urlParsed) ? this.urlParsed.protocol: null,
-        'audio': null,
-        'video': null,
+        'audio': (this.ns) ? this.streamHasAudio : null,
+        'video': (this.ns) ? this.streamHasVideo : null,
         'state': this.currentState,
         'isSeekable': false,
         'isPlaybackSpeedChangeable': false,
@@ -294,6 +300,14 @@ package {
       if (urlParsed) {
         start();
       }
+    }
+
+    private function onStartPlay(ev:ClientEvent):void {
+      this.currentState = "Playing";
+    }
+
+    public function onPlayStatus(ev:Object):void {
+      this.currentState = "Stopped";
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

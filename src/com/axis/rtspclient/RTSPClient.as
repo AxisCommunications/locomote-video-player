@@ -448,6 +448,7 @@ package com.axis.rtspclient {
       this.ns.play(null);
 
       state = STATE_PLAY;
+      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
 
       var req:String =
         "PLAY " + getControlURL() + " RTSP/1.0\r\n" +
