@@ -24,6 +24,8 @@ package {
   import flash.media.Video;
   import flash.net.NetStream;
   import flash.system.Security;
+  import flash.events.TimerEvent;
+  import flash.utils.Timer;
 
   [SWF(frameRate="60")]
   [SWF(backgroundColor="#efefef")]
@@ -52,6 +54,71 @@ package {
       Security.allowDomain("*");
       Security.allowInsecureDomain("*");
 
+      if (ExternalInterface.available)
+      {
+        try
+        {
+          // This calls the isJSReady() method, which in turn calls
+          // the container to see if Flash Player has loaded and the container
+          // is ready to receive calls from the Player.
+          var jsReady:Boolean = isJSReady();
+          if (jsReady)
+          {
+            // if the container is ready, register the Player's API functions
+            setupAPICallbacks();
+          }
+          else
+          {
+            // If the container is not ready, set up a Timer to call the
+            // container at 100ms intervals. Once the container responds that
+            // it's ready, the timer will be stopped.
+            var readyTimer:Timer = new Timer(100);
+            readyTimer.addEventListener(TimerEvent.TIMER, timerHandler);
+            readyTimer.start();
+          }
+        }
+        catch (error:SecurityError)
+        {
+            trace("A SecurityError occurred: " + error.message + "\n");
+            throw error;
+        }
+        catch (error:Error)
+        {
+            trace("An Error occurred: " + error.message + "\n");
+            throw error;
+        }
+      }
+      else
+      {
+        trace("External interface is not available for this container.");
+      }
+
+      /* Set default speaker volume */
+      this.speakerVolume(50);
+
+      /* Stage setup */
+      this.stage.align = StageAlign.TOP_LEFT;
+      this.stage.scaleMode = StageScaleMode.NO_SCALE;
+      addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
+
+      /* Video object setup */
+      video = new Video(stage.stageWidth, stage.stageHeight);
+      addChild(video);
+
+      /* Fullscreen support setup */
+      this.stage.doubleClickEnabled = true;
+      this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
+      this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
+        videoResize();
+      });
+    }
+
+    /**
+     * Registers the appropriate API functions with the container, so that
+     * they can be called, and triggers the apiReady event
+     * which tells the container that the Player is ready to receive API calls.
+     */
+    public function setupAPICallbacks():void {
       ExternalInterface.marshallExceptions = true;
 
       /* Media player API */
@@ -75,24 +142,31 @@ package {
       ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
       ExternalInterface.addCallback("stopAudioTransmit", stopAudioTransmit);
 
-      /* Set default speaker volume */
-      this.speakerVolume(50);
+      // notify the container that the SWF is ready to be called.
+      this.callAPI('apiReady');
+    }
 
-      /* Stage setup */
-      this.stage.align = StageAlign.TOP_LEFT;
-      this.stage.scaleMode = StageScaleMode.NO_SCALE;
-      addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
+    /**
+     * Calls the container's isReady() function, to check if the container is loaded
+     * and ready to communicate with the Player.
+     * @return   Whether the container is ready to communicate with ActionScript.
+     */
+    private function isJSReady():Boolean {
+      var result:Boolean = ExternalInterface.call("Locomote('" + ExternalInterface.objectID + "').isReady");
+      return result;
+    }
 
-      /* Video object setup */
-      video = new Video(stage.stageWidth, stage.stageHeight);
-      addChild(video);
-
-      /* Fullscreen support setup */
-      this.stage.doubleClickEnabled = true;
-      this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
-      this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
-        videoResize();
-      });
+    private function timerHandler(event:TimerEvent):void {
+      // check if the container is now ready
+      var isReady:Boolean = isJSReady();
+      if (isReady) {
+        // If the container has become ready, we don't need to check anymore,
+        // so stop the timer.
+        Timer(event.target).stop();
+        // Set up the ActionScript methods that will be available to be
+        // called by the container.
+        setupAPICallbacks();
+      }
     }
 
     public function fullscreen(event:MouseEvent):void {

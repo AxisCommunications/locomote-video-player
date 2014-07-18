@@ -24,6 +24,13 @@ function Locomote(id) {
 }
 
 Locomote.prototype = {
+  isReady: function() {
+    // JavsScript readyness is assumed.
+    // If this is not the case, this function may be
+    // implemented to return JavaScript status.
+    return true;
+  },
+
   play: function(url) {
     this.e.play(url);
     return this;
