@@ -41,7 +41,7 @@ package {
     private var urlParsed:Object;
     private var savedSpeakerVolume:Number;
     private var fullscreenAllowed:Boolean = true;
-    private var currentState:String = "Stopped";
+    private var currentState:String = "stopped";
     private var streamHasAudio:Boolean = false;
     private var streamHasVideo:Boolean = false;
 
@@ -172,7 +172,7 @@ package {
     public function pause():void {
       client.pause();
       this.callAPI('streamPaused');
-      this.currentState = "Paused";
+      this.currentState = "paused";
     }
 
     public function resume():void {
@@ -185,7 +185,7 @@ package {
       ns = null;
       client.stop();
       this.callAPI('streamStopped');
-      this.currentState = "Stopped";
+      this.currentState = "stopped";
       this.streamHasAudio = false;
       this.streamHasVideo = false;
     }
@@ -199,7 +199,7 @@ package {
     }
 
     public function streamStatus():Object {
-      if (this.currentState === 'Playing') {
+      if (this.currentState === 'playing') {
         this.streamHasAudio = (this.streamHasAudio || this.ns.info.audioBufferByteLength);
         this.streamHasVideo = (this.streamHasVideo || this.ns.info.videoBufferByteLength);
       }
@@ -307,11 +307,11 @@ package {
     }
 
     private function onStartPlay(ev:ClientEvent):void {
-      this.currentState = "Playing";
+      this.currentState = "playing";
     }
 
     public function onPlayStatus(ev:Object):void {
-      this.currentState = "Stopped";
+      this.currentState = "stopped";
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
