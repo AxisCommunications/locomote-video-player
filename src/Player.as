@@ -184,6 +184,8 @@ package {
       client.stop();
       this.callAPI('streamStopped');
       this.currentState = "Stopped";
+      this.streamHasAudio = false;
+      this.streamHasVideo = false;
     }
 
     public function seek(timestamp:String):void {
@@ -196,8 +198,8 @@ package {
 
     public function streamStatus():Object {
       if (this.currentState === 'Playing') {
-        this.streamHasAudio = (this.ns.info.audioBufferByteLength);
-        this.streamHasVideo = (this.ns.info.videoBufferByteLength);
+        this.streamHasAudio = (this.streamHasAudio || this.ns.info.audioBufferByteLength);
+        this.streamHasVideo = (this.streamHasVideo || this.ns.info.videoBufferByteLength);
       }
       var status:Object = {
         'fps': (this.ns) ? Math.floor(this.ns.currentFPS + 0.5) : null,
