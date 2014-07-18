@@ -129,6 +129,8 @@ package {
         return;
       }
 
+      this.streamHasAudio = false;
+      this.streamHasVideo = false;
       urlParsed = url.parse(iurl);
       start();
     }
