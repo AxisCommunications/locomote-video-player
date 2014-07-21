@@ -1,34 +1,37 @@
 function Locomote(id) {
-  // About object is returned if there is no 'id' parameter
-  var about = {
-    Author: "Axis Communications"
-  };
-
-  if (!window.Locomote.callbacks)
-    window.Locomote.callbacks = {};
+  this.callbacks = [];
+  this.apiReady = false;
 
   if (id) {
     // return a new Locomote object if we're in the wrong scope
     if (window === this) {
-      return new Locomote(id);
+      window.Locomote[id] = new Locomote(id);
+      return window.Locomote[id];
     }
-
+    if (!window.Locomote[id]) {
+      window.Locomote[id] = this;
+    } else {
+      return window.Locomote[id];
+    }
     // Init our element object and return the object
     this.e = document.getElementById(id);
     this.id = id;
     return this;
   } else {
-    // No 'id' parameter was given, return the 'about' object
-    return about;
+    // No 'id' parameter was given, return null
+    return null;
   }
 }
 
 Locomote.prototype = {
   isReady: function() {
-    // JavsScript readyness is assumed.
-    // If this is not the case, this function may be
-    // implemented to return JavaScript status.
-    return true;
+    // Returns the ready status to the Flash Player
+    return this.apiReady;
+  },
+
+  start: function() {
+    // Set the ready status to true and start listening for events
+    this.apiReady = true;
   },
 
   play: function(url) {
@@ -112,19 +115,11 @@ Locomote.prototype = {
   },
 
   on: function(eventName, callback) {
-    if (!window.Locomote.callbacks[this.id]) {
-      window.Locomote.callbacks[this.id] = [];
-    }
-
-    window.Locomote.callbacks[this.id].push({ eventName: eventName, callback: callback });
+    this.callbacks.push({ eventName: eventName, callback: callback });
   },
 
   off: function(eventName, callback) {
-    if (!window.Locomote.callbacks[this.id]) {
-      return;
-    }
-
-    window.Locomote.callbacks[this.id].forEach(function(element, index, array) {
+    this.callbacks.forEach(function(element, index, array) {
       if((element.eventName === eventName) && (element.callback === callback)) {
         array.splice(index, 1);
       }
@@ -132,13 +127,11 @@ Locomote.prototype = {
   },
 
   __playerEvent: function(eventName) {
-    if (!window.Locomote.callbacks[this.id]) {
-      return;
-    }
-
-    window.Locomote.callbacks[this.id].forEach(function(element, index, array) {
+    this.callbacks.forEach(function(element, index, array) {
       if (element.eventName === eventName) {
-        element.callback.call();
+        if (element.callback) {
+          element.callback.call();
+        }
       }
     });
   },
