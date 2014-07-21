@@ -126,6 +126,7 @@ package {
       if (iconfig.buffer !== undefined) {
         config.buffer = iconfig.buffer;
         this.ns.bufferTime = config.buffer;
+        this.client.forceBuffering();
       }
 
       if (iconfig.scaleUp !== undefined) {
@@ -249,7 +250,8 @@ package {
         'speakerVolume': this.savedSpeakerVolume,
         'microphoneMuted': (mic.gain === 0),
         'speakerMuted': (flash.media.SoundMixer.soundTransform.volume === 0),
-        'fullscreen': (StageDisplayState.FULL_SCREEN === stage.displayState)
+        'fullscreen': (StageDisplayState.FULL_SCREEN === stage.displayState),
+        'buffer': this.ns.bufferTime
       };
 
       return status;
