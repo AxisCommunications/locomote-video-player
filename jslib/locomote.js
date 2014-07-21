@@ -100,9 +100,8 @@ Locomote.prototype = {
     return this;
   },
 
-  allowFullscreen: function(state) {
-    this.e.allowFullscreen(state);
-    return this;
+  config: function(config) {
+    this.e.setConfig(config);
   },
 
   on: function(eventName, callback) {

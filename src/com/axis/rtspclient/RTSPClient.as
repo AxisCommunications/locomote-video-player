@@ -131,6 +131,12 @@ package com.axis.rtspclient {
       return true;
     }
 
+    public function forceBuffering():Boolean {
+      ns.close();
+      ns.play(null);
+      return true;
+    }
+
     private function onClose(event:Event):void {
       if (state === STATE_TEARDOWN) {
         this.ns.dispose();

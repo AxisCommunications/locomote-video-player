@@ -31,7 +31,8 @@ package {
   public class Player extends Sprite {
     private var config:Object = {
       'buffer': 1,
-      'scaleUp': false
+      'scaleUp': false,
+      'allowFullscreen': true
     };
     private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
@@ -68,7 +69,7 @@ package {
       ExternalInterface.addCallback("microphoneVolume", microphoneVolume);
       ExternalInterface.addCallback("muteMicrophone", muteMicrophone);
       ExternalInterface.addCallback("unmuteMicrophone", unmuteMicrophone);
-      ExternalInterface.addCallback("allowFullscreen", allowFullscreen);
+      ExternalInterface.addCallback("setConfig", setConfig);
 
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
@@ -95,7 +96,7 @@ package {
     }
 
     public function fullscreen(event:MouseEvent):void {
-      if (this.fullscreenAllowed)
+      if (config.allowFullscreen)
         this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
           StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
     }
@@ -119,6 +120,28 @@ package {
 
       video.x = (stagewidth - video.width) / 2;
       video.y = (stageheight - video.height) / 2;
+    }
+
+    public function setConfig(iconfig:Object):void {
+      if (iconfig.buffer !== undefined) {
+        config.buffer = iconfig.buffer;
+        this.ns.bufferTime = config.buffer;
+        this.client.forceBuffering();
+      }
+
+      if (iconfig.scaleUp !== undefined) {
+        var scaleUpChanged:Boolean = (config.scaleUp !== iconfig.scaleUp);
+        config.scaleUp = iconfig.scaleUp;
+        if (scaleUpChanged)
+          this.videoResize();
+      }
+
+      if (iconfig.allowFullscreen !== undefined) {
+        config.allowFullscreen = iconfig.allowFullscreen;
+
+        if (!config.allowFullscreen)
+          this.stage.displayState = StageDisplayState.NORMAL;
+      }
     }
 
     public function play(iurl:String = null):void {
@@ -227,7 +250,8 @@ package {
         'speakerVolume': this.savedSpeakerVolume,
         'microphoneMuted': (mic.gain === 0),
         'speakerMuted': (flash.media.SoundMixer.soundTransform.volume === 0),
-        'fullscreen': (StageDisplayState.FULL_SCREEN === stage.displayState)
+        'fullscreen': (StageDisplayState.FULL_SCREEN === stage.displayState),
+        'buffer': this.ns.bufferTime
       };
 
       return status;

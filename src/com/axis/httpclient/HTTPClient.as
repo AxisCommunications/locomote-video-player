@@ -53,6 +53,12 @@ package com.axis.httpclient {
       return true;
     }
 
+    public function forceBuffering():Boolean {
+      this.ns.pause();
+      this.ns.resume();
+      return true;
+    }
+
     private function onConnectionStatus(event:NetStatusEvent):void {
       if ('NetConnection.Connect.Closed' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));

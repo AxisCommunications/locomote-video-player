@@ -84,5 +84,11 @@ package com.axis.rtmpclient {
 
     public function onFCSubscribe(info:Object):void {
     }
+
+    public function forceBuffering():Boolean {
+      ns.pause();
+      ns.resume();
+      return true;
+    }
   }
 }

@@ -37,5 +37,11 @@ package com.axis {
      * stream by returning `true` from a call to `stop`.
      */
     function resume():Boolean;
+
+    /**
+     * Called when the client must ensure that the buffer set on the NetStream
+     * object is in effect.
+     */
+    function forceBuffering():Boolean;
   }
 }
