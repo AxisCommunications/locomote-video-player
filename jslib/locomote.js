@@ -1,37 +1,64 @@
-function Locomote(id) {
+function Locomote(id, tag, swf) {
   this.callbacks = [];
-  this.apiReady = false;
 
-  if (id) {
-    // return a new Locomote object if we're in the wrong scope
-    if (window === this) {
-      window.Locomote[id] = new Locomote(id);
-      return window.Locomote[id];
-    }
-    if (!window.Locomote[id]) {
-      window.Locomote[id] = this;
-    } else {
-      return window.Locomote[id];
-    }
-    // Init our element object and return the object
-    this.e = document.getElementById(id);
-    this.id = id;
-    return this;
-  } else {
-    // No 'id' parameter was given, return null
+  if (!id) {
     return null;
   }
+
+  // return a new Locomote object if we're in the global scope
+  if (window === this) {
+    window.Locomote[id] = new Locomote(id, tag, swf);
+    return window.Locomote[id];
+  }
+
+  // Instance already initialized. Return it.
+  if (window.Locomote[id]) {
+    return window.Locomote[id];
+  }
+
+  // Init our element object and return the object
+  this.id = id;
+  window.Locomote[id] = this;
+  this.__embed(tag, swf);
+  return this;
 }
 
 Locomote.prototype = {
-  isReady: function() {
-    // Returns the ready status to the Flash Player
-    return this.apiReady;
-  },
+  __embed: function(tag, swf) {
+    element = '<object type="application/x-shockwave-flash" ';
+    element += 'class="locomote-player" ';
+    element += 'data="' + swf + '" ';
+    element += 'id="' + this.id + '" ';
+    element += 'name="' + this.id + '" ';
+    element += 'width="100%" ';
+    element += 'height="100%" ';
+    element += 'allowFullScreen="true"';
 
-  start: function() {
-    // Set the ready status to true and start listening for events
-    this.apiReady = true;
+    // Default Flash Player options
+    var opts = {
+      width: "100%",
+      height: "100%",
+      allowscriptaccess: "always",
+      wmode: "transparent",
+      quality: "high",
+      flashvars: "",
+      movie: swf,
+      name: this.id
+    };
+
+    for(var index in opts) {
+      if (opts.hasOwnProperty(index)) {
+        element += '<param name="' + index + '" value="'+ opts[index] +'"/>';
+      }
+    }
+
+    element += "</object>";
+
+    // Insert the object into the provided tag
+    document.getElementById(tag).innerHTML = element;
+
+    // Save the reference to the Flash Player object
+    this.e = document.getElementById(this.id);
   },
 
   play: function(url) {
@@ -128,10 +155,8 @@ Locomote.prototype = {
 
   __playerEvent: function(eventName) {
     this.callbacks.forEach(function(element, index, array) {
-      if (element.eventName === eventName) {
-        if (element.callback) {
-          element.callback.call();
-        }
+      if (element.eventName === eventName && element.callback) {
+        element.callback.call();
       }
     });
   },

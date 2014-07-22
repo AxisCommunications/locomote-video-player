@@ -54,42 +54,9 @@ package {
       Security.allowDomain("*");
       Security.allowInsecureDomain("*");
 
-      if (ExternalInterface.available)
-      {
-        try
-        {
-          // This calls the isJSReady() method, which in turn calls
-          // the container to see if Flash Player has loaded and the container
-          // is ready to receive calls from the Player.
-          var jsReady:Boolean = isJSReady();
-          if (jsReady)
-          {
-            // if the container is ready, register the Player's API functions
-            setupAPICallbacks();
-          }
-          else
-          {
-            // If the container is not ready, set up a Timer to call the
-            // container at 100ms intervals. Once the container responds that
-            // it's ready, the timer will be stopped.
-            var readyTimer:Timer = new Timer(100);
-            readyTimer.addEventListener(TimerEvent.TIMER, timerHandler);
-            readyTimer.start();
-          }
-        }
-        catch (error:SecurityError)
-        {
-            trace("A SecurityError occurred: " + error.message + "\n");
-            throw error;
-        }
-        catch (error:Error)
-        {
-            trace("An Error occurred: " + error.message + "\n");
-            throw error;
-        }
-      }
-      else
-      {
+      if (ExternalInterface.available) {
+          setupAPICallbacks();
+      } else {
         trace("External interface is not available for this container.");
       }
 
@@ -141,32 +108,6 @@ package {
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
       ExternalInterface.addCallback("stopAudioTransmit", stopAudioTransmit);
-
-      // notify the container that the SWF is ready to be called.
-      this.callAPI('apiReady');
-    }
-
-    /**
-     * Calls the container's isReady() function, to check if the container is loaded
-     * and ready to communicate with the Player.
-     * @return   Whether the container is ready to communicate with ActionScript.
-     */
-    private function isJSReady():Boolean {
-      var result:Boolean = ExternalInterface.call("Locomote('" + ExternalInterface.objectID + "').isReady");
-      return result;
-    }
-
-    private function timerHandler(event:TimerEvent):void {
-      // check if the container is now ready
-      var isReady:Boolean = isJSReady();
-      if (isReady) {
-        // If the container has become ready, we don't need to check anymore,
-        // so stop the timer.
-        Timer(event.target).stop();
-        // Set up the ActionScript methods that will be available to be
-        // called by the container.
-        setupAPICallbacks();
-      }
     }
 
     public function fullscreen(event:MouseEvent):void {
@@ -413,11 +354,6 @@ package {
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
-      if (!ExternalInterface.available) {
-        trace("ExternalInterface is not available!");
-        return;
-      }
-
       var functionName:String = "Locomote('" + ExternalInterface.objectID + "').__playerEvent";
       if (data) {
         ExternalInterface.call(functionName, eventName, data);
