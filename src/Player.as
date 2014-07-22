@@ -106,8 +106,6 @@ package {
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
       ExternalInterface.addCallback("stopAudioTransmit", stopAudioTransmit);
-
-      ExternalInterface.call("Locomote('" + ExternalInterface.objectID + "').__swfReady");
     }
 
     public function fullscreen(event:MouseEvent):void {
@@ -323,7 +321,7 @@ package {
     }
 
     private function onStageAdded(e:Event):void {
-      trace('stage added');
+      ExternalInterface.call("Locomote('" + ExternalInterface.objectID + "').__swfReady");
     }
 
     public function onMetaData(item:Object):void {
