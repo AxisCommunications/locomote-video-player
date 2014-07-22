@@ -24,8 +24,6 @@ package {
   import flash.media.Video;
   import flash.net.NetStream;
   import flash.system.Security;
-  import flash.events.TimerEvent;
-  import flash.utils.Timer;
 
   [SWF(frameRate="60")]
   [SWF(backgroundColor="#efefef")]
@@ -108,6 +106,8 @@ package {
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
       ExternalInterface.addCallback("stopAudioTransmit", stopAudioTransmit);
+
+      ExternalInterface.call("Locomote('" + ExternalInterface.objectID + "').__swfReady");
     }
 
     public function fullscreen(event:MouseEvent):void {

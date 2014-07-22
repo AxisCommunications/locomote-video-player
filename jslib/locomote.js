@@ -1,5 +1,6 @@
 function Locomote(tag, swf) {
   this.callbacks = [];
+  this.swfready = false;
 
   if (!tag) {
     return null;
@@ -63,6 +64,12 @@ Locomote.prototype = {
 
     // Save the reference to the Flash Player object
     this.e = document.getElementById(tempTag);
+  },
+
+  __swfReady: function() {
+    this.swfready = true;
+
+    this.__playerEvent("apiReady");
   },
 
   play: function(url) {
@@ -147,6 +154,10 @@ Locomote.prototype = {
 
   on: function(eventName, callback) {
     this.callbacks.push({ eventName: eventName, callback: callback });
+
+    if (eventName === 'apiReady' && this.swfready) {
+      callback.call();
+    }
   },
 
   off: function(eventName, callback) {
