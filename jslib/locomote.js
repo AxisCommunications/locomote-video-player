@@ -29,7 +29,17 @@ function Locomote(tag, swf) {
 
 Locomote.prototype = {
   __embed: function(tag, swf) {
-    var tempTag = 'player_' + (new Date()).getTime();
+    var guid = (function() {
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      }
+      return function() {
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+      };
+    })();
+    var tempTag = guid();
     element = '<object type="application/x-shockwave-flash" ';
     element += 'class="locomote-player" ';
     element += 'data="' + swf + '" ';
