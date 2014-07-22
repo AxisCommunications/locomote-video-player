@@ -1,35 +1,39 @@
-function Locomote(id, tag, swf) {
+function Locomote(tag, swf) {
   this.callbacks = [];
 
-  if (!id) {
+  if (!tag) {
     return null;
+  }
+
+  if (!window.LocomoteMap) {
+    window.LocomoteMap = {};
+  }
+
+  // Instance already initialized. Return it.
+  if (window.LocomoteMap[tag]) {
+    return window.LocomoteMap[tag];
   }
 
   // return a new Locomote object if we're in the global scope
   if (window === this) {
-    window.Locomote[id] = new Locomote(id, tag, swf);
-    return window.Locomote[id];
-  }
-
-  // Instance already initialized. Return it.
-  if (window.Locomote[id]) {
-    return window.Locomote[id];
+    window.LocomoteMap[tag] = new Locomote(tag, swf);
+    return window.LocomoteMap[tag];
   }
 
   // Init our element object and return the object
-  this.id = id;
-  window.Locomote[id] = this;
+  window.LocomoteMap[tag] = this;
   this.__embed(tag, swf);
   return this;
 }
 
 Locomote.prototype = {
   __embed: function(tag, swf) {
+    var tempTag = 'player_' + (new Date()).getTime();
     element = '<object type="application/x-shockwave-flash" ';
     element += 'class="locomote-player" ';
     element += 'data="' + swf + '" ';
-    element += 'id="' + this.id + '" ';
-    element += 'name="' + this.id + '" ';
+    element += 'id="' + tempTag + '" ';
+    element += 'name="' + tag + '" ';
     element += 'width="100%" ';
     element += 'height="100%" ';
     element += 'allowFullScreen="true"';
@@ -43,7 +47,7 @@ Locomote.prototype = {
       quality: "high",
       flashvars: "",
       movie: swf,
-      name: this.id
+      name: tag
     };
 
     for(var index in opts) {
@@ -58,7 +62,7 @@ Locomote.prototype = {
     document.getElementById(tag).innerHTML = element;
 
     // Save the reference to the Flash Player object
-    this.e = document.getElementById(this.id);
+    this.e = document.getElementById(tempTag);
   },
 
   play: function(url) {
