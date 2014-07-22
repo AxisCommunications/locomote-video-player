@@ -1,29 +1,87 @@
-function Locomote(id) {
-  // About object is returned if there is no 'id' parameter
-  var about = {
-    Author: "Axis Communications"
-  };
+function Locomote(tag, swf) {
+  this.callbacks = [];
+  this.swfready = false;
 
-  if (!window.Locomote.callbacks)
-    window.Locomote.callbacks = {};
-
-  if (id) {
-    // return a new Locomote object if we're in the wrong scope
-    if (window === this) {
-      return new Locomote(id);
-    }
-
-    // Init our element object and return the object
-    this.e = document.getElementById(id);
-    this.id = id;
-    return this;
-  } else {
-    // No 'id' parameter was given, return the 'about' object
-    return about;
+  if (!tag) {
+    return null;
   }
+
+  if (!window.LocomoteMap) {
+    window.LocomoteMap = {};
+  }
+
+  // Instance already initialized. Return it.
+  if (window.LocomoteMap[tag]) {
+    return window.LocomoteMap[tag];
+  }
+
+  // return a new Locomote object if we're in the global scope
+  if (window === this) {
+    window.LocomoteMap[tag] = new Locomote(tag, swf);
+    return window.LocomoteMap[tag];
+  }
+
+  // Init our element object and return the object
+  window.LocomoteMap[tag] = this;
+  this.__embed(tag, swf);
+  return this;
 }
 
 Locomote.prototype = {
+  __embed: function(tag, swf) {
+    var guid = (function() {
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      }
+      return function() {
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+      };
+    })();
+    var tempTag = guid();
+    element = '<object type="application/x-shockwave-flash" ';
+    element += 'class="locomote-player" ';
+    element += 'data="' + swf + '" ';
+    element += 'id="' + tempTag + '" ';
+    element += 'name="' + tag + '" ';
+    element += 'width="100%" ';
+    element += 'height="100%" ';
+    element += 'allowFullScreen="true"';
+
+    // Default Flash Player options
+    var opts = {
+      width: "100%",
+      height: "100%",
+      allowscriptaccess: "always",
+      wmode: "transparent",
+      quality: "high",
+      flashvars: "",
+      movie: swf,
+      name: tag
+    };
+
+    for(var index in opts) {
+      if (opts.hasOwnProperty(index)) {
+        element += '<param name="' + index + '" value="'+ opts[index] +'"/>';
+      }
+    }
+
+    element += "</object>";
+
+    // Insert the object into the provided tag
+    document.getElementById(tag).innerHTML = element;
+
+    // Save the reference to the Flash Player object
+    this.e = document.getElementById(tempTag);
+  },
+
+  __swfReady: function() {
+    this.swfready = true;
+
+    this.__playerEvent("apiReady");
+  },
+
   play: function(url) {
     this.e.play(url);
     return this;
@@ -105,19 +163,15 @@ Locomote.prototype = {
   },
 
   on: function(eventName, callback) {
-    if (!window.Locomote.callbacks[this.id]) {
-      window.Locomote.callbacks[this.id] = [];
-    }
+    this.callbacks.push({ eventName: eventName, callback: callback });
 
-    window.Locomote.callbacks[this.id].push({ eventName: eventName, callback: callback });
+    if (eventName === 'apiReady' && this.swfready) {
+      callback.call();
+    }
   },
 
   off: function(eventName, callback) {
-    if (!window.Locomote.callbacks[this.id]) {
-      return;
-    }
-
-    window.Locomote.callbacks[this.id].forEach(function(element, index, array) {
+    this.callbacks.forEach(function(element, index, array) {
       if((element.eventName === eventName) && (element.callback === callback)) {
         array.splice(index, 1);
       }
@@ -125,12 +179,8 @@ Locomote.prototype = {
   },
 
   __playerEvent: function(eventName) {
-    if (!window.Locomote.callbacks[this.id]) {
-      return;
-    }
-
-    window.Locomote.callbacks[this.id].forEach(function(element, index, array) {
-      if (element.eventName === eventName) {
+    this.callbacks.forEach(function(element, index, array) {
+      if (element.eventName === eventName && element.callback) {
         element.callback.call();
       }
     });

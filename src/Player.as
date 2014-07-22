@@ -52,6 +52,38 @@ package {
       Security.allowDomain("*");
       Security.allowInsecureDomain("*");
 
+      if (ExternalInterface.available) {
+          setupAPICallbacks();
+      } else {
+        trace("External interface is not available for this container.");
+      }
+
+      /* Set default speaker volume */
+      this.speakerVolume(50);
+
+      /* Stage setup */
+      this.stage.align = StageAlign.TOP_LEFT;
+      this.stage.scaleMode = StageScaleMode.NO_SCALE;
+      addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
+
+      /* Video object setup */
+      video = new Video(stage.stageWidth, stage.stageHeight);
+      addChild(video);
+
+      /* Fullscreen support setup */
+      this.stage.doubleClickEnabled = true;
+      this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
+      this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
+        videoResize();
+      });
+    }
+
+    /**
+     * Registers the appropriate API functions with the container, so that
+     * they can be called, and triggers the apiReady event
+     * which tells the container that the Player is ready to receive API calls.
+     */
+    public function setupAPICallbacks():void {
       ExternalInterface.marshallExceptions = true;
 
       /* Media player API */
@@ -74,25 +106,6 @@ package {
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
       ExternalInterface.addCallback("stopAudioTransmit", stopAudioTransmit);
-
-      /* Set default speaker volume */
-      this.speakerVolume(50);
-
-      /* Stage setup */
-      this.stage.align = StageAlign.TOP_LEFT;
-      this.stage.scaleMode = StageScaleMode.NO_SCALE;
-      addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
-
-      /* Video object setup */
-      video = new Video(stage.stageWidth, stage.stageHeight);
-      addChild(video);
-
-      /* Fullscreen support setup */
-      this.stage.doubleClickEnabled = true;
-      this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
-      this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
-        videoResize();
-      });
     }
 
     public function fullscreen(event:MouseEvent):void {
@@ -308,7 +321,7 @@ package {
     }
 
     private function onStageAdded(e:Event):void {
-      trace('stage added');
+      ExternalInterface.call("Locomote('" + ExternalInterface.objectID + "').__swfReady");
     }
 
     public function onMetaData(item:Object):void {
@@ -339,11 +352,6 @@ package {
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
-      if (!ExternalInterface.available) {
-        trace("ExternalInterface is not available!");
-        return;
-      }
-
       var functionName:String = "Locomote('" + ExternalInterface.objectID + "').__playerEvent";
       if (data) {
         ExternalInterface.call(functionName, eventName, data);
