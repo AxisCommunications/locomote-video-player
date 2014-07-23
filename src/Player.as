@@ -29,6 +29,9 @@ package {
   [SWF(backgroundColor="#efefef")]
 
   public class Player extends Sprite {
+    private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
+    private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
+
     private var config:Object = {
       'buffer': 1,
       'scaleUp': false,
@@ -112,7 +115,7 @@ package {
       if (config.allowFullscreen) {
         this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
           StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
-          (StageDisplayState.NORMAL === stage.displayState) ? this.callAPI("fullscreenExited") : this.callAPI("fullscreenEntered");
+          (StageDisplayState.NORMAL === stage.displayState) ? this.callAPI(EVENT_FULLSCREEN_EXITED) : this.callAPI(EVENT_FULLSCREEN_ENTERED);
       }
     }
 
