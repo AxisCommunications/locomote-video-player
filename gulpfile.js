@@ -2,7 +2,7 @@ var fs = require('fs');
 var _ = require('underscore');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
-var clean = require('gulp-clean');
+var rimraf = require('gulp-rimraf');
 var jshint = require('gulp-jshint');
 var jscs = require('gulp-jscs');
 
@@ -100,6 +100,6 @@ gulp.task('default', [ 'build-as3corelib', 'build-locomote' ]);
 gulp.task('clean', function() {
   'use strict';
 
-  gulp.src([ 'build/', 'ext/as3corelib/bin/as3corelib.swc', 'VERSION' ], { read: false })
-    .pipe(clean({ force: true }));
+  gulp.src([ 'build/', 'ext/as3corelib/', 'VERSION' ], { read: false })
+    .pipe(rimraf({ force: true }));
 });
