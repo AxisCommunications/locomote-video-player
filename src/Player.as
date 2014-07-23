@@ -32,6 +32,7 @@ package {
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
     private static const EVENT_STREAM_STOPPED:String  = "streamStopped";
+    private static const EVENT_STREAM_ENDED:String  = "streamEnded";
     private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
 
@@ -356,6 +357,8 @@ package {
 
     public function onPlayStatus(ev:Object):void {
       this.currentState = "stopped";
+      this.callAPI(EVENT_STREAM_STOPPED);
+      this.callAPI(EVENT_STREAM_ENDED);
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
