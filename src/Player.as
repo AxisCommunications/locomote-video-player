@@ -109,9 +109,11 @@ package {
     }
 
     public function fullscreen(event:MouseEvent):void {
-      if (config.allowFullscreen)
+      if (config.allowFullscreen) {
         this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
           StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
+          (StageDisplayState.NORMAL === stage.displayState) ? this.callAPI("fullscreenExited") : this.callAPI("fullscreenEntered");
+      }
     }
 
     public function videoResize():void {
