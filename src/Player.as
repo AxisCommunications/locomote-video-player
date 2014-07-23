@@ -219,7 +219,6 @@ package {
 
     public function resume():void {
       client.resume();
-      this.callAPI('streamResumed');
     }
 
     public function stop():void {
