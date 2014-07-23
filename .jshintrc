@@ -32,7 +32,8 @@
     "beforeEach":   true,
     "afterEach":    true,
     "sinon":        true,
-    "jasmine":      true
+    "jasmine":      true,
+    "__dirname":    true
   },
 
   // Misc.
