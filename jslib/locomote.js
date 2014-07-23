@@ -1,9 +1,6 @@
 function Locomote(tag, swf) {
   'use strict';
 
-  this.callbacks = [];
-  this.swfready = false;
-
   if (!tag) {
     return null;
   }
@@ -18,13 +15,15 @@ function Locomote(tag, swf) {
   }
 
   // return a new Locomote object if we're in the global scope
-  if (window === this) {
+  if (this === undefined) {
     window.LocomoteMap[tag] = new Locomote(tag, swf);
     return window.LocomoteMap[tag];
   }
 
   // Init our element object and return the object
   window.LocomoteMap[tag] = this;
+  this.callbacks = [];
+  this.swfready = false;
   this.__embed(tag, swf);
   return this;
 }
