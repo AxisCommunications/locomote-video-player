@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "Media player for Adobe Flash with support for RTSP, RTMP and HTTP.",
   "scripts": {
-    "test": "./node_modules/.bin/jshint jslib && ./node_modules/.bin/jscs jslib"
+    "test": "./node_modules/.bin/gulp test",
+    "postinstall": "./node_modules/.bin/gulp --color"
   },
   "repository": {
     "type": "git",
@@ -11,7 +12,17 @@
   },
   "dependencies": {
     "jscs": "^1.5.8",
-    "jshint": "^2.5.2"
+    "jshint": "^2.5.2",
+    "flex-sdk": "^4.6.0-0",
+    "underscore": "^1.6.0",
+    "gulp": "^3.8.6",
+    "gulp-util": "^3.0.0",
+    "gulp-clean": "^0.3.1",
+    "gulp-jshint": "^1.7.1",
+    "gulp-jscs": "^0.6.0"
+  },
+  "engines": {
+    "node": "0.10.x"
   },
   "author": "Alexander Olsson <alexander.olsson@axis.com>",
   "license": "GPL2"
