@@ -71,7 +71,7 @@ gulp.task('build-locomote', [ 'build-as3corelib', 'version' ], function(cb) {
     'allow-source-path-overlap': false,
     'target-player': 11.1,
     'locale': 'en_US',
-    'output' : 'build/Player.swf',
+    'output': 'build/Player.swf',
     'debug': true,
     'benchmark': false,
     'verbose-stacktraces': false,
