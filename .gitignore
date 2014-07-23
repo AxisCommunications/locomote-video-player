@@ -13,8 +13,11 @@ bin-release/
 # Other files and folders
 .settings/
 html-assets/
+html-template/
+libs/
 .actionScriptProperties
 .flexProperties
+.project
 
 locomote.sublime-workspace
 locomote.sublime-project
