@@ -31,6 +31,7 @@ package {
   public class Player extends Sprite {
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
+    private static const EVENT_STREAM_STOPPED:String  = "streamStopped";
     private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
 
@@ -225,7 +226,6 @@ package {
       urlParsed = null;
       ns = null;
       client.stop();
-      this.callAPI('streamStopped');
       this.currentState = "stopped";
       this.streamHasAudio = false;
       this.streamHasVideo = false;
@@ -343,6 +343,7 @@ package {
     private function onStopped(ev:ClientEvent):void {
       video.clear();
       client = null;
+      this.callAPI(EVENT_STREAM_STOPPED);
       if (urlParsed) {
         start();
       }
