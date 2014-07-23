@@ -149,10 +149,6 @@ Dispatched when video stream is paused. `reason` can have the following values:
 - `user` - stream was paused by user.
 - `buffering` - stream has stopped for buffering.
 
-#### streamResumed
-
-Dispatched when stream playing is resumed after pause.
-
 #### seekCompleted
 
 Dispatched when seek has completed.
