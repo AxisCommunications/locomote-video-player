@@ -356,6 +356,8 @@ package {
     }
 
     public function onPlayStatus(ev:Object):void {
+      video.clear();
+      client = null;
       this.currentState = "stopped";
       this.callAPI(EVENT_STREAM_STOPPED);
       this.callAPI(EVENT_STREAM_ENDED);
