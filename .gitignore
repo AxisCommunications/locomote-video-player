@@ -19,3 +19,5 @@ bin-release/
 html-assets/
 locomote.sublime-workspace
 locomote.sublime-project
+.atom-build.json
+node_modules

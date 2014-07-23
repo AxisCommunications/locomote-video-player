@@ -1,0 +1,18 @@
+{
+  "name": "locomote-video-player",
+  "version": "0.0.1",
+  "description": "Media player for Adobe Flash with support for RTSP, RTMP and HTTP.",
+  "scripts": {
+    "test": "./node_modules/.bin/jshint jslib && ./node_modules/.bin/jscs jslib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AxisCommunications/locomote-video-player.git"
+  },
+  "dependencies": {
+    "jscs": "^1.5.8",
+    "jshint": "^2.5.2"
+  },
+  "author": "Alexander Olsson <alexander.olsson@axis.com>",
+  "license": "GPL2"
+}
