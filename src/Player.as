@@ -82,6 +82,7 @@ package {
       this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
       this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
         videoResize();
+        (StageDisplayState.NORMAL === stage.displayState) ? callAPI(EVENT_FULLSCREEN_EXITED) : callAPI(EVENT_FULLSCREEN_ENTERED);
       });
     }
 
@@ -119,7 +120,6 @@ package {
       if (config.allowFullscreen) {
         this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
           StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
-          (StageDisplayState.NORMAL === stage.displayState) ? this.callAPI(EVENT_FULLSCREEN_EXITED) : this.callAPI(EVENT_FULLSCREEN_ENTERED);
       }
     }
 
