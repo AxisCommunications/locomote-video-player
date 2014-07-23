@@ -30,6 +30,7 @@ package {
 
   public class Player extends Sprite {
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
+    private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
     private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
 
@@ -212,7 +213,7 @@ package {
 
     public function pause():void {
       client.pause();
-      this.callAPI('streamPaused');
+      this.callAPI(EVENT_STREAM_PAUSED);
       this.currentState = "paused";
     }
 
