@@ -17,6 +17,7 @@ package {
   import flash.display.StageScaleMode;
   import flash.events.Event;
   import flash.events.MouseEvent;
+  import flash.events.NetStatusEvent;
   import flash.external.ExternalInterface;
   import flash.media.Microphone;
   import flash.media.SoundMixer;
@@ -209,7 +210,6 @@ package {
 
       client.addEventListener(ClientEvent.NETSTREAM_CREATED, onNetStreamCreated);
       client.addEventListener(ClientEvent.STOPPED, onStopped);
-      client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.start();
     }
 
@@ -339,6 +339,14 @@ package {
       this.ns = ev.data.ns;
       ev.data.ns.bufferTime = config.buffer;
       ev.data.ns.client = this;
+      ev.data.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatusEvent);
+    }
+
+    public function onNetStatusEvent(ev:NetStatusEvent):void {
+      if (ev.info.code === 'NetStream.Buffer.Full'  || ev.info.code === 'NetStream.Unpause.Notify') {
+        this.currentState = "playing";
+        this.callAPI(EVENT_STREAM_STARTED);
+      }
     }
 
     private function onStopped(ev:ClientEvent):void {
@@ -348,11 +356,6 @@ package {
       if (urlParsed) {
         start();
       }
-    }
-
-    private function onStartPlay(ev:ClientEvent):void {
-      this.currentState = "playing";
-      this.callAPI(EVENT_STREAM_STARTED);
     }
 
     public function onPlayStatus(ev:Object):void {
