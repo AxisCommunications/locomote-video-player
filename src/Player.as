@@ -29,6 +29,7 @@ package {
   [SWF(backgroundColor="#efefef")]
 
   public class Player extends Sprite {
+    private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
 
@@ -186,7 +187,6 @@ package {
       case 'rtsp':
         /* RTSP over TCP */
         client = new RTSPClient(this.video, urlParsed, new RTSPoverTCPHandle(urlParsed));
-        this.callAPI('streamStarted');
         break;
 
       case 'http':
@@ -350,6 +350,7 @@ package {
 
     private function onStartPlay(ev:ClientEvent):void {
       this.currentState = "playing";
+      this.callAPI(EVENT_STREAM_STARTED);
     }
 
     public function onPlayStatus(ev:Object):void {
