@@ -306,6 +306,7 @@ package com.axis.rtspclient {
       case STATE_PAUSE:
         trace("RTSPClient: STATE_PAUSE");
         state = STATE_PAUSED;
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         break;
 
       case STATE_TEARDOWN:
@@ -477,8 +478,6 @@ package com.axis.rtspclient {
         auth.authorizationHeader("PAUSE", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
       handle.writeUTFBytes(req);
-
-      dispatchEvent(new ClientEvent(ClientEvent.PAUSED));
     }
 
     private function sendTeardownReq():void {
