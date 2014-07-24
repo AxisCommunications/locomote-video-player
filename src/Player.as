@@ -210,13 +210,13 @@ package {
 
       client.addEventListener(ClientEvent.NETSTREAM_CREATED, onNetStreamCreated);
       client.addEventListener(ClientEvent.STOPPED, onStopped);
+      client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
+      client.addEventListener(ClientEvent.PAUSED, onPaused);
       client.start();
     }
 
     public function pause():void {
       client.pause();
-      this.callAPI(EVENT_STREAM_PAUSED);
-      this.currentState = "paused";
     }
 
     public function resume():void {
@@ -339,17 +339,19 @@ package {
       this.ns = ev.data.ns;
       ev.data.ns.bufferTime = config.buffer;
       ev.data.ns.client = this;
-      ev.data.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatusEvent);
     }
 
-    public function onNetStatusEvent(ev:NetStatusEvent):void {
-      if (ev.info.code === 'NetStream.Buffer.Full'  || ev.info.code === 'NetStream.Unpause.Notify') {
-        this.currentState = "playing";
-        this.callAPI(EVENT_STREAM_STARTED);
-      }
+    private function onStartPlay(event:ClientEvent):void {
+      this.currentState = "playing";
+      this.callAPI(EVENT_STREAM_STARTED);
     }
 
-    private function onStopped(ev:ClientEvent):void {
+    private function onPaused(event:ClientEvent):void {
+      this.currentState = "paused";
+      this.callAPI(EVENT_STREAM_PAUSED);
+    }
+
+    private function onStopped(event:ClientEvent):void {
       video.clear();
       client = null;
       this.callAPI(EVENT_STREAM_STOPPED);
@@ -358,12 +360,14 @@ package {
       }
     }
 
-    public function onPlayStatus(ev:Object):void {
-      video.clear();
-      client = null;
-      this.currentState = "stopped";
-      this.callAPI(EVENT_STREAM_STOPPED);
-      this.callAPI(EVENT_STREAM_ENDED);
+    public function onPlayStatus(event:Object):void {
+      if ('NetStream.Play.Complete' === event.code) {
+        video.clear();
+        client = null;
+        this.currentState = "stopped";
+        this.callAPI(EVENT_STREAM_STOPPED);
+        this.callAPI(EVENT_STREAM_ENDED);
+      }
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

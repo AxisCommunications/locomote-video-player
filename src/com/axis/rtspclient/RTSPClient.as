@@ -2,6 +2,7 @@ package com.axis.rtspclient {
 
   import flash.events.EventDispatcher;
   import flash.events.Event;
+  import flash.events.NetStatusEvent;
   import flash.utils.ByteArray;
   import flash.net.Socket;
   import flash.net.NetConnection;
@@ -90,6 +91,7 @@ package com.axis.rtspclient {
       nc.connect(null);
       this.ns = new NetStream(nc);
       dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
+      this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
       video.attachNetStream(this.ns);
 
       handle.connect();
@@ -133,6 +135,7 @@ package com.axis.rtspclient {
 
     public function forceBuffering():Boolean {
       ns.close();
+      dispatchEvent(new ClientEvent(ClientEvent.PAUSED));
       ns.play(null);
       return true;
     }
@@ -443,7 +446,6 @@ package com.axis.rtspclient {
       this.ns.play(null);
 
       state = STATE_PLAY;
-      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
 
       var req:String =
         "PLAY " + getControlURL() + " RTSP/1.0\r\n" +
@@ -475,6 +477,8 @@ package com.axis.rtspclient {
         auth.authorizationHeader("PAUSE", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
       handle.writeUTFBytes(req);
+
+      dispatchEvent(new ClientEvent(ClientEvent.PAUSED));
     }
 
     private function sendTeardownReq():void {
@@ -487,6 +491,12 @@ package com.axis.rtspclient {
         auth.authorizationHeader("TEARDOWN", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
       handle.writeUTFBytes(req);
+    }
+
+    private function onNetStatus(event:NetStatusEvent):void {
+      if ('NetStream.Buffer.Full' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+      }
     }
   }
 }

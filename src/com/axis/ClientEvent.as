@@ -3,8 +3,9 @@ package com.axis {
 
   public class ClientEvent extends Event {
     public static const NETSTREAM_CREATED:String = "NetStreamCreated";
-    public static const STOPPED:String = "Stopped";
-    public static const START_PLAY:String = "Playing";
+    public static const STOPPED:String = "stopped";
+    public static const START_PLAY:String = "playing";
+    public static const PAUSED:String = "paused";
 
     public var data:Object;
 
