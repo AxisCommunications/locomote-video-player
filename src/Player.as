@@ -17,6 +17,7 @@ package {
   import flash.display.StageScaleMode;
   import flash.events.Event;
   import flash.events.MouseEvent;
+  import flash.events.NetStatusEvent;
   import flash.external.ExternalInterface;
   import flash.media.Microphone;
   import flash.media.SoundMixer;
@@ -29,6 +30,13 @@ package {
   [SWF(backgroundColor="#efefef")]
 
   public class Player extends Sprite {
+    private static const EVENT_STREAM_STARTED:String  = "streamStarted";
+    private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
+    private static const EVENT_STREAM_STOPPED:String  = "streamStopped";
+    private static const EVENT_STREAM_ENDED:String  = "streamEnded";
+    private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
+    private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
+
     private var config:Object = {
       'buffer': 1,
       'scaleUp': false,
@@ -75,6 +83,7 @@ package {
       this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
       this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
         videoResize();
+        (StageDisplayState.NORMAL === stage.displayState) ? callAPI(EVENT_FULLSCREEN_EXITED) : callAPI(EVENT_FULLSCREEN_ENTERED);
       });
     }
 
@@ -109,9 +118,10 @@ package {
     }
 
     public function fullscreen(event:MouseEvent):void {
-      if (config.allowFullscreen)
+      if (config.allowFullscreen) {
         this.stage.displayState = (StageDisplayState.NORMAL === stage.displayState) ?
           StageDisplayState.FULL_SCREEN : StageDisplayState.NORMAL;
+      }
     }
 
     public function videoResize():void {
@@ -181,7 +191,6 @@ package {
       case 'rtsp':
         /* RTSP over TCP */
         client = new RTSPClient(this.video, urlParsed, new RTSPoverTCPHandle(urlParsed));
-        this.callAPI('streamStarted');
         break;
 
       case 'http':
@@ -202,25 +211,22 @@ package {
       client.addEventListener(ClientEvent.NETSTREAM_CREATED, onNetStreamCreated);
       client.addEventListener(ClientEvent.STOPPED, onStopped);
       client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
+      client.addEventListener(ClientEvent.PAUSED, onPaused);
       client.start();
     }
 
     public function pause():void {
       client.pause();
-      this.callAPI('streamPaused');
-      this.currentState = "paused";
     }
 
     public function resume():void {
       client.resume();
-      this.callAPI('streamResumed');
     }
 
     public function stop():void {
       urlParsed = null;
       ns = null;
       client.stop();
-      this.callAPI('streamStopped');
       this.currentState = "stopped";
       this.streamHasAudio = false;
       this.streamHasVideo = false;
@@ -335,20 +341,33 @@ package {
       ev.data.ns.client = this;
     }
 
-    private function onStopped(ev:ClientEvent):void {
+    private function onStartPlay(event:ClientEvent):void {
+      this.currentState = "playing";
+      this.callAPI(EVENT_STREAM_STARTED);
+    }
+
+    private function onPaused(event:ClientEvent):void {
+      this.currentState = "paused";
+      this.callAPI(EVENT_STREAM_PAUSED);
+    }
+
+    private function onStopped(event:ClientEvent):void {
       video.clear();
       client = null;
+      this.callAPI(EVENT_STREAM_STOPPED);
       if (urlParsed) {
         start();
       }
     }
 
-    private function onStartPlay(ev:ClientEvent):void {
-      this.currentState = "playing";
-    }
-
-    public function onPlayStatus(ev:Object):void {
-      this.currentState = "stopped";
+    public function onPlayStatus(event:Object):void {
+      if ('NetStream.Play.Complete' === event.code) {
+        video.clear();
+        client = null;
+        this.currentState = "stopped";
+        this.callAPI(EVENT_STREAM_STOPPED);
+        this.callAPI(EVENT_STREAM_ENDED);
+      }
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

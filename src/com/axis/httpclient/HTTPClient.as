@@ -1,12 +1,13 @@
 package com.axis.httpclient {
-  import com.axis.IClient;
   import com.axis.ClientEvent;
+  import com.axis.IClient;
 
+  import flash.events.Event;
+  import flash.events.EventDispatcher;
+  import flash.events.NetStatusEvent;
   import flash.media.Video;
   import flash.net.NetConnection;
   import flash.net.NetStream;
-  import flash.events.EventDispatcher;
-  import flash.events.NetStatusEvent;
 
   public class HTTPClient extends EventDispatcher implements IClient {
     private var urlParsed:Object;
@@ -27,12 +28,12 @@ package com.axis.httpclient {
       nc.addEventListener(NetStatusEvent.NET_STATUS, onConnectionStatus);
 
       this.ns = new NetStream(nc);
+      this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
       dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
 
       this.video.attachNetStream(this.ns);
 
       ns.play(urlParsed.full);
-      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
     }
 
@@ -49,7 +50,6 @@ package com.axis.httpclient {
 
     public function resume():Boolean {
       ns.resume();
-      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
     }
 
@@ -62,6 +62,18 @@ package com.axis.httpclient {
     private function onConnectionStatus(event:NetStatusEvent):void {
       if ('NetConnection.Connect.Closed' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+      }
+    }
+
+    private function onNetStatus(event:NetStatusEvent):void {
+      if ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+        return;
+      }
+
+      if ('NetStream.Pause.Notify' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED));
+        return;
       }
     }
   }

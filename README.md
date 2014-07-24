@@ -183,16 +183,6 @@ use this yet.
 
 > Dispatched when video streams starts.
 
-#### streamStopped
-
-> Dispatched when stream stops.
-
-#### streamError(error)
-
-> Dispatched when video stream fails. `error` can be either
-> protocol error (rtsp etc) or Locomote internal error.
-> Includes socket and seek errors.`error` is a generic object.
-
 #### streamPaused(reason)
 
 > Dispatched when video stream is paused. `reason` can have the following values:
@@ -200,22 +190,28 @@ use this yet.
 > - `user` - stream was paused by user.
 > - `buffering` - stream has stopped for buffering.
 
-#### streamResumed
+#### streamStopped
 
-> Dispatched when stream playing is resumed after pause.
+> Dispatched when stream stops.
+
+#### streamEnded
+
+> Dispatched when fixed length video stream reaches end of stream. The streamStopped event is also dispatched just before this event.
+
+#### streamError(error)
+
+> Dispatched when video stream fails. `error` can be either
+> protocol error (rtsp etc) or Locomote internal error.
+> Includes socket and seek errors.`error` is a generic object.
 
 #### seekCompleted
 
 > Dispatched when seek has completed.
 
-#### streamEnded
-
-> Dispatched when fixed length video stream reaches end of stream.
-
-#### fullScreenEntered
+#### fullscreenEntered
 
 > Dispatched when the player enters fullscreen mode.
 
-#### fullScreenExited
+#### fullscreenExited
 
 > Dispatched when the player exits fullscreen mode.

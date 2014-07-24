@@ -54,7 +54,6 @@ package com.axis.rtmpclient {
 
     public function resume():Boolean {
       ns.resume();
-      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
     }
 
@@ -63,10 +62,10 @@ package com.axis.rtmpclient {
         trace('RTMPClient: connected');
         this.ns = new NetStream(this.nc);
         dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
+        this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
         this.video.attachNetStream(this.ns);
         trace('RTMPClient: starting stream: \'' + this.streamId + '\'');
         this.ns.play(this.streamId);
-        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       }
 
       if ('NetConnection.Connect.Closed' === event.info.code) {
@@ -89,6 +88,30 @@ package com.axis.rtmpclient {
       ns.pause();
       ns.resume();
       return true;
+    }
+
+    private function onNetStatus(event:NetStatusEvent):void {
+      if (this.ns.bufferTime === 0 && 'NetStream.Play.Start' === event.info.code) {
+        // Buffer is set to 0, dispatch start event immediately
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+        return;
+      }
+
+      if (this.ns.bufferTime === 0 && 'NetStream.Unpause.Notify' === event.info.code) {
+        // Buffer is set to 0, dispatch start event immediately
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+        return;
+      }
+
+      if ('NetStream.Buffer.Full' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+        return;
+      }
+
+      if ('NetStream.Pause.Notify' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED));
+        return;
+      }
     }
   }
 }
