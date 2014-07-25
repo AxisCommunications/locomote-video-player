@@ -348,7 +348,7 @@ package {
 
     private function onPaused(event:ClientEvent):void {
       this.currentState = "paused";
-      this.callAPI(EVENT_STREAM_PAUSED);
+      this.callAPI(EVENT_STREAM_PAUSED, event.data);
     }
 
     private function onStopped(event:ClientEvent):void {
