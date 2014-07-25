@@ -199,6 +199,8 @@ package {
         break;
 
       case 'rtmp':
+      case 'rtmps':
+      case 'rtmpt':
         /* RTMP */
         client = new RTMPClient(this.video, urlParsed);
         break;
