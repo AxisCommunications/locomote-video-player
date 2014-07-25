@@ -183,9 +183,9 @@ use this yet.
 
 > Dispatched when video streams starts.
 
-#### streamPaused(reason)
+#### streamPaused(result)
 
-> Dispatched when video stream is paused. `reason` can have the following values:
+> Dispatched when video stream is paused. `result` is an object with a single property `reason` that can have the following values:
 
 > - `user` - stream was paused by user.
 > - `buffering` - stream has stopped for buffering.
