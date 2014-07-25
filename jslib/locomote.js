@@ -221,12 +221,16 @@ Locomote.prototype = {
     });
   },
 
-  __playerEvent: function(eventName) {
+  __playerEvent: function(eventName, data) {
     'use strict';
 
     this.callbacks.forEach(function(element, index, array) {
       if (element.eventName === eventName && element.callback) {
-        element.callback.call();
+        if (data) {
+          element.callback.call(this, data);
+        } else {
+          element.callback.call();
+        }
       }
     });
   },
