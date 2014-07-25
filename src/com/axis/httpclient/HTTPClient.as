@@ -14,6 +14,7 @@ package com.axis.httpclient {
     private var video:Video;
     private var nc:NetConnection;
     private var ns:NetStream;
+    public var ended:Boolean = false;
 
     public function HTTPClient(video:Video, urlParsed:Object) {
       this.urlParsed = urlParsed;
@@ -71,8 +72,18 @@ package com.axis.httpclient {
         return;
       }
 
+      if ('NetStream.Play.Stop' === event.info.code) {
+        ended = true;
+        return;
+      }
+
+      if (!ended && 'NetStream.Buffer.Empty' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+        return;
+      }
+
       if ('NetStream.Pause.Notify' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.PAUSED));
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         return;
       }
     }
