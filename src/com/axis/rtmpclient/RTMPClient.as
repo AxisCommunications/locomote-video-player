@@ -108,8 +108,13 @@ package com.axis.rtmpclient {
         return;
       }
 
+      if ('NetStream.Buffer.Empty' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+        return;
+      }
+
       if ('NetStream.Pause.Notify' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.PAUSED));
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         return;
       }
     }

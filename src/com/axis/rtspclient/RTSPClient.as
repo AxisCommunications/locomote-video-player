@@ -135,7 +135,7 @@ package com.axis.rtspclient {
 
     public function forceBuffering():Boolean {
       ns.close();
-      dispatchEvent(new ClientEvent(ClientEvent.PAUSED));
+      dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
       ns.play(null);
       return true;
     }
@@ -495,6 +495,11 @@ package com.axis.rtspclient {
     private function onNetStatus(event:NetStatusEvent):void {
       if ('NetStream.Buffer.Full' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+      }
+
+      if ('NetStream.Buffer.Empty' === event.info.code) {
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+        return;
       }
     }
   }
