@@ -148,8 +148,10 @@ package {
     public function setConfig(iconfig:Object):void {
       if (iconfig.buffer !== undefined) {
         config.buffer = iconfig.buffer;
-        this.ns.bufferTime = config.buffer;
-        this.client.forceBuffering();
+        if (this.ns) {
+          this.ns.bufferTime = config.buffer;
+          this.client.forceBuffering();
+        }
       }
 
       if (iconfig.scaleUp !== undefined) {
