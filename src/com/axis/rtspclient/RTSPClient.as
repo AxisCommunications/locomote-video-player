@@ -10,6 +10,7 @@ package com.axis.rtspclient {
   import flash.media.Video;
   import mx.utils.StringUtil;
 
+  import com.axis.ErrorManager;
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.SDP;
@@ -71,7 +72,7 @@ package com.axis.rtspclient {
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
         if (state !== STATE_INITIAL) {
-          trace('Cannot start unless in initial state.');
+          ErrorManager.streamError(806);
           return;
         }
 
@@ -100,14 +101,14 @@ package com.axis.rtspclient {
 
     public function pause():Boolean {
       if (state !== STATE_PLAYING) {
-        trace('Unable to pause a stream if not playing.');
+        ErrorManager.streamError(800);
         return false;
       }
 
       try {
         sendPauseReq();
       } catch (err:Error) {
-        trace("Unable to pause: " + err.message);
+        ErrorManager.streamError(803, [err.message]);
         return false;
       }
 
@@ -116,7 +117,7 @@ package com.axis.rtspclient {
 
     public function resume():Boolean {
       if (state !== STATE_PAUSED) {
-        trace('Unable to resume a stream if not paused.');
+        ErrorManager.streamError(801);
         return false;
       }
 
@@ -126,7 +127,7 @@ package com.axis.rtspclient {
 
     public function stop():Boolean {
       if (state < STATE_PLAY) {
-        trace('Unable to stop if we never reached play.');
+        ErrorManager.streamError(802);
         return false;
       }
       sendTeardownReq();
@@ -145,7 +146,7 @@ package com.axis.rtspclient {
         this.ns.dispose();
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       } else {
-        trace('RTSPClient: Handle unexpectedly closed.');
+        ErrorManager.streamError(804);
       }
     }
 
@@ -169,7 +170,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          trace('Unknown determining byte:', '0x' + data[0].toString(16), '. Stopping stream.');
+          ErrorManager.streamError(805, [data[0].toString(16)]);
           stop();
           break;
       }
@@ -196,8 +197,7 @@ package com.axis.rtspclient {
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
-          trace('GET: Exhausted all authentication methods.');
-          trace('GET: Unable to authorize to ' + urlParsed.host);
+          ErrorManager.streamError(807, [urlParsed.host]);
           return false;
         }
 
@@ -229,7 +229,7 @@ package com.axis.rtspclient {
       }
 
       if (200 !== parsed.code) {
-        trace('RTSPClient: Invalid RTSP response - ', parsed.code, parsed.message);
+        ErrorManager.streamError(808, [parsed.code, parsed.message]);
         return;
       }
 
@@ -247,7 +247,7 @@ package com.axis.rtspclient {
         trace("RTSPClient: STATE_DESCRIBE");
 
         if (!sdp.parse(body)) {
-          trace("RTSPClient:Failed to parse SDP file");
+          ErrorManager.streamError(809);
           return;
         }
 
@@ -256,7 +256,7 @@ package com.axis.rtspclient {
         trace('SDP contained ' + tracks.length + ' track(s). Calling SETUP for each.');
 
         if (0 === tracks.length) {
-          trace('No tracks in SDP file.');
+          ErrorManager.streamError(810);
           return;
         }
 

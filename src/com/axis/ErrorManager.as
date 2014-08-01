@@ -73,7 +73,18 @@ package com.axis {
       '720': "NetStream.Seek.InvalidTime - For video downloaded progressively, the user has tried to seek or play past the end of the video data that has downloaded thus far, or past the end of the video once the entire file has downloaded. The info.details property of the event object contains a time code that indicates the last valid position to which the user can seek.",
       '721': "SharedObject.BadPersistence - A request was made for a shared object with persistence flags, but the request cannot be granted because the object has already been created with different flags.",
       '722': "SharedObject.Flush.Failed - The 'pending' status is resolved, but the SharedObject.flush() failed.",
-      '723': "SharedObject.UriMismatch - The video dimensions are available or have changed. Use the Video or StageVideo videoWidth/videoHeight property to query the new video dimensions. New in Flash Player 11.4/AIR 3.4."
+      '723': "SharedObject.UriMismatch - The video dimensions are available or have changed. Use the Video or StageVideo videoWidth/videoHeight property to query the new video dimensions. New in Flash Player 11.4/AIR 3.4.",
+      '800': "Unable to pause a stream if not playing.",
+      '801': "Unable to resume a stream if not paused.",
+      '802': "Unable to stop if we never reached play.",
+      '803': "Unable to pause: %p",
+      '804': "RTSPClient: Handle unexpectedly closed.",
+      '805': "Unknown determining byte: 0x%p. Stopping stream.",
+      '806': "Cannot start unless in initial state.",
+      '807': "GET: Exhausted all authentication methods. Unable to authorize to %p.",
+      '808': "RTSPClient: Invalid RTSP response - %p, %p",
+      '809': "RTSPClient:Failed to parse SDP file.",
+      '810': "No tracks in SDP file."
     };
 
     public static function streamError(errorCode:Number, errorData:Array = null):void {
