@@ -71,6 +71,9 @@ Locomote.prototype = {
       }
     }
 
+    // Insert the locomote tag into a FlashVar so it can be read by all browsers
+    element += '<param name="FlashVars" value="locomoteID=' + tag + '" />';
+
     element += '</object>';
 
     // Insert the object into the provided tag
