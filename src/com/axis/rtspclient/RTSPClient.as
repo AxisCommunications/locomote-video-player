@@ -59,7 +59,7 @@ package com.axis.rtspclient {
     private var digestNC:uint = 1;
 
     public function RTSPClient(video:Video, urlParsed:Object, handle:IRTSPHandle) {
-      this.userAgent = "Slush " + StringUtil.trim(new Version().toString());
+      this.userAgent = "Locomote " + StringUtil.trim(new Version().toString());
       this.state = STATE_INITIAL;
       this.handle = handle;
       this.video = video;
