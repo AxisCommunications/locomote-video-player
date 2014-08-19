@@ -212,7 +212,7 @@ package {
         break;
 
       default:
-        trace('Unknown streaming protocol:', urlParsed.protocol)
+        ErrorManager.streamError(814, [urlParsed.protocol])
         return;
       }
 
@@ -224,14 +224,26 @@ package {
     }
 
     public function pause():void {
+      if (ns === null) {
+        ErrorManager.streamError(811);
+        return;
+      }
       client.pause();
     }
 
     public function resume():void {
+      if (ns === null) {
+        ErrorManager.streamError(812);
+        return;
+      }
       client.resume();
     }
 
     public function stop():void {
+      if (client === null) {
+        ErrorManager.streamError(813);
+        return;
+      }
       urlParsed = null;
       ns = null;
       client.stop();
@@ -257,7 +269,7 @@ package {
         'fps': (this.ns) ? Math.floor(this.ns.currentFPS + 0.5) : null,
         'resolution': (this.ns) ? { width: meta.width, height: meta.height } : null,
         'playbackSpeed': (this.ns) ? 1.0 : null,
-        'protocol': (this.urlParsed) ? this.urlParsed.protocol: null,
+        'protocol': (this.urlParsed) ? this.urlParsed.protocol : null,
         'audio': (this.ns) ? this.streamHasAudio : null,
         'video': (this.ns) ? this.streamHasVideo : null,
         'state': this.currentState,
@@ -278,7 +290,7 @@ package {
         'microphoneMuted': (mic.gain === 0),
         'speakerMuted': (flash.media.SoundMixer.soundTransform.volume === 0),
         'fullscreen': (StageDisplayState.FULL_SCREEN === stage.displayState),
-        'buffer': this.ns.bufferTime
+        'buffer': (ns === null) ? 0 : this.ns.bufferTime
       };
 
       return status;
@@ -319,7 +331,7 @@ package {
       if (type === 'axis') {
         audioTransmit.start(url);
       } else {
-        trace("unsupported type");
+        ErrorManager.streamError(815);
       }
     }
 
@@ -458,7 +470,7 @@ package {
           break;
 
         default:
-          trace('Unknown NetStatus error:', event.info.code);
+          ErrorManager.streamError(724, [event.info.code]);
           return;
         }
 

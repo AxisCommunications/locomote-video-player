@@ -73,6 +73,7 @@ package com.axis {
       '721': "SharedObject.BadPersistence - A request was made for a shared object with persistence flags, but the request cannot be granted because the object has already been created with different flags.",
       '722': "SharedObject.Flush.Failed - The 'pending' status is resolved, but the SharedObject.flush() failed.",
       '723': "SharedObject.UriMismatch - The video dimensions are available or have changed. Use the Video or StageVideo videoWidth/videoHeight property to query the new video dimensions. New in Flash Player 11.4/AIR 3.4.",
+      '724': "Unknown NetStatus error: %p",
       '800': "Unable to pause a stream if not playing.",
       '801': "Unable to resume a stream if not paused.",
       '802': "Unable to stop if we never reached play.",
@@ -83,7 +84,12 @@ package com.axis {
       '807': "GET: Exhausted all authentication methods. Unable to authorize to %p.",
       '808': "RTSPClient: Invalid RTSP response - %p, %p",
       '809': "RTSPClient:Failed to parse SDP file.",
-      '810': "No tracks in SDP file."
+      '810': "No tracks in SDP file.",
+      '811': "Unable to pause. No active stream.",
+      '812': "Unable to resume. No active stream.",
+      '813': "Unable to stop. No active stream.",
+      '814': "Unknown streaming protocol: %p",
+      '815': "Unsupported audio transmit protocol."
     };
 
     public static function streamError(errorCode:Number, errorData:Array = null):void {
