@@ -1,19 +1,18 @@
 package com.axis.rtspclient {
-
-  import flash.net.Socket;
   import flash.events.Event;
   import flash.events.EventDispatcher;
-  import flash.events.ProgressEvent;
   import flash.events.IOErrorEvent
+  import flash.events.ProgressEvent;
+  import flash.net.Socket;
   import flash.utils.ByteArray;
+
   import mx.utils.Base64Encoder;
 
   public class RTSPoverTCPHandle extends EventDispatcher implements IRTSPHandle {
     private var channel:Socket;
     private var urlParsed:Object;
 
-    public function RTSPoverTCPHandle(iurl:Object)
-    {
+    public function RTSPoverTCPHandle(iurl:Object) {
       this.urlParsed = iurl;
 
       channel = new Socket();
@@ -29,30 +28,25 @@ package com.axis.rtspclient {
       });
     }
 
-    public function writeUTFBytes(value:String):void
-    {
+    public function writeUTFBytes(value:String):void {
       channel.writeUTFBytes(value);
       channel.flush();
     }
 
-    public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void
-    {
+    public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void {
       channel.readBytes(bytes, offset, length);
     }
 
-    public function connect():void
-    {
+    public function connect():void {
       channel.connect(urlParsed.host, urlParsed.port);
     }
 
-    public function reconnect():void
-    {
+    public function reconnect():void {
       channel.close();
       connect();
     }
 
-    public function disconnect():void
-    {
+    public function disconnect():void {
       channel.close();
 
       /* should probably wait for close, but it doesn't seem to fire properly */

@@ -1,10 +1,10 @@
 package {
-  import com.axis.ClientEvent;
-  import com.axis.IClient;
   import com.axis.audioclient.AxisTransmit;
+  import com.axis.ClientEvent;
   import com.axis.ErrorManager;
   import com.axis.http.url;
   import com.axis.httpclient.HTTPClient;
+  import com.axis.IClient;
   import com.axis.rtmpclient.RTMPClient;
   import com.axis.rtspclient.IRTSPHandle;
   import com.axis.rtspclient.RTSPClient;

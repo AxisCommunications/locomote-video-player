@@ -1,27 +1,23 @@
 package com.axis.rtspclient {
+  import com.axis.rtspclient.ByteArrayUtils;
+  import com.axis.rtspclient.RTP;
 
   import flash.events.Event;
   import flash.events.EventDispatcher;
   import flash.external.ExternalInterface;
   import flash.utils.ByteArray;
 
-  import com.axis.rtspclient.RTP;
-  import com.axis.rtspclient.ByteArrayUtils;
-
   /* Assembler of NAL units */
-  public class ANALU extends EventDispatcher
-  {
+  public class ANALU extends EventDispatcher {
     private static const NALTYPE_FU_A:uint = 28;
     private static const NALTYPE_FU_B:uint = 29;
 
     private var nalu:NALU = null;
 
-    public function ANALU()
-    {
+    public function ANALU() {
     }
 
-    public function onRTPPacket(pkt:RTP):void
-    {
+    public function onRTPPacket(pkt:RTP):void {
       var data:ByteArray = pkt.getPayload();
 
       var nalhdr:uint = data.readUnsignedByte();

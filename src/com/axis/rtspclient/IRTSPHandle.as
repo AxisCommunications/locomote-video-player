@@ -1,8 +1,7 @@
 package com.axis.rtspclient {
-
   import flash.events.IEventDispatcher;
-  import flash.utils.ByteArray;
   import flash.net.Socket;
+  import flash.utils.ByteArray;
 
   public interface IRTSPHandle extends IEventDispatcher {
     function writeUTFBytes(value:String):void;

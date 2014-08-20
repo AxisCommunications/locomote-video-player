@@ -1,5 +1,4 @@
 package com.axis.codec {
-
   public class g711 {
 
     private static const exponentLookup:Array = [
@@ -21,8 +20,7 @@ package com.axis.codec {
       7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
     ];
 
-    public static function linearToMulaw(sample:Number):uint
-    {
+    public static function linearToMulaw(sample:Number):uint {
       var bias:uint = 0x84;
       var clamp:uint = 32635;
 
@@ -48,6 +46,5 @@ package com.axis.codec {
       }
       return encoded;
     }
-
   }
 }

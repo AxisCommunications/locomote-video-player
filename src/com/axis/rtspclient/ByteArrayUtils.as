@@ -1,5 +1,4 @@
 package com.axis.rtspclient {
-
   import flash.utils.ByteArray;
 
   public class ByteArrayUtils {
@@ -72,8 +71,7 @@ package com.axis.rtspclient {
       return toFind;
     }
 
-    public static function hexdump(ba:ByteArray, offset:uint = 0, length:int = -1):String
-    {
+    public static function hexdump(ba:ByteArray, offset:uint = 0, length:int = -1):String {
       var result:String = "";
 
       var realOffset:uint = offset;
@@ -88,16 +86,14 @@ package com.axis.rtspclient {
       return result;
     }
 
-    public static function appendByteArray(dest:ByteArray, src:ByteArray):void
-    {
+    public static function appendByteArray(dest:ByteArray, src:ByteArray):void {
       var prepos:uint = dest.position;
       dest.position   = dest.length;
       dest.writeBytes(src, src.position);
       dest.position   = prepos;
     }
 
-    public static function createFromHexstring(hex:String):ByteArray
-    {
+    public static function createFromHexstring(hex:String):ByteArray {
       var res:ByteArray = new ByteArray();
       for (var i:uint = 0; i < hex.length; i += 2) {
         res.writeByte(parseInt(hex.substr(i, 2), 16));

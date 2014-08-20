@@ -1,5 +1,4 @@
 package com.axis.rtspclient {
-
   import flash.utils.ByteArray;
 
   import mx.utils.StringUtil;
@@ -12,12 +11,10 @@ package com.axis.rtspclient {
     private var sessionBlock:Object = new Object();
     private var media:Object = new Object();
 
-    public function SDP()
-    {
+    public function SDP() {
     }
 
-    public function parse(content:ByteArray):Boolean
-    {
+    public function parse(content:ByteArray):Boolean {
       var dataString:String = content.toString();
       var success:Boolean = true;
       var currentMediaBlock:Object = sessionBlock;
@@ -89,8 +86,7 @@ package com.axis.rtspclient {
       return success;
     }
 
-    private function parseVersion(line:String):Boolean
-    {
+    private function parseVersion(line:String):Boolean {
       var matches:Array = line.match(/^v=([0-9]+)$/);
       if (0 === matches.length) {
         trace('\'v=\' (Version) formatted incorrectly: ' + line);
@@ -106,8 +102,7 @@ package com.axis.rtspclient {
       return true;
     }
 
-    private function parseOrigin(line:String):Boolean
-    {
+    private function parseOrigin(line:String):Boolean {
       var matches:Array = line.match(/^o=([^ ]+) ([0-9]+) ([0-9]+) (IN) (IP4|IP6) ([^ ]+)$/);
       if (0 === matches.length) {
         trace('\'o=\' (Origin) formatted incorrectly: ' + line);
@@ -125,8 +120,7 @@ package com.axis.rtspclient {
       return true;
     }
 
-    private function parseSessionName(line:String):Boolean
-    {
+    private function parseSessionName(line:String):Boolean {
       var matches:Array = line.match(/^s=([^\r\n]+)$/);
       if (0 === matches.length) {
         trace('\'s=\' (Session Name) formatted incorrectly: ' + line);
@@ -138,8 +132,7 @@ package com.axis.rtspclient {
       return true;
     }
 
-    private function parseTiming(line:String):Boolean
-    {
+    private function parseTiming(line:String):Boolean {
       var matches:Array = line.match(/^t=([0-9]+) ([0-9]+)$/);
       if (0 === matches.length) {
         trace('\'t=\' (Timing) formatted incorrectly: ' + line);
@@ -153,8 +146,7 @@ package com.axis.rtspclient {
       return true;
     }
 
-    private function parseMediaDescription(line:String, media:Object):Boolean
-    {
+    private function parseMediaDescription(line:String, media:Object):Boolean {
       var matches:Array = line.match(/^m=([^ ]+) ([^ ]+) ([^ ]+)[ ]/);
       if (0 === matches.length) {
         trace('\'m=\' (Media) formatted incorrectly: ' + line);
@@ -171,8 +163,7 @@ package com.axis.rtspclient {
       return true;
     }
 
-    private function parseAttribute(line:String, media:Object):Boolean
-    {
+    private function parseAttribute(line:String, media:Object):Boolean {
       if (null === media) {
         /* Not in a media block, can't be bothered parsing attributes for session */
         return true;
@@ -232,18 +223,15 @@ package com.axis.rtspclient {
       return true;
     }
 
-    public function getSessionBlock():Object
-    {
+    public function getSessionBlock():Object {
       return this.sessionBlock;
     }
 
-    public function getMediaBlock(mediaType:String):Object
-    {
+    public function getMediaBlock(mediaType:String):Object {
       return this.media[mediaType];
     }
 
-    public function getMediaBlockByPayloadType(pt:int):Object
-    {
+    public function getMediaBlockByPayloadType(pt:int):Object {
       for each (var m:Object in this.media) {
         if (-1 !== m.fmt.indexOf(pt)) {
           return m;
@@ -253,8 +241,7 @@ package com.axis.rtspclient {
       throw new Error('No media block for payload type: ' + pt);
     }
 
-    public function getMediaBlockList():Array
-    {
+    public function getMediaBlockList():Array {
       var res:Array = [];
       for each (var m:Object in this.media) {
         res.push(m);

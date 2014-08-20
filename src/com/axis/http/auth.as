@@ -1,14 +1,15 @@
 package com.axis.http {
+  import com.adobe.crypto.MD5;
+
+  import com.axis.rtspclient.GUID;
 
   import flash.net.Socket;
+
   import mx.utils.Base64Encoder;
-  import com.adobe.crypto.MD5;
-  import com.axis.rtspclient.GUID;
 
   public class auth {
 
-    public static function basic(user:String, pass:String):String
-    {
+    public static function basic(user:String, pass:String):String {
       var b64:Base64Encoder = new Base64Encoder();
       b64.insertNewLines = false;
       b64.encode(user + ':' + pass);
@@ -24,8 +25,7 @@ package com.axis.http {
       qop:String,
       nonce:String,
       nc:uint
-    ):String
-    {
+    ):String {
       /* NOTE: Unsupported: md5-sess and auth-int */
 
       if (qop && 'auth' !== qop) {
@@ -54,8 +54,7 @@ package com.axis.http {
         ;
     }
 
-    public static function nextMethod(current:String, authOpts:Object):String
-    {
+    public static function nextMethod(current:String, authOpts:Object):String {
       switch (current) {
         case 'none':
           /* No authorization attempt yet, try with the best method supported by server */
@@ -84,8 +83,8 @@ package com.axis.http {
       authState:String,
       authOpts:Object,
       urlParsed:Object,
-      digestNC:uint):String
-    {
+      digestNC:uint):String {
+
       var content:String = '';
       switch (authState) {
         case "basic":

@@ -1,25 +1,21 @@
 package com.axis.rtspclient {
+  import com.axis.rtspclient.ByteArrayUtils;
+  import com.axis.rtspclient.RTP;
 
   import flash.events.Event;
   import flash.events.EventDispatcher;
   import flash.external.ExternalInterface;
   import flash.utils.ByteArray;
 
-  import com.axis.rtspclient.RTP;
-  import com.axis.rtspclient.ByteArrayUtils;
-
   /* Assembler of AAC frames */
-  public class AAAC extends EventDispatcher
-  {
+  public class AAAC extends EventDispatcher {
     private var sdp:SDP;
 
-    public function AAAC(sdp:SDP)
-    {
+    public function AAAC(sdp:SDP) {
       this.sdp = sdp;
     }
 
-    public function onRTPPacket(pkt:RTP):void
-    {
+    public function onRTPPacket(pkt:RTP):void {
       var media:Object = sdp.getMediaBlockByPayloadType(pkt.pt);
       var sizeLength:uint = parseInt(media.fmtp['sizelength']);
       var indexLength:uint = parseInt(media.fmtp['indexlength']);

@@ -1,24 +1,24 @@
 package com.axis.rtspclient {
-
-  import flash.events.EventDispatcher;
-  import flash.events.Event;
-  import flash.events.NetStatusEvent;
-  import flash.utils.ByteArray;
-  import flash.net.Socket;
-  import flash.net.NetConnection;
-  import flash.net.NetStream;
-  import flash.media.Video;
-  import mx.utils.StringUtil;
-
+  import com.axis.ClientEvent;
   import com.axis.ErrorManager;
+  import com.axis.http.auth;
+  import com.axis.http.request;
+  import com.axis.http.url;
+  import com.axis.IClient;
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.SDP;
-  import com.axis.http.url;
-  import com.axis.http.request;
-  import com.axis.http.auth;
-  import com.axis.IClient;
-  import com.axis.ClientEvent;
+
+  import flash.events.Event;
+  import flash.events.EventDispatcher;
+  import flash.events.NetStatusEvent;
+  import flash.media.Video;
+  import flash.net.NetConnection;
+  import flash.net.NetStream;
+  import flash.net.Socket;
+  import flash.utils.ByteArray;
+
+  import mx.utils.StringUtil;
 
   public class RTSPClient extends EventDispatcher implements IClient {
     [Embed(source = "../../../../VERSION", mimeType = "application/octet-stream")] private var Version:Class;

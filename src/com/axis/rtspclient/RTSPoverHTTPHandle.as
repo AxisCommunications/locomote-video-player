@@ -1,22 +1,21 @@
 package com.axis.rtspclient {
+  import com.axis.http.auth;
+  import com.axis.http.request;
+  import com.axis.http.url;
+  import com.axis.rtspclient.GUID;
 
-  import flash.events.EventDispatcher;
   import flash.events.ErrorEvent;
   import flash.events.Event;
+  import flash.events.EventDispatcher;
   import flash.events.IOErrorEvent;
   import flash.events.ProgressEvent;
   import flash.events.SecurityErrorEvent;
   import flash.net.Socket;
   import flash.utils.ByteArray;
+
   import mx.utils.Base64Encoder;
 
-  import com.axis.rtspclient.GUID;
-  import com.axis.http.url;
-  import com.axis.http.auth;
-  import com.axis.http.request;
-
   public class RTSPoverHTTPHandle extends EventDispatcher implements IRTSPHandle {
-
     private var getChannel:Socket = null;
     private var postChannel:Socket = null;
     private var urlParsed:Object = {};
@@ -40,8 +39,7 @@ package com.axis.rtspclient {
       this.base64encoder = new Base64Encoder();
     }
 
-    private function setupSockets():void
-    {
+    private function setupSockets():void {
       getChannel = new Socket();
       getChannel.timeout = 5000;
       getChannel.addEventListener(Event.CONNECT, onGetChannelConnect);
@@ -66,14 +64,12 @@ package com.axis.rtspclient {
       return base64encoder.toString();
     }
 
-    public function writeUTFBytes(value:String):void
-    {
+    public function writeUTFBytes(value:String):void {
       postChannel.writeUTFBytes(base64encode(value));
       postChannel.flush();
     }
 
-    public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void
-    {
+    public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void {
       getChannel.readBytes(bytes, offset, length);
     }
 
@@ -98,8 +94,7 @@ package com.axis.rtspclient {
       getChannel.connect(this.urlParsed.host, this.urlParsed.port);
     }
 
-    public function reconnect():void
-    {
+    public function reconnect():void {
       throw new Error('RTSPoverHTTPHandle: reconnect not implemented');
     }
 

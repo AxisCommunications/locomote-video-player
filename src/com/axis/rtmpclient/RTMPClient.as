@@ -1,15 +1,15 @@
 package com.axis.rtmpclient {
-  import flash.net.NetStream;
-  import flash.net.NetConnection;
-  import flash.media.Video;
+  import com.axis.ClientEvent;
+  import com.axis.IClient;
+
+  import flash.events.AsyncErrorEvent;
   import flash.events.EventDispatcher;
   import flash.events.NetStatusEvent;
-  import flash.events.AsyncErrorEvent;
-  import com.axis.IClient;
-  import com.axis.ClientEvent;
+  import flash.media.Video;
+  import flash.net.NetConnection;
+  import flash.net.NetStream;
 
   public class RTMPClient extends EventDispatcher implements IClient {
-
     private var video:Video;
     private var urlParsed:Object;
     private var nc:NetConnection;

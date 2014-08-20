@@ -1,11 +1,10 @@
 package com.axis.rtspclient {
+  import com.axis.rtspclient.ByteArrayUtils;
 
   import flash.events.Event;
   import flash.utils.ByteArray;
-  import com.axis.rtspclient.ByteArrayUtils;
 
-  public class RTP extends Event
-  {
+  public class RTP extends Event {
     private var data:ByteArray;
     private var media:Object;
 
@@ -22,8 +21,7 @@ package com.axis.rtspclient {
     public var headerLength:uint;
     public var bodyLength:uint;
 
-    public function RTP(pkt:ByteArray, sdp:SDP)
-    {
+    public function RTP(pkt:ByteArray, sdp:SDP) {
       var line1:uint = pkt.readUnsignedInt();
 
       version   = (line1 & 0xC0000000) >>> 30;
@@ -49,18 +47,15 @@ package com.axis.rtspclient {
       this.data = pkt;
     }
 
-    public function getPayload():ByteArray
-    {
+    public function getPayload():ByteArray {
       return data;
     }
 
-    public function getTimestampMS():uint
-    {
+    public function getTimestampMS():uint {
       return 1000 * (timestamp / media.rtpmap[pt].clock);
     }
 
-    public override function toString():String
-    {
+    public override function toString():String {
       return "RTP(" +
         "version:"   + version   + ", " +
         "padding:"   + padding   + ", " +
