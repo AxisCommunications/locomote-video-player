@@ -79,6 +79,7 @@ package com.axis {
       '727': "NetStream reported an IOError: %p.",
       '728': "NetConnection reported an asyncError.",
       '729': "NetConnection reported an IOError: %p.",
+      '730': "NetConnection reported a security error: %p.",
       '800': "Unable to pause a stream if not playing.",
       '801': "Unable to resume a stream if not paused.",
       '802': "Unable to stop if we never reached play.",
