@@ -507,7 +507,7 @@ package com.axis.rtspclient {
     }
 
     private function onSecurityError(event:SecurityErrorEvent):void {
-      ErrorManager.dispatchError(729, [event.text]);
+      ErrorManager.dispatchError(730, [event.text]);
     }
 
     private function onNetStatus(event:NetStatusEvent):void {
