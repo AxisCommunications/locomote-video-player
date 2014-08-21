@@ -77,6 +77,7 @@ package com.axis {
       '725': "NetStream reported an asyncError.",
       '726': "NetStream reported a DRMError with ID: %p and subID: %p.",
       '727': "NetStream reported an IOError: %p.",
+      '728': "NetStream reported an asyncError.",
       '800': "Unable to pause a stream if not playing.",
       '801': "Unable to resume a stream if not paused.",
       '802': "Unable to stop if we never reached play.",
