@@ -215,7 +215,7 @@ package {
         break;
 
       default:
-        ErrorManager.streamError(814, [urlParsed.protocol])
+        ErrorManager.dispatchError(814, [urlParsed.protocol])
         return;
       }
 
@@ -228,7 +228,7 @@ package {
 
     public function pause():void {
       if (ns === null) {
-        ErrorManager.streamError(811);
+        ErrorManager.dispatchError(811);
         return;
       }
       client.pause();
@@ -236,7 +236,7 @@ package {
 
     public function resume():void {
       if (ns === null) {
-        ErrorManager.streamError(812);
+        ErrorManager.dispatchError(812);
         return;
       }
       client.resume();
@@ -244,7 +244,7 @@ package {
 
     public function stop():void {
       if (client === null) {
-        ErrorManager.streamError(813);
+        ErrorManager.dispatchError(813);
         return;
       }
       urlParsed = null;
@@ -334,7 +334,7 @@ package {
       if (type === 'axis') {
         audioTransmit.start(url);
       } else {
-        ErrorManager.streamError(815);
+        ErrorManager.dispatchError(815);
       }
     }
 
@@ -476,26 +476,26 @@ package {
           break;
 
         default:
-          ErrorManager.streamError(724, [event.info.code]);
+          ErrorManager.dispatchError(724, [event.info.code]);
           return;
         }
 
         if (errorCode) {
-          ErrorManager.streamError(errorCode);
+          ErrorManager.dispatchError(errorCode);
         }
       }
     }
 
     private function onAsyncError(event:AsyncErrorEvent):void {
-      ErrorManager.streamError(816);
+      ErrorManager.dispatchError(816);
     }
 
     private function onDRMError(event:DRMErrorEvent):void {
-      ErrorManager.streamError(817, [event.errorID, event.subErrorID]);
+      ErrorManager.dispatchError(817, [event.errorID, event.subErrorID]);
     }
 
     private function onIOError(event:IOErrorEvent):void {
-      ErrorManager.streamError(818, [event.text]);
+      ErrorManager.dispatchError(818, [event.text]);
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

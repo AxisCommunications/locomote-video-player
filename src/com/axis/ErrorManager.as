@@ -95,7 +95,7 @@ package com.axis {
       '818': "NetStream reported an IOError: %p."
     };
 
-    public static function streamError(errorCode:Number, errorData:Array = null):void {
+    public static function dispatchError(errorCode:Number, errorData:Array = null):void {
       var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
       var errorMessage:String = (errorData) ? ErrorManager.resolveErrorString(STREAM_ERRORS[errorCode], errorData) : STREAM_ERRORS[errorCode];
       var errorInfo:Object = {

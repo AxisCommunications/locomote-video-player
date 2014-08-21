@@ -72,7 +72,7 @@ package com.axis.rtspclient {
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
         if (state !== STATE_INITIAL) {
-          ErrorManager.streamError(806);
+          ErrorManager.dispatchError(806);
           return;
         }
 
@@ -101,14 +101,14 @@ package com.axis.rtspclient {
 
     public function pause():Boolean {
       if (state !== STATE_PLAYING) {
-        ErrorManager.streamError(800);
+        ErrorManager.dispatchError(800);
         return false;
       }
 
       try {
         sendPauseReq();
       } catch (err:Error) {
-        ErrorManager.streamError(803, [err.message]);
+        ErrorManager.dispatchError(803, [err.message]);
         return false;
       }
 
@@ -117,7 +117,7 @@ package com.axis.rtspclient {
 
     public function resume():Boolean {
       if (state !== STATE_PAUSED) {
-        ErrorManager.streamError(801);
+        ErrorManager.dispatchError(801);
         return false;
       }
 
@@ -127,7 +127,7 @@ package com.axis.rtspclient {
 
     public function stop():Boolean {
       if (state < STATE_PLAY) {
-        ErrorManager.streamError(802);
+        ErrorManager.dispatchError(802);
         return false;
       }
       sendTeardownReq();
@@ -146,7 +146,7 @@ package com.axis.rtspclient {
         this.ns.dispose();
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       } else {
-        ErrorManager.streamError(804);
+        ErrorManager.dispatchError(804);
       }
     }
 
@@ -170,7 +170,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          ErrorManager.streamError(805, [data[0].toString(16)]);
+          ErrorManager.dispatchError(805, [data[0].toString(16)]);
           stop();
           break;
       }
@@ -197,7 +197,7 @@ package com.axis.rtspclient {
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
-          ErrorManager.streamError(807, [urlParsed.host]);
+          ErrorManager.dispatchError(807, [urlParsed.host]);
           return false;
         }
 
@@ -229,7 +229,7 @@ package com.axis.rtspclient {
       }
 
       if (200 !== parsed.code) {
-        ErrorManager.streamError(808, [parsed.code, parsed.message]);
+        ErrorManager.dispatchError(808, [parsed.code, parsed.message]);
         return;
       }
 
@@ -247,7 +247,7 @@ package com.axis.rtspclient {
         trace("RTSPClient: STATE_DESCRIBE");
 
         if (!sdp.parse(body)) {
-          ErrorManager.streamError(809);
+          ErrorManager.dispatchError(809);
           return;
         }
 
@@ -256,7 +256,7 @@ package com.axis.rtspclient {
         trace('SDP contained ' + tracks.length + ' track(s). Calling SETUP for each.');
 
         if (0 === tracks.length) {
-          ErrorManager.streamError(810);
+          ErrorManager.dispatchError(810);
           return;
         }
 
