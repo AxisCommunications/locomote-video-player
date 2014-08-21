@@ -1,16 +1,16 @@
 package {
-  import com.axis.audioclient.AxisTransmit;
   import com.axis.ClientEvent;
   import com.axis.ErrorManager;
+  import com.axis.IClient;
+  import com.axis.audioclient.AxisTransmit;
   import com.axis.http.url;
   import com.axis.httpclient.HTTPClient;
-  import com.axis.IClient;
   import com.axis.rtmpclient.RTMPClient;
   import com.axis.rtspclient.IRTSPHandle;
   import com.axis.rtspclient.RTSPClient;
   import com.axis.rtspclient.RTSPoverHTTPHandle;
   import com.axis.rtspclient.RTSPoverTCPHandle;
-
+  
   import flash.display.LoaderInfo;
   import flash.display.Sprite;
   import flash.display.Stage;
@@ -18,6 +18,7 @@ package {
   import flash.display.StageDisplayState;
   import flash.display.StageScaleMode;
   import flash.events.AsyncErrorEvent;
+  import flash.events.DRMErrorEvent;
   import flash.events.Event;
   import flash.events.MouseEvent;
   import flash.events.NetStatusEvent;
@@ -363,6 +364,7 @@ package {
       ev.data.ns.client = this;
       this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
       this.ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
+      this.ns.addEventListener(DRMErrorEvent.DRM_ERROR, onDRMError);
     }
 
     private function onStartPlay(event:ClientEvent):void {
@@ -484,6 +486,10 @@ package {
 
     private function onAsyncError(event:AsyncErrorEvent):void {
       ErrorManager.streamError(816);
+    }
+
+    private function onDRMError(event:DRMErrorEvent):void {
+      ErrorManager.streamError(817, [event.errorID, event.subErrorID]);
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
