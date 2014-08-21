@@ -98,6 +98,9 @@ package com.axis {
     public static function dispatchError(errorCode:Number, errorData:Array = null):void {
       var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
       var errorMessage:String = (errorData) ? ErrorManager.resolveErrorString(STREAM_ERRORS[errorCode], errorData) : STREAM_ERRORS[errorCode];
+      if (null === errorMessage) {
+        errorMessage = "An unknown error has occurred.";
+      }
       var errorInfo:Object = {
         'code': errorCode,
         'message': errorMessage
