@@ -487,15 +487,15 @@ package {
     }
 
     private function onAsyncError(event:AsyncErrorEvent):void {
-      ErrorManager.dispatchError(816);
+      ErrorManager.dispatchError(725);
     }
 
     private function onDRMError(event:DRMErrorEvent):void {
-      ErrorManager.dispatchError(817, [event.errorID, event.subErrorID]);
+      ErrorManager.dispatchError(726, [event.errorID, event.subErrorID]);
     }
 
     private function onIOError(event:IOErrorEvent):void {
-      ErrorManager.dispatchError(818, [event.text]);
+      ErrorManager.dispatchError(727, [event.text]);
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

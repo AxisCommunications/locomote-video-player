@@ -74,6 +74,9 @@ package com.axis {
       '722': "SharedObject.Flush.Failed - The 'pending' status is resolved, but the SharedObject.flush() failed.",
       '723': "SharedObject.UriMismatch - The video dimensions are available or have changed. Use the Video or StageVideo videoWidth/videoHeight property to query the new video dimensions. New in Flash Player 11.4/AIR 3.4.",
       '724': "Unknown NetStatus error: %p",
+      '725': "NetStream reported an asyncError.",
+      '726': "NetStream reported a DRMError with ID: %p and subID: %p.",
+      '727': "NetStream reported an IOError: %p.",
       '800': "Unable to pause a stream if not playing.",
       '801': "Unable to resume a stream if not paused.",
       '802': "Unable to stop if we never reached play.",
@@ -89,10 +92,7 @@ package com.axis {
       '812': "Unable to resume. No active stream.",
       '813': "Unable to stop. No active stream.",
       '814': "Unknown streaming protocol: %p",
-      '815': "Unsupported audio transmit protocol.",
-      '816': "NetStream reported an asyncError.",
-      '817': "NetStream reported a DRMError with ID: %p and subID: %p.",
-      '818': "NetStream reported an IOError: %p."
+      '815': "Unsupported audio transmit protocol."
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null):void {
