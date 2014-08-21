@@ -89,7 +89,8 @@ package com.axis {
       '812': "Unable to resume. No active stream.",
       '813': "Unable to stop. No active stream.",
       '814': "Unknown streaming protocol: %p",
-      '815': "Unsupported audio transmit protocol."
+      '815': "Unsupported audio transmit protocol.",
+      '816': "Netstream reported an asyncError."
     };
 
     public static function streamError(errorCode:Number, errorData:Array = null):void {

@@ -17,6 +17,7 @@ package {
   import flash.display.StageAlign;
   import flash.display.StageDisplayState;
   import flash.display.StageScaleMode;
+  import flash.events.AsyncErrorEvent;
   import flash.events.Event;
   import flash.events.MouseEvent;
   import flash.events.NetStatusEvent;
@@ -361,6 +362,7 @@ package {
       ev.data.ns.bufferTime = config.buffer;
       ev.data.ns.client = this;
       this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
+      this.ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
     }
 
     private function onStartPlay(event:ClientEvent):void {
@@ -478,6 +480,10 @@ package {
           ErrorManager.streamError(errorCode);
         }
       }
+    }
+
+    private function onAsyncError(event:AsyncErrorEvent):void {
+      ErrorManager.streamError(816);
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
