@@ -12,6 +12,7 @@ package com.axis.rtspclient {
   import flash.events.AsyncErrorEvent;
   import flash.events.Event;
   import flash.events.EventDispatcher;
+  import flash.events.IOErrorEvent;
   import flash.events.NetStatusEvent;
   import flash.media.Video;
   import flash.net.NetConnection;
@@ -92,6 +93,7 @@ package com.axis.rtspclient {
       var nc:NetConnection = new NetConnection();
       nc.connect(null);
       nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
+      nc.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
       this.ns = new NetStream(nc);
       dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
       this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
@@ -496,6 +498,10 @@ package com.axis.rtspclient {
 
     private function onAsyncError(event:AsyncErrorEvent):void {
       ErrorManager.dispatchError(728);
+    }
+
+    private function onIOError(event:IOErrorEvent):void {
+      ErrorManager.dispatchError(729, [event.text]);
     }
 
     private function onNetStatus(event:NetStatusEvent):void {
