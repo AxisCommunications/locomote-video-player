@@ -90,8 +90,9 @@ package com.axis {
       '813': "Unable to stop. No active stream.",
       '814': "Unknown streaming protocol: %p",
       '815': "Unsupported audio transmit protocol.",
-      '816': "Netstream reported an asyncError.",
-      '817': "Netstream reported a DRMError with ID: %p and subID: %p."
+      '816': "NetStream reported an asyncError.",
+      '817': "NetStream reported a DRMError with ID: %p and subID: %p.",
+      '818': "NetStream reported an IOError: %p."
     };
 
     public static function streamError(errorCode:Number, errorData:Array = null):void {

@@ -10,7 +10,7 @@ package {
   import com.axis.rtspclient.RTSPClient;
   import com.axis.rtspclient.RTSPoverHTTPHandle;
   import com.axis.rtspclient.RTSPoverTCPHandle;
-  
+
   import flash.display.LoaderInfo;
   import flash.display.Sprite;
   import flash.display.Stage;
@@ -20,6 +20,7 @@ package {
   import flash.events.AsyncErrorEvent;
   import flash.events.DRMErrorEvent;
   import flash.events.Event;
+  import flash.events.IOErrorEvent;
   import flash.events.MouseEvent;
   import flash.events.NetStatusEvent;
   import flash.external.ExternalInterface;
@@ -365,6 +366,7 @@ package {
       this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
       this.ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       this.ns.addEventListener(DRMErrorEvent.DRM_ERROR, onDRMError);
+      this.ns.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
     }
 
     private function onStartPlay(event:ClientEvent):void {
@@ -490,6 +492,10 @@ package {
 
     private function onDRMError(event:DRMErrorEvent):void {
       ErrorManager.streamError(817, [event.errorID, event.subErrorID]);
+    }
+
+    private function onIOError(event:IOErrorEvent):void {
+      ErrorManager.streamError(818, [event.text]);
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
