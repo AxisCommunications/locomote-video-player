@@ -61,6 +61,7 @@ Locomote.prototype = {
       wmode: 'transparent',
       quality: 'high',
       flashvars: '',
+      allowFullScreenInteractive: true,
       movie: swf,
       name: tag
     };
