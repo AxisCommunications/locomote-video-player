@@ -133,10 +133,6 @@ package com.axis.rtspclient {
     }
 
     public function stop():Boolean {
-      if (state < STATE_PLAY) {
-        ErrorManager.dispatchError(802);
-        return false;
-      }
       sendTeardownReq();
       return true;
     }

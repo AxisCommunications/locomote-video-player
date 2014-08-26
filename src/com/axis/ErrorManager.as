@@ -82,7 +82,6 @@ package com.axis {
       '730': "NetConnection reported a security error: %p.",
       '800': "Unable to pause a stream if not playing.",
       '801': "Unable to resume a stream if not paused.",
-      '802': "Unable to stop if we never reached play.",
       '803': "Unable to pause: %p",
       '804': "RTSPClient: Handle unexpectedly closed.",
       '805': "Unknown determining byte: 0x%p. Stopping stream.",
