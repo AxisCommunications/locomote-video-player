@@ -241,7 +241,7 @@ package com.axis.rtspclient {
       }
 
       if (200 !== parsed.code) {
-        ErrorManager.dispatchError(808, [parsed.code, parsed.message]);
+        ErrorManager.dispatchError(parsed.code);
         return;
       }
 
