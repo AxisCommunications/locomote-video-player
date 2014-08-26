@@ -216,6 +216,11 @@ package com.axis.rtspclient {
         return false;
       }
 
+      if (200 !== parsed.code) {
+        ErrorManager.dispatchError(parsed.code);
+        return false;
+      }
+
       if (parsed.headers['content-length']) {
         if (data.bytesAvailable < parsed.headers['content-length']) {
           return false;
