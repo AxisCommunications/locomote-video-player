@@ -1,8 +1,11 @@
 package com.axis.rtspclient {
+  import com.axis.ErrorManager;
+
   import flash.events.Event;
   import flash.events.EventDispatcher;
   import flash.events.IOErrorEvent
   import flash.events.ProgressEvent;
+  import flash.events.SecurityErrorEvent;
   import flash.net.Socket;
   import flash.utils.ByteArray;
 
@@ -24,8 +27,9 @@ package com.axis.rtspclient {
         dispatchEvent(new Event("data"));
       });
       channel.addEventListener(IOErrorEvent.IO_ERROR, function(ev:IOErrorEvent):void {
-        trace('io error');
+        trace('io error->' + ev.text);
       });
+      channel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
     }
 
     public function writeUTFBytes(value:String):void {
@@ -51,6 +55,10 @@ package com.axis.rtspclient {
 
       /* should probably wait for close, but it doesn't seem to fire properly */
       dispatchEvent(new Event("closed"));
+    }
+
+    private function onSecurityError(event:SecurityErrorEvent):void {
+      ErrorManager.dispatchError(731, [event.text]);
     }
   }
 }
