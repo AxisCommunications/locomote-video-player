@@ -223,6 +223,7 @@ package {
       client.addEventListener(ClientEvent.STOPPED, onStopped);
       client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.addEventListener(ClientEvent.PAUSED, onPaused);
+      client.addEventListener(ClientEvent.ABORTED, onAborted);
       client.start();
     }
 
@@ -386,6 +387,13 @@ package {
       if (urlParsed) {
         start();
       }
+    }
+
+    private function onAborted(event:ClientEvent):void {
+      video.clear();
+      client = null;
+      urlParsed = null;
+      ns = null;
     }
 
     public function onPlayStatus(event:Object):void {

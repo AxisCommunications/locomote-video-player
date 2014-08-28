@@ -201,6 +201,7 @@ package com.axis.rtspclient {
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
           ErrorManager.dispatchError(807, [urlParsed.host]);
+          dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
           return false;
         }
 
