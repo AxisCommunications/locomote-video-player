@@ -86,7 +86,7 @@ package com.axis {
       '804': "RTSPClient: Handle unexpectedly closed.",
       '805': "Unknown determining byte: 0x%p. Stopping stream.",
       '806': "Cannot start unless in initial state.",
-      '807': "GET: Exhausted all authentication methods. Unable to authorize to %p.",
+      '807': "Authorization to %p failed. Please check the username and password.",
       '809': "RTSPClient:Failed to parse SDP file.",
       '810': "No tracks in SDP file.",
       '811': "Unable to pause. No active stream.",
