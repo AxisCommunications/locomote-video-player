@@ -29,7 +29,9 @@ package com.axis.rtspclient {
       channel.addEventListener(IOErrorEvent.IO_ERROR, function(event:IOErrorEvent):void {
         ErrorManager.dispatchError(732, [event.text]);
       });
-      channel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
+      channel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function(event:SecurityErrorEvent):void {
+        ErrorManager.dispatchError(731, [event.text]);
+      });
     }
 
     public function writeUTFBytes(value:String):void {
@@ -55,10 +57,6 @@ package com.axis.rtspclient {
 
       /* should probably wait for close, but it doesn't seem to fire properly */
       dispatchEvent(new Event("closed"));
-    }
-
-    private function onSecurityError(event:SecurityErrorEvent):void {
-      ErrorManager.dispatchError(731, [event.text]);
     }
   }
 }
