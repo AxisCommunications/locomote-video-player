@@ -120,6 +120,8 @@ package com.axis.rtspclient {
     private function onGetChannelData(event:ProgressEvent):void {
       var parsed:* = request.readHeaders(getChannel, getChannelData);
       if (false === parsed) {
+        ErrorManager.dispatchError(807, [urlParsed.host]);
+        dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
         return;
       }
 
@@ -129,8 +131,6 @@ package com.axis.rtspclient {
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
-          trace('GET: Exhausted all authentication methods.');
-          trace('GET: Unable to authorize to ' + urlParsed.host);
           return;
         }
 
@@ -143,7 +143,7 @@ package com.axis.rtspclient {
       }
 
       if (200 !== parsed.code) {
-        trace('Invalid HTTP code: ' + parsed.code);
+        ErrorManager.dispatchError(parsed.code);
         return;
       }
 
