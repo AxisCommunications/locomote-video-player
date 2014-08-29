@@ -1,4 +1,6 @@
 package com.axis.rtspclient {
+  import com.axis.ClientEvent;
+  import com.axis.ErrorManager;
   import com.axis.http.auth;
   import com.axis.http.request;
   import com.axis.http.url;
@@ -44,14 +46,14 @@ package com.axis.rtspclient {
       getChannel.timeout = 5000;
       getChannel.addEventListener(Event.CONNECT, onGetChannelConnect);
       getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onGetChannelData);
-      getChannel.addEventListener(IOErrorEvent.IO_ERROR, onError);
-      getChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
+      getChannel.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      getChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
       postChannel = new Socket();
       postChannel.timeout = 5000;
       postChannel.addEventListener(Event.CONNECT, onPostChannelConnect);
-      postChannel.addEventListener(IOErrorEvent.IO_ERROR, onError);
-      postChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
+      postChannel.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      postChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
       getChannelData = new ByteArray();
       postChannelData = new ByteArray();
@@ -73,16 +75,21 @@ package com.axis.rtspclient {
       getChannel.readBytes(bytes, offset, length);
     }
 
-    private function onError(e:ErrorEvent):void {
-      trace("HTTPClient socket error");
-    }
-
     public function disconnect():void {
       if (getChannel.connected) {
         getChannel.close();
+
+        getChannel.removeEventListener(Event.CONNECT, onGetChannelConnect);
+        getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetChannelData);
+        getChannel.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
+        getChannel.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       }
       if (postChannel.connected) {
         postChannel.close();
+
+        postChannel.removeEventListener(Event.CONNECT, onPostChannelConnect);
+        postChannel.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
+        postChannel.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       }
 
       /* should probably wait for close, but it doesn't seem to fire properly */
@@ -166,6 +173,16 @@ package com.axis.rtspclient {
       postChannel.flush();
 
       dispatchEvent(new Event('connected'));
+    }
+
+    private function onIOError(event:IOErrorEvent):void {
+      ErrorManager.dispatchError(732, [event.text]);
+      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
+    }
+
+    private function onSecurityError(event:SecurityErrorEvent):void {
+      ErrorManager.dispatchError(731, [event.text]);
+      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
     }
   }
 }
