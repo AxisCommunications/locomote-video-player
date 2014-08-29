@@ -1,4 +1,5 @@
 package com.axis.rtspclient {
+  import com.axis.ClientEvent;
   import com.axis.ErrorManager;
 
   import flash.events.Event;
@@ -20,18 +21,10 @@ package com.axis.rtspclient {
 
       channel = new Socket();
       channel.timeout = 5000;
-      channel.addEventListener(Event.CONNECT, function():void {
-        dispatchEvent(new Event("connected"));
-      });
-      channel.addEventListener(ProgressEvent.SOCKET_DATA, function():void {
-        dispatchEvent(new Event("data"));
-      });
-      channel.addEventListener(IOErrorEvent.IO_ERROR, function(event:IOErrorEvent):void {
-        ErrorManager.dispatchError(732, [event.text]);
-      });
-      channel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function(event:SecurityErrorEvent):void {
-        ErrorManager.dispatchError(731, [event.text]);
-      });
+      channel.addEventListener(Event.CONNECT, onConnect);
+      channel.addEventListener(ProgressEvent.SOCKET_DATA, onData);
+      channel.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      channel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
     }
 
     public function writeUTFBytes(value:String):void {
@@ -55,8 +48,31 @@ package com.axis.rtspclient {
     public function disconnect():void {
       channel.close();
 
+      channel.removeEventListener(Event.CONNECT, onConnect);
+      channel.removeEventListener(ProgressEvent.SOCKET_DATA, onData);
+      channel.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      channel.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
+
       /* should probably wait for close, but it doesn't seem to fire properly */
       dispatchEvent(new Event("closed"));
+    }
+
+    private function onConnect(event:Event):void {
+      dispatchEvent(new Event("connected"));
+    }
+
+    private function onData(event:ProgressEvent):void {
+      dispatchEvent(new Event("data"));
+    }
+
+    private function onIOError(event:IOErrorEvent):void {
+      ErrorManager.dispatchError(732, [event.text]);
+      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
+    }
+
+    private function onSecurityError(event:SecurityErrorEvent):void {
+      ErrorManager.dispatchError(731, [event.text]);
+      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
     }
   }
 }

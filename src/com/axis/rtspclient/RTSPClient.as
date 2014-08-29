@@ -69,6 +69,7 @@ package com.axis.rtspclient {
       this.urlParsed = urlParsed;
 
       handle.addEventListener('data', this.onData);
+      handle.addEventListener(ClientEvent.ABORTED, onAborted);
     }
 
     public function start():Boolean {
@@ -610,6 +611,12 @@ package com.axis.rtspclient {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
         return;
       }
+    }
+
+    private function onAborted(event:ClientEvent):void {
+      this.handle.disconnect();
+      this.handle = null;
+      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
     }
   }
 }
