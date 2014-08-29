@@ -26,8 +26,8 @@ package com.axis.rtspclient {
       channel.addEventListener(ProgressEvent.SOCKET_DATA, function():void {
         dispatchEvent(new Event("data"));
       });
-      channel.addEventListener(IOErrorEvent.IO_ERROR, function(ev:IOErrorEvent):void {
-        trace('io error->' + ev.text);
+      channel.addEventListener(IOErrorEvent.IO_ERROR, function(event:IOErrorEvent):void {
+        ErrorManager.dispatchError(732, [event.text]);
       });
       channel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
     }
