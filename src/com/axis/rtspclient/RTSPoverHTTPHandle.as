@@ -102,7 +102,13 @@ package com.axis.rtspclient {
     }
 
     public function reconnect():void {
-      throw new Error('RTSPoverHTTPHandle: reconnect not implemented');
+      if (getChannel.connected) {
+        getChannel.close();
+      }
+      if (postChannel.connected) {
+        postChannel.close();
+      }
+      connect();
     }
 
     private function onGetChannelConnect(event:Event):void {
