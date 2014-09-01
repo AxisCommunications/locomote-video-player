@@ -400,6 +400,8 @@ package {
       if ('NetStream.Play.Complete' === event.code) {
         video.clear();
         client = null;
+        urlParsed = null;
+        ns = null;
         this.currentState = "stopped";
         this.callAPI(EVENT_STREAM_STOPPED);
         this.callAPI(EVENT_STREAM_ENDED);
