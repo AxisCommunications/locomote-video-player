@@ -157,7 +157,9 @@ package {
         config.buffer = iconfig.buffer;
         if (this.ns) {
           this.ns.bufferTime = config.buffer;
-          this.client.forceBuffering();
+          if (this.currentState === 'playing') {
+            this.client.forceBuffering();
+          }
         }
       }
 
