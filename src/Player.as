@@ -30,11 +30,14 @@ package {
   import flash.media.Video;
   import flash.net.NetStream;
   import flash.system.Security;
+  import mx.utils.StringUtil;
 
   [SWF(frameRate="60")]
   [SWF(backgroundColor="#efefef")]
 
   public class Player extends Sprite {
+    [Embed(source = "../VERSION", mimeType = "application/octet-stream")] private var Version:Class;
+
     public static var locomoteID:String = null;
 
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
@@ -66,6 +69,8 @@ package {
 
       Security.allowDomain("*");
       Security.allowInsecureDomain("*");
+
+      trace('Loaded Locomote, version ' + StringUtil.trim(new Version().toString()));
 
       if (ExternalInterface.available) {
           setupAPICallbacks();
