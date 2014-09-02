@@ -1,9 +1,8 @@
 package com.axis {
+  import flash.display.LoaderInfo;
   import flash.external.ExternalInterface;
 
   public class ErrorManager {
-    public static const NETSTREAM_CREATED:String = "NetStreamCreated";
-
     public static const STREAM_ERRORS:Object = {
       '100': "Continue",
       '200': "OK",
@@ -88,7 +87,7 @@ package com.axis {
     };
 
     public static function streamError(errorCode:Number, errorData:Array = null):void {
-      var functionName:String = "Locomote('" + ExternalInterface.objectID + "').__playerEvent";
+      var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
       var errorMessage:String = (errorData) ? ErrorManager.resolveErrorString(STREAM_ERRORS[errorCode], errorData) : STREAM_ERRORS[errorCode];
       var errorInfo:Object = {
         'code': errorCode,

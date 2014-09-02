@@ -11,6 +11,7 @@ package {
   import com.axis.rtspclient.RTSPoverHTTPHandle;
   import com.axis.rtspclient.RTSPoverTCPHandle;
 
+  import flash.display.LoaderInfo;
   import flash.display.Sprite;
   import flash.display.Stage;
   import flash.display.StageAlign;
@@ -31,6 +32,8 @@ package {
   [SWF(backgroundColor="#efefef")]
 
   public class Player extends Sprite {
+    public static var locomoteID:String = null;
+
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
     private static const EVENT_STREAM_STOPPED:String  = "streamStopped";
@@ -332,7 +335,8 @@ package {
     }
 
     private function onStageAdded(e:Event):void {
-      ExternalInterface.call("Locomote('" + ExternalInterface.objectID + "').__swfReady");
+      Player.locomoteID = LoaderInfo(this.root.loaderInfo).parameters.locomoteID.toString();
+      ExternalInterface.call("Locomote('" + Player.locomoteID + "').__swfReady");
     }
 
     public function onMetaData(item:Object):void {
@@ -465,7 +469,7 @@ package {
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
-      var functionName:String = "Locomote('" + ExternalInterface.objectID + "').__playerEvent";
+      var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
       if (data) {
         ExternalInterface.call(functionName, eventName, data);
       } else {
