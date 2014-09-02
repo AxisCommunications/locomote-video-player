@@ -49,6 +49,11 @@ and the javascript library (`locomote.js` in example below). Use a simple page l
         locomote.on('streamStarted', function() {
           console.log('stream has started');
         });
+
+        /* If any error occurs, we should take action */
+        locomote.on('streamError', function(err) {
+          console.log(err);
+        });
       });
 
     </script>
