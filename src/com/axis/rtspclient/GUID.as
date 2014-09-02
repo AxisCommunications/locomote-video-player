@@ -1,5 +1,4 @@
 package com.axis.rtspclient {
-
   public class GUID {
     public static function create():String {
       var uid:Array      = new Array();

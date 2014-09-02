@@ -60,7 +60,8 @@ Locomote.prototype = {
       allowscriptaccess: 'always',
       wmode: 'transparent',
       quality: 'high',
-      flashvars: '',
+      flashvars: 'locomoteID=' + tag,
+      allowFullScreenInteractive: true,
       movie: swf,
       name: tag
     };
@@ -70,9 +71,6 @@ Locomote.prototype = {
         element += '<param name="' + index + '" value="' + opts[index] + '"/>';
       }
     }
-
-    // Insert the locomote tag into a FlashVar so it can be read by all browsers
-    element += '<param name="FlashVars" value="locomoteID=' + tag + '" />';
 
     element += '</object>';
 

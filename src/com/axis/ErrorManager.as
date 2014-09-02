@@ -73,22 +73,37 @@ package com.axis {
       '721': "SharedObject.BadPersistence - A request was made for a shared object with persistence flags, but the request cannot be granted because the object has already been created with different flags.",
       '722': "SharedObject.Flush.Failed - The 'pending' status is resolved, but the SharedObject.flush() failed.",
       '723': "SharedObject.UriMismatch - The video dimensions are available or have changed. Use the Video or StageVideo videoWidth/videoHeight property to query the new video dimensions. New in Flash Player 11.4/AIR 3.4.",
+      '724': "Unknown NetStatus error: %p",
+      '725': "NetStream reported an asyncError.",
+      '726': "NetStream reported a DRMError with ID: %p and subID: %p.",
+      '727': "NetStream reported an IOError: %p.",
+      '728': "NetConnection reported an asyncError.",
+      '729': "NetConnection reported an IOError: %p.",
+      '730': "NetConnection reported a security error: %p.",
+      '731': "Socket reported a security error: %p.",
+      '732': "Socket reported an IOError: %p.",
       '800': "Unable to pause a stream if not playing.",
       '801': "Unable to resume a stream if not paused.",
-      '802': "Unable to stop if we never reached play.",
       '803': "Unable to pause: %p",
       '804': "RTSPClient: Handle unexpectedly closed.",
       '805': "Unknown determining byte: 0x%p. Stopping stream.",
       '806': "Cannot start unless in initial state.",
-      '807': "GET: Exhausted all authentication methods. Unable to authorize to %p.",
-      '808': "RTSPClient: Invalid RTSP response - %p, %p",
+      '807': "Authorization to %p failed. Please check the username and password.",
       '809': "RTSPClient:Failed to parse SDP file.",
-      '810': "No tracks in SDP file."
+      '810': "No tracks in SDP file.",
+      '811': "Unable to pause. No active stream.",
+      '812': "Unable to resume. No active stream.",
+      '813': "Unable to stop. No active stream.",
+      '814': "Unknown streaming protocol: %p",
+      '815': "Unsupported audio transmit protocol."
     };
 
-    public static function streamError(errorCode:Number, errorData:Array = null):void {
+    public static function dispatchError(errorCode:Number, errorData:Array = null):void {
       var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
       var errorMessage:String = (errorData) ? ErrorManager.resolveErrorString(STREAM_ERRORS[errorCode], errorData) : STREAM_ERRORS[errorCode];
+      if (null === errorMessage) {
+        errorMessage = "An unknown error has occurred.";
+      }
       var errorInfo:Object = {
         'code': errorCode,
         'message': errorMessage

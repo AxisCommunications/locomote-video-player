@@ -1,7 +1,5 @@
 package com.axis.http {
-
   public class url {
-
     /**
      * Parses an URL.
      * mx.utils.URLUtil is not good enough since it doesn't support
@@ -13,8 +11,7 @@ package com.axis.http {
      *         If URL part is not in the specified url, the corresponding
      *         value is null.
      */
-    public static function parse(url:String):Object
-    {
+    public static function parse(url:String):Object {
       var ret:Object = {};
 
       var regex:RegExp = /^(?P<protocol>[^:]+):\/\/(?P<login>[^\/]+)(?P<urlpath>.*)$/;
@@ -46,13 +43,11 @@ package com.axis.http {
       return ret;
     }
 
-    public static function isAbsolute(url:String):Boolean
-    {
+    public static function isAbsolute(url:String):Boolean {
       return /^[^:]+:\/\//.test(url);
     }
 
-    private static function protocolDefaultPort(protocol:String):uint
-    {
+    private static function protocolDefaultPort(protocol:String):uint {
       switch (protocol) {
         case 'rtmp': return 1935;
         case 'rtsp': return 554;

@@ -1,22 +1,21 @@
 package com.axis.audioclient {
-
-  import flash.events.Event;
-  import flash.events.ProgressEvent;
-  import flash.events.ErrorEvent;
-  import flash.events.SampleDataEvent;
-  import flash.events.StatusEvent;
-  import flash.events.SecurityErrorEvent;
-  import flash.events.IOErrorEvent;
-  import flash.net.Socket;
-  import flash.media.Microphone;
-  import flash.media.SoundCodec;
-  import flash.utils.ByteArray;
-
   import com.axis.audioclient.IAudioClient;
   import com.axis.codec.g711;
-  import com.axis.http.url;
   import com.axis.http.auth;
   import com.axis.http.request;
+  import com.axis.http.url;
+
+  import flash.events.ErrorEvent;
+  import flash.events.Event;
+  import flash.events.IOErrorEvent;
+  import flash.events.ProgressEvent;
+  import flash.events.SampleDataEvent;
+  import flash.events.SecurityErrorEvent;
+  import flash.events.StatusEvent;
+  import flash.media.Microphone;
+  import flash.media.SoundCodec;
+  import flash.net.Socket;
+  import flash.utils.ByteArray;
 
   public class AxisTransmit implements IAudioClient {
     private var urlParsed:Object = {};
@@ -100,8 +99,7 @@ package com.axis.audioclient {
       conn.close();
     }
 
-    private function writeAuthorizationHeader():void
-    {
+    private function writeAuthorizationHeader():void {
       var a:String = '';
       switch (authState) {
         case "basic":
@@ -144,8 +142,7 @@ package com.axis.audioclient {
       trace('axis audio closed');
     }
 
-    private function onMicSampleData(event:SampleDataEvent):void
-    {
+    private function onMicSampleData(event:SampleDataEvent):void {
       if (!conn.connected) {
         return;
       }
@@ -182,7 +179,6 @@ package com.axis.audioclient {
         conn.connect(this.urlParsed.host, this.urlParsed.port);
         return;
       }
-
     }
 
     private function onError(e:ErrorEvent):void {

@@ -1,22 +1,18 @@
 package com.axis.rtspclient {
-
   import flash.utils.ByteArray;
 
-  public class BitArray extends ByteArray
-  {
+  public class BitArray extends ByteArray {
     private var src:ByteArray;
     private var byte:uint;
     private var bitpos:uint;
 
-    public function BitArray(src:ByteArray)
-    {
+    public function BitArray(src:ByteArray) {
       this.src    = src;
       this.bitpos = 0;
       this.byte   = 0; /* This should really be undefined, uint wont allow it though */
     }
 
-    public function readBits(length:uint):uint
-    {
+    public function readBits(length:uint):uint {
       if (32 < length || 0 === length) {
        /* To big for an uint */
        throw new Error("Bit ranges must be 1 - 32.");
@@ -38,8 +34,7 @@ package com.axis.rtspclient {
       return result;
     }
 
-    public function readUnsignedExpGolomb():uint
-    {
+    public function readUnsignedExpGolomb():uint {
       var bitsToRead:uint = 0;
       while (readBits(1) !== 1) bitsToRead++;
 

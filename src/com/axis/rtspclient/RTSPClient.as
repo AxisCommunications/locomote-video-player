@@ -1,24 +1,27 @@
 package com.axis.rtspclient {
-
-  import flash.events.EventDispatcher;
-  import flash.events.Event;
-  import flash.events.NetStatusEvent;
-  import flash.utils.ByteArray;
-  import flash.net.Socket;
-  import flash.net.NetConnection;
-  import flash.net.NetStream;
-  import flash.media.Video;
-  import mx.utils.StringUtil;
-
+  import com.axis.ClientEvent;
   import com.axis.ErrorManager;
+  import com.axis.http.auth;
+  import com.axis.http.request;
+  import com.axis.http.url;
+  import com.axis.IClient;
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.SDP;
-  import com.axis.http.url;
-  import com.axis.http.request;
-  import com.axis.http.auth;
-  import com.axis.IClient;
-  import com.axis.ClientEvent;
+
+  import flash.events.AsyncErrorEvent;
+  import flash.events.Event;
+  import flash.events.EventDispatcher;
+  import flash.events.IOErrorEvent;
+  import flash.events.NetStatusEvent;
+  import flash.events.SecurityErrorEvent;
+  import flash.media.Video;
+  import flash.net.NetConnection;
+  import flash.net.NetStream;
+  import flash.net.Socket;
+  import flash.utils.ByteArray;
+
+  import mx.utils.StringUtil;
 
   public class RTSPClient extends EventDispatcher implements IClient {
     [Embed(source = "../../../../VERSION", mimeType = "application/octet-stream")] private var Version:Class;
@@ -59,20 +62,21 @@ package com.axis.rtspclient {
     private var digestNC:uint = 1;
 
     public function RTSPClient(video:Video, urlParsed:Object, handle:IRTSPHandle) {
-      this.userAgent = "Slush " + StringUtil.trim(new Version().toString());
+      this.userAgent = "Locomote " + StringUtil.trim(new Version().toString());
       this.state = STATE_INITIAL;
       this.handle = handle;
       this.video = video;
       this.urlParsed = urlParsed;
 
       handle.addEventListener('data', this.onData);
+      handle.addEventListener(ClientEvent.ABORTED, onAborted);
     }
 
     public function start():Boolean {
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
         if (state !== STATE_INITIAL) {
-          ErrorManager.streamError(806);
+          ErrorManager.dispatchError(806);
           return;
         }
 
@@ -90,6 +94,10 @@ package com.axis.rtspclient {
 
       var nc:NetConnection = new NetConnection();
       nc.connect(null);
+      nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
+      nc.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      nc.addEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
+      nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       this.ns = new NetStream(nc);
       dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
       this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
@@ -101,14 +109,14 @@ package com.axis.rtspclient {
 
     public function pause():Boolean {
       if (state !== STATE_PLAYING) {
-        ErrorManager.streamError(800);
+        ErrorManager.dispatchError(800);
         return false;
       }
 
       try {
         sendPauseReq();
       } catch (err:Error) {
-        ErrorManager.streamError(803, [err.message]);
+        ErrorManager.dispatchError(803, [err.message]);
         return false;
       }
 
@@ -117,7 +125,7 @@ package com.axis.rtspclient {
 
     public function resume():Boolean {
       if (state !== STATE_PAUSED) {
-        ErrorManager.streamError(801);
+        ErrorManager.dispatchError(801);
         return false;
       }
 
@@ -126,10 +134,6 @@ package com.axis.rtspclient {
     }
 
     public function stop():Boolean {
-      if (state < STATE_PLAY) {
-        ErrorManager.streamError(802);
-        return false;
-      }
       sendTeardownReq();
       return true;
     }
@@ -146,7 +150,7 @@ package com.axis.rtspclient {
         this.ns.dispose();
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       } else {
-        ErrorManager.streamError(804);
+        ErrorManager.dispatchError(804);
       }
     }
 
@@ -170,7 +174,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          ErrorManager.streamError(805, [data[0].toString(16)]);
+          ErrorManager.dispatchError(805, [data[0].toString(16)]);
           stop();
           break;
       }
@@ -197,7 +201,8 @@ package com.axis.rtspclient {
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
-          ErrorManager.streamError(807, [urlParsed.host]);
+          ErrorManager.dispatchError(807, [urlParsed.host]);
+          dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
           return false;
         }
 
@@ -206,6 +211,11 @@ package com.axis.rtspclient {
         state = STATE_INITIAL;
         data = new ByteArray();
         handle.reconnect();
+        return false;
+      }
+
+      if (200 !== parsed.code) {
+        ErrorManager.dispatchError(parsed.code);
         return false;
       }
 
@@ -229,7 +239,7 @@ package com.axis.rtspclient {
       }
 
       if (200 !== parsed.code) {
-        ErrorManager.streamError(808, [parsed.code, parsed.message]);
+        ErrorManager.dispatchError(parsed.code);
         return;
       }
 
@@ -247,7 +257,7 @@ package com.axis.rtspclient {
         trace("RTSPClient: STATE_DESCRIBE");
 
         if (!sdp.parse(body)) {
-          ErrorManager.streamError(809);
+          ErrorManager.dispatchError(809);
           return;
         }
 
@@ -256,7 +266,7 @@ package com.axis.rtspclient {
         trace('SDP contained ' + tracks.length + ' track(s). Calling SETUP for each.');
 
         if (0 === tracks.length) {
-          ErrorManager.streamError(810);
+          ErrorManager.dispatchError(810);
           return;
         }
 
@@ -492,6 +502,106 @@ package com.axis.rtspclient {
       handle.writeUTFBytes(req);
     }
 
+    private function onAsyncError(event:AsyncErrorEvent):void {
+      ErrorManager.dispatchError(728);
+    }
+
+    private function onIOError(event:IOErrorEvent):void {
+      ErrorManager.dispatchError(729, [event.text]);
+    }
+
+    private function onSecurityError(event:SecurityErrorEvent):void {
+      ErrorManager.dispatchError(730, [event.text]);
+    }
+
+    private function onNetStatusError(event:NetStatusEvent):void {
+      if (event.info.status === 'error') {
+        var errorCode:int = 0;
+        switch (event.info.code) {
+        case 'NetConnection.Call.BadVersion':
+          errorCode = 700;
+          break;
+        case 'NetConnection.Call.Failed':
+          errorCode = 701;
+          break;
+        case 'NetConnection.Call.Prohibited':
+          errorCode = 702;
+          break;
+        case 'NetConnection.Connect.AppShutdown':
+          errorCode = 703;
+          break;
+        case 'NetConnection.Connect.Failed':
+          errorCode = 704;
+          break;
+        case 'NetConnection.Connect.InvalidApp':
+          errorCode = 705;
+          break;
+        case 'NetConnection.Connect.Rejected':
+          errorCode = 706;
+          break;
+        case 'NetGroup.Connect.Failed':
+          errorCode = 707;
+          break;
+        case 'NetGroup.Connect.Rejected':
+          errorCode = 708;
+          break;
+        case 'NetStream.Connect.Failed':
+          errorCode = 709;
+          break;
+        case 'NetStream.Connect.Rejected':
+          errorCode = 710;
+          break;
+        case 'NetStream.Failed':
+          errorCode = 711;
+          break;
+        case 'NetStream.Play.Failed':
+          errorCode = 712;
+          break;
+        case 'NetStream.Play.FileStructureInvalid':
+          errorCode = 713;
+          break;
+        case 'NetStream.Play.InsufficientBW':
+          errorCode = 714;
+          break;
+        case 'NetStream.Play.StreamNotFound':
+          errorCode = 715;
+          break;
+        case 'NetStream.Publish.BadName':
+          errorCode = 716;
+          break;
+        case 'NetStream.Record.Failed':
+          errorCode = 717;
+          break;
+        case 'NetStream.Record.NoAccess':
+          errorCode = 718;
+          break;
+        case 'NetStream.Seek.Failed':
+          errorCode = 719;
+          break;
+        case 'NetStream.Seek.InvalidTime':
+          errorCode = 720;
+          break;
+        case 'SharedObject.BadPersistence':
+          errorCode = 721;
+          break;
+        case 'SharedObject.Flush.Failed':
+          errorCode = 722;
+          break;
+        case 'SharedObject.UriMismatch':
+          errorCode = 723;
+          break;
+
+        default:
+          ErrorManager.dispatchError(724, [event.info.code]);
+          return;
+        }
+
+        if (errorCode) {
+          ErrorManager.dispatchError(errorCode);
+        }
+      }
+    }
+
     private function onNetStatus(event:NetStatusEvent):void {
       if ('NetStream.Buffer.Full' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
@@ -501,6 +611,12 @@ package com.axis.rtspclient {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
         return;
       }
+    }
+
+    private function onAborted(event:ClientEvent):void {
+      this.handle.disconnect();
+      this.handle = null;
+      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
     }
   }
 }

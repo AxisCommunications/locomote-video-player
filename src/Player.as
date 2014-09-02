@@ -1,8 +1,8 @@
 package {
   import com.axis.ClientEvent;
+  import com.axis.ErrorManager;
   import com.axis.IClient;
   import com.axis.audioclient.AxisTransmit;
-  import com.axis.ErrorManager;
   import com.axis.http.url;
   import com.axis.httpclient.HTTPClient;
   import com.axis.rtmpclient.RTMPClient;
@@ -17,7 +17,10 @@ package {
   import flash.display.StageAlign;
   import flash.display.StageDisplayState;
   import flash.display.StageScaleMode;
+  import flash.events.AsyncErrorEvent;
+  import flash.events.DRMErrorEvent;
   import flash.events.Event;
+  import flash.events.IOErrorEvent;
   import flash.events.MouseEvent;
   import flash.events.NetStatusEvent;
   import flash.external.ExternalInterface;
@@ -154,7 +157,9 @@ package {
         config.buffer = iconfig.buffer;
         if (this.ns) {
           this.ns.bufferTime = config.buffer;
-          this.client.forceBuffering();
+          if (this.currentState === 'playing') {
+            this.client.forceBuffering();
+          }
         }
       }
 
@@ -212,7 +217,7 @@ package {
         break;
 
       default:
-        trace('Unknown streaming protocol:', urlParsed.protocol)
+        ErrorManager.dispatchError(814, [urlParsed.protocol])
         return;
       }
 
@@ -220,18 +225,31 @@ package {
       client.addEventListener(ClientEvent.STOPPED, onStopped);
       client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.addEventListener(ClientEvent.PAUSED, onPaused);
+      client.addEventListener(ClientEvent.ABORTED, onAborted);
       client.start();
     }
 
     public function pause():void {
+      if (ns === null) {
+        ErrorManager.dispatchError(811);
+        return;
+      }
       client.pause();
     }
 
     public function resume():void {
+      if (ns === null) {
+        ErrorManager.dispatchError(812);
+        return;
+      }
       client.resume();
     }
 
     public function stop():void {
+      if (client === null) {
+        ErrorManager.dispatchError(813);
+        return;
+      }
       urlParsed = null;
       ns = null;
       client.stop();
@@ -257,7 +275,7 @@ package {
         'fps': (this.ns) ? Math.floor(this.ns.currentFPS + 0.5) : null,
         'resolution': (this.ns) ? { width: meta.width, height: meta.height } : null,
         'playbackSpeed': (this.ns) ? 1.0 : null,
-        'protocol': (this.urlParsed) ? this.urlParsed.protocol: null,
+        'protocol': (this.urlParsed) ? this.urlParsed.protocol : null,
         'audio': (this.ns) ? this.streamHasAudio : null,
         'video': (this.ns) ? this.streamHasVideo : null,
         'state': this.currentState,
@@ -278,7 +296,7 @@ package {
         'microphoneMuted': (mic.gain === 0),
         'speakerMuted': (flash.media.SoundMixer.soundTransform.volume === 0),
         'fullscreen': (StageDisplayState.FULL_SCREEN === stage.displayState),
-        'buffer': this.ns.bufferTime
+        'buffer': (ns === null) ? 0 : this.ns.bufferTime
       };
 
       return status;
@@ -319,7 +337,7 @@ package {
       if (type === 'axis') {
         audioTransmit.start(url);
       } else {
-        trace("unsupported type");
+        ErrorManager.dispatchError(815);
       }
     }
 
@@ -349,6 +367,9 @@ package {
       ev.data.ns.bufferTime = config.buffer;
       ev.data.ns.client = this;
       this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
+      this.ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
+      this.ns.addEventListener(DRMErrorEvent.DRM_ERROR, onDRMError);
+      this.ns.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
     }
 
     private function onStartPlay(event:ClientEvent):void {
@@ -370,10 +391,19 @@ package {
       }
     }
 
+    private function onAborted(event:ClientEvent):void {
+      video.clear();
+      client = null;
+      urlParsed = null;
+      ns = null;
+    }
+
     public function onPlayStatus(event:Object):void {
       if ('NetStream.Play.Complete' === event.code) {
         video.clear();
         client = null;
+        urlParsed = null;
+        ns = null;
         this.currentState = "stopped";
         this.callAPI(EVENT_STREAM_STOPPED);
         this.callAPI(EVENT_STREAM_ENDED);
@@ -458,14 +488,26 @@ package {
           break;
 
         default:
-          trace('Unknown NetStatus error:', event.info.code);
+          ErrorManager.dispatchError(724, [event.info.code]);
           return;
         }
 
         if (errorCode) {
-          ErrorManager.streamError(errorCode);
+          ErrorManager.dispatchError(errorCode);
         }
       }
+    }
+
+    private function onAsyncError(event:AsyncErrorEvent):void {
+      ErrorManager.dispatchError(725);
+    }
+
+    private function onDRMError(event:DRMErrorEvent):void {
+      ErrorManager.dispatchError(726, [event.errorID, event.subErrorID]);
+    }
+
+    private function onIOError(event:IOErrorEvent):void {
+      ErrorManager.dispatchError(727, [event.text]);
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

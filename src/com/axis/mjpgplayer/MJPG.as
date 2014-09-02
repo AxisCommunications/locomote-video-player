@@ -1,16 +1,15 @@
 package com.axis.mjpgplayer {
-
   import com.axis.mjpgplayer.MJPGImage;
+
   import flash.display.Bitmap;
   import flash.display.LoaderInfo;
   import flash.display.Sprite;
   import flash.events.Event;
   import flash.events.IOErrorEvent;
-  import flash.utils.ByteArray;
   import flash.external.ExternalInterface;
+  import flash.utils.ByteArray;
 
   public class MJPG extends Sprite {
-
     private const FLOATING_AVG_LENGTH:Number = 10;
     private const MAX_IMAGES:uint = 2;
 
@@ -196,7 +195,5 @@ package com.axis.mjpgplayer {
       }
       return 1000 * (timestamps.length - 1) / loadTimesSum;
     }
-
   }
-
 }

@@ -1,17 +1,16 @@
 package com.axis.rtspclient {
+  import com.axis.rtspclient.ByteArrayUtils;
+  import com.axis.rtspclient.RTP;
 
   import flash.events.Event;
   import flash.events.EventDispatcher;
-  import flash.utils.ByteArray;
-  import flash.net.NetStream;
   import flash.net.FileReference;
+  import flash.net.NetStream;
+  import flash.utils.ByteArray;
+
   import mx.utils.Base64Decoder;
 
-  import com.axis.rtspclient.RTP;
-  import com.axis.rtspclient.ByteArrayUtils;
-
   public class FLVMux {
-
     private var sdp:SDP;
     private var ns:NetStream;
     private var container:ByteArray = new ByteArray();
@@ -19,8 +18,7 @@ package com.axis.rtspclient {
     private var videoInitialTimestamp:int = -1;
     private var audioInitialTimestamp:int = -1;
 
-    public function FLVMux(ns:NetStream, sdp:SDP)
-    {
+    public function FLVMux(ns:NetStream, sdp:SDP) {
       container.writeByte(0x46); // 'F'
       container.writeByte(0x4C); // 'L'
       container.writeByte(0x56); // 'V'
@@ -54,8 +52,7 @@ package com.axis.rtspclient {
       pushData();
     }
 
-    private function writeECMAArray(contents:Object):uint
-    {
+    private function writeECMAArray(contents:Object):uint {
       var size:uint = 0;
       var count:uint = 0;
 
@@ -94,23 +91,20 @@ package com.axis.rtspclient {
       return size;
     }
 
-    private function writeDouble(contents:Number):uint
-    {
+    private function writeDouble(contents:Number):uint {
       container.writeByte(0x00); // Number type marker
       container.writeDouble(contents);
       return 1 + 8;
     }
 
-    private function writeString(contents:String):uint
-    {
+    private function writeString(contents:String):uint {
       container.writeByte(0x02); // String type marker
       container.writeShort(contents.length); // Length of string
       container.writeUTFBytes(contents); // String
       return 1 + 2 + contents.length;
     }
 
-    private function parseSPS(sps:BitArray):Object
-    {
+    private function parseSPS(sps:BitArray):Object {
       var nalhdr:uint      = sps.readBits(8);
       var profile:uint     = sps.readBits(8);
       var constraints:uint = sps.readBits(8);
@@ -154,8 +148,7 @@ package com.axis.rtspclient {
       };
     }
 
-    public function createMetaDataTag():void
-    {
+    public function createMetaDataTag():void {
       var size:uint = 0;
 
       /* FLV Tag */
@@ -197,8 +190,7 @@ package com.axis.rtspclient {
       container[sizePosition + 2] = dataSize & 0x000000FF;
     }
 
-    public function createDecoderConfigRecordTag(sps:ByteArray, pps:ByteArray):void
-    {
+    public function createDecoderConfigRecordTag(sps:ByteArray, pps:ByteArray):void {
       var start:uint = container.position;
 
       /* FLV Tag */
@@ -228,8 +220,7 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(size);
     }
 
-    public function writeDecoderConfigurationRecord():void
-    {
+    public function writeDecoderConfigurationRecord():void {
       /* Always take this from SDP file. Is this correct? */
       var profilelevelid:uint = parseInt(sdp.getMediaBlock('video').fmtp['profile-level-id'], 16);
       container.writeByte(0x01); // Version
@@ -239,8 +230,7 @@ package com.axis.rtspclient {
       container.writeByte(0xFF); // 111111xx (xx=lengthSizeMinusOne)
     }
 
-    public function writeParameterSets(sps:ByteArray, pps:ByteArray):void
-    {
+    public function writeParameterSets(sps:ByteArray, pps:ByteArray):void {
       if (sps.bytesAvailable > 0) {
         /* There is one sps available */
         container.writeByte(0xE1); // 111xxxxx (xxxxx=numSequenceParameters), only support 1
@@ -261,8 +251,7 @@ package com.axis.rtspclient {
       }
     }
 
-    public function createAudioSpecificConfigTag(config:ByteArray):void
-    {
+    public function createAudioSpecificConfigTag(config:ByteArray):void {
       var start:uint = container.position;
 
       /* FLV Tag */
@@ -292,8 +281,7 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(size);
     }
 
-    private function createVideoTag(nalu:NALU):void
-    {
+    private function createVideoTag(nalu:NALU):void {
       var start:uint = container.position;
       var ts:uint = nalu.timestamp;
       if (videoInitialTimestamp == -1) {
@@ -330,8 +318,7 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(size + 11);
     }
 
-    public function createAudioTag(aacframe:AACFrame):void
-    {
+    public function createAudioTag(aacframe:AACFrame):void {
       var start:uint = container.position;
       var ts:uint = aacframe.timestamp;
       if (audioInitialTimestamp === -1) {
@@ -368,8 +355,7 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(size);
     }
 
-    public function onNALU(nalu:NALU):void
-    {
+    public function onNALU(nalu:NALU):void {
       switch (nalu.ntype) {
       case 1: /* Coded slice of a non-IDR picture */
       case 2: /* Coded slice data partition A */
@@ -399,14 +385,12 @@ package com.axis.rtspclient {
       pushData();
     }
 
-    public function onAACFrame(aacframe:AACFrame):void
-    {
+    public function onAACFrame(aacframe:AACFrame):void {
       createAudioTag(aacframe);
       pushData();
     }
 
-    private function pushData():void
-    {
+    private function pushData():void {
       container.position = 0;
       this.ns.appendBytes(container);
       container.clear();

@@ -1,16 +1,15 @@
 package com.axis.mjpgplayer {
-
+  import flash.display.LoaderInfo;
   import flash.events.ErrorEvent;
   import flash.events.Event;
   import flash.events.EventDispatcher;
   import flash.events.IOErrorEvent;
   import flash.events.ProgressEvent;
   import flash.events.SecurityErrorEvent;
-  import flash.net.Socket;
-  import flash.utils.ByteArray;
-  import flash.system.Security;
   import flash.external.ExternalInterface;
-  import flash.display.LoaderInfo;
+  import flash.net.Socket;
+  import flash.system.Security;
+  import flash.utils.ByteArray;
 
   import mx.utils.URLUtil;
 
@@ -27,7 +26,6 @@ package com.axis.mjpgplayer {
    */
 
   public class IPCam extends EventDispatcher {
-
     private var jsEventCallbackName:String = "console.log";
     private var socket:Socket = null;
     private var buffer:ByteArray = null;
@@ -248,7 +246,5 @@ package com.axis.mjpgplayer {
       clen = 0;
       parseSubheaders = true;
     }
-
   }
-
 }

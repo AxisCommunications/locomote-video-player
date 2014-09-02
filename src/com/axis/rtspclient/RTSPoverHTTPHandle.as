@@ -1,22 +1,23 @@
 package com.axis.rtspclient {
+  import com.axis.ClientEvent;
+  import com.axis.ErrorManager;
+  import com.axis.http.auth;
+  import com.axis.http.request;
+  import com.axis.http.url;
+  import com.axis.rtspclient.GUID;
 
-  import flash.events.EventDispatcher;
   import flash.events.ErrorEvent;
   import flash.events.Event;
+  import flash.events.EventDispatcher;
   import flash.events.IOErrorEvent;
   import flash.events.ProgressEvent;
   import flash.events.SecurityErrorEvent;
   import flash.net.Socket;
   import flash.utils.ByteArray;
+
   import mx.utils.Base64Encoder;
 
-  import com.axis.rtspclient.GUID;
-  import com.axis.http.url;
-  import com.axis.http.auth;
-  import com.axis.http.request;
-
   public class RTSPoverHTTPHandle extends EventDispatcher implements IRTSPHandle {
-
     private var getChannel:Socket = null;
     private var postChannel:Socket = null;
     private var urlParsed:Object = {};
@@ -40,20 +41,19 @@ package com.axis.rtspclient {
       this.base64encoder = new Base64Encoder();
     }
 
-    private function setupSockets():void
-    {
+    private function setupSockets():void {
       getChannel = new Socket();
       getChannel.timeout = 5000;
       getChannel.addEventListener(Event.CONNECT, onGetChannelConnect);
       getChannel.addEventListener(ProgressEvent.SOCKET_DATA, onGetChannelData);
-      getChannel.addEventListener(IOErrorEvent.IO_ERROR, onError);
-      getChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
+      getChannel.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      getChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
       postChannel = new Socket();
       postChannel.timeout = 5000;
       postChannel.addEventListener(Event.CONNECT, onPostChannelConnect);
-      postChannel.addEventListener(IOErrorEvent.IO_ERROR, onError);
-      postChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
+      postChannel.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      postChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
       getChannelData = new ByteArray();
       postChannelData = new ByteArray();
@@ -66,27 +66,30 @@ package com.axis.rtspclient {
       return base64encoder.toString();
     }
 
-    public function writeUTFBytes(value:String):void
-    {
+    public function writeUTFBytes(value:String):void {
       postChannel.writeUTFBytes(base64encode(value));
       postChannel.flush();
     }
 
-    public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void
-    {
+    public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void {
       getChannel.readBytes(bytes, offset, length);
-    }
-
-    private function onError(e:ErrorEvent):void {
-      trace("HTTPClient socket error");
     }
 
     public function disconnect():void {
       if (getChannel.connected) {
         getChannel.close();
+
+        getChannel.removeEventListener(Event.CONNECT, onGetChannelConnect);
+        getChannel.removeEventListener(ProgressEvent.SOCKET_DATA, onGetChannelData);
+        getChannel.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
+        getChannel.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       }
       if (postChannel.connected) {
         postChannel.close();
+
+        postChannel.removeEventListener(Event.CONNECT, onPostChannelConnect);
+        postChannel.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
+        postChannel.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       }
 
       /* should probably wait for close, but it doesn't seem to fire properly */
@@ -98,9 +101,14 @@ package com.axis.rtspclient {
       getChannel.connect(this.urlParsed.host, this.urlParsed.port);
     }
 
-    public function reconnect():void
-    {
-      throw new Error('RTSPoverHTTPHandle: reconnect not implemented');
+    public function reconnect():void {
+      if (getChannel.connected) {
+        getChannel.close();
+      }
+      if (postChannel.connected) {
+        postChannel.close();
+      }
+      connect();
     }
 
     private function onGetChannelConnect(event:Event):void {
@@ -118,6 +126,8 @@ package com.axis.rtspclient {
     private function onGetChannelData(event:ProgressEvent):void {
       var parsed:* = request.readHeaders(getChannel, getChannelData);
       if (false === parsed) {
+        ErrorManager.dispatchError(807, [urlParsed.host]);
+        dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
         return;
       }
 
@@ -127,8 +137,6 @@ package com.axis.rtspclient {
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
-          trace('GET: Exhausted all authentication methods.');
-          trace('GET: Unable to authorize to ' + urlParsed.host);
           return;
         }
 
@@ -141,7 +149,7 @@ package com.axis.rtspclient {
       }
 
       if (200 !== parsed.code) {
-        trace('Invalid HTTP code: ' + parsed.code);
+        ErrorManager.dispatchError(parsed.code);
         return;
       }
 
@@ -171,6 +179,16 @@ package com.axis.rtspclient {
       postChannel.flush();
 
       dispatchEvent(new Event('connected'));
+    }
+
+    private function onIOError(event:IOErrorEvent):void {
+      ErrorManager.dispatchError(732, [event.text]);
+      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
+    }
+
+    private function onSecurityError(event:SecurityErrorEvent):void {
+      ErrorManager.dispatchError(731, [event.text]);
+      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
     }
   }
 }

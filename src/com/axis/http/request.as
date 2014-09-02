@@ -1,8 +1,7 @@
 package com.axis.http {
+  import com.axis.rtspclient.ByteArrayUtils;
 
   import flash.utils.ByteArray;
-
-  import com.axis.rtspclient.ByteArrayUtils;
 
   public class request {
 
@@ -29,8 +28,7 @@ package com.axis.http {
       return parsed;
     }
 
-    public static function parse(data:String):Object
-    {
+    public static function parse(data:String):Object {
       var ret:Object = {};
 
       var lines:Array = data.split('\r\n');
@@ -55,8 +53,7 @@ package com.axis.http {
       return ret;
     }
 
-    private static function parseMiddleware(key:String, val:String, hdr:Object):void
-    {
+    private static function parseMiddleware(key:String, val:String, hdr:Object):void {
       switch (key) {
         case 'www-authenticate':
           if (!hdr['www-authenticate'])
