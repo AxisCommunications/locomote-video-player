@@ -14,12 +14,16 @@ package com.axis.audioclient {
   import flash.events.SampleDataEvent;
   import flash.events.SecurityErrorEvent;
   import flash.events.StatusEvent;
+  import flash.external.ExternalInterface;
   import flash.media.Microphone;
   import flash.media.SoundCodec;
   import flash.net.Socket;
   import flash.utils.ByteArray;
 
   public class AxisTransmit implements IAudioClient {
+    private static const EVENT_AUDIO_STARTED:String = "audioStarted";
+    private static const EVENT_AUDIO_STOPPED:String = "audioStopped";
+
     private var urlParsed:Object = {};
     private var conn:Socket = new Socket();
 
@@ -30,6 +34,8 @@ package com.axis.audioclient {
 
     private var mic:Microphone = Microphone.getMicrophone();
     private var _microphoneVolume:Number;
+
+    private var currentState:String = "stopped";
 
     public function AxisTransmit() {
       /* Set default microphone volume */
@@ -43,7 +49,7 @@ package com.axis.audioclient {
       }
 
       if ('Microphone.Muted' === event.code) {
-        ErrorManager.dispatchError(813);
+        ErrorManager.dispatchError(816);
         return;
       }
 
@@ -54,14 +60,14 @@ package com.axis.audioclient {
 
     public function start(iurl:String = null):void {
       if (conn.connected) {
-        ErrorManager.dispatchError(814);
+        ErrorManager.dispatchError(817);
         return;
       }
 
       var currentUrl:String = (iurl) ? iurl : savedUrl;
 
       if (!currentUrl) {
-        ErrorManager.dispatchError(815);
+        ErrorManager.dispatchError(818);
         return;
       }
 
@@ -79,11 +85,11 @@ package com.axis.audioclient {
       conn.addEventListener(Event.CONNECT, onConnected);
       conn.addEventListener(Event.CLOSE, onClosed);
       conn.addEventListener(ProgressEvent.SOCKET_DATA, onRequestData);
-      conn.addEventListener(IOErrorEvent.IO_ERROR, onError);
-      conn.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
+      conn.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      conn.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
       if (true === mic.muted) {
-        ErrorManager.dispatchError(813);
+        ErrorManager.dispatchError(816);
         return;
       }
 
@@ -92,12 +98,13 @@ package com.axis.audioclient {
 
     public function stop():void {
       if (!conn.connected) {
-        ErrorManager.dispatchError(810);
+        ErrorManager.dispatchError(813);
         return;
       }
 
       mic.removeEventListener(StatusEvent.STATUS, onMicStatus);
       mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
+      mic = null;
       conn.close();
     }
 
@@ -129,7 +136,6 @@ package com.axis.audioclient {
       conn.writeUTFBytes('Authorization: ' + a + "\r\n");
     }
 
-
     private function onConnected(event:Event):void {
       conn.writeUTFBytes("POST " + this.urlParsed.urlpath + " HTTP/1.0\r\n");
       conn.writeUTFBytes("Content-Type: audio/axis-mulaw-128\r\n");
@@ -140,13 +146,21 @@ package com.axis.audioclient {
       conn.writeUTFBytes("\r\n");
     }
 
-    private function onClosed(event:Event):void {
-      trace('axis audio closed');
+    public function onClosed(event:Event):void {
+      if ("playing" === this.currentState) {
+        this.currentState = "stopped";
+        this.callAPI(EVENT_AUDIO_STOPPED);
+      }
     }
 
     private function onMicSampleData(event:SampleDataEvent):void {
       if (!conn.connected) {
         return;
+      }
+
+      if ("stopped" === this.currentState) {
+        this.currentState = "playing";
+        this.callAPI(EVENT_AUDIO_STARTED);
       }
 
       while (event.data.bytesAvailable) {
@@ -165,13 +179,12 @@ package com.axis.audioclient {
         return;
       }
 
-     if (401 === parsed.code) {
+      if (401 === parsed.code) {
         /* Unauthorized, change authState and (possibly) try again */
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
-          trace('AxisTransmit: Exhausted all authentication methods.');
-          trace('AxisTransmit: Unable to authorize to ' + urlParsed.host);
+          ErrorManager.dispatchError(807, [urlParsed.host]);
           return;
         }
 
@@ -183,8 +196,12 @@ package com.axis.audioclient {
       }
     }
 
-    private function onError(e:ErrorEvent):void {
-      trace('axis transmit error');
+    private function onIOError(event:IOErrorEvent):void {
+      ErrorManager.dispatchError(732, [event.text]);
+    }
+
+    private function onSecurityError(event:SecurityErrorEvent):void {
+      ErrorManager.dispatchError(731, [event.text]);
     }
 
     public function get microphoneVolume():Number {
@@ -210,6 +227,15 @@ package com.axis.audioclient {
 
       mic.gain = this.microphoneVolume;
       start();
+    }
+
+    private function callAPI(eventName:String, data:Object = null):void {
+      var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
+      if (data) {
+        ExternalInterface.call(functionName, eventName, data);
+      } else {
+        ExternalInterface.call(functionName, eventName);
+      }
     }
   }
 }
