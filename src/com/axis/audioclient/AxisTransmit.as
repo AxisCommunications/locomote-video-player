@@ -184,7 +184,7 @@ package com.axis.audioclient {
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
-          ErrorManager.dispatchError(807, [urlParsed.host]);
+          ErrorManager.dispatchError(parsed.code);
           return;
         }
 
