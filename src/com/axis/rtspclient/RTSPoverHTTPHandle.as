@@ -126,17 +126,15 @@ package com.axis.rtspclient {
     private function onGetChannelData(event:ProgressEvent):void {
       var parsed:* = request.readHeaders(getChannel, getChannelData);
       if (false === parsed) {
-        ErrorManager.dispatchError(807, [urlParsed.host]);
-        dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
         return;
       }
 
       if (401 === parsed.code) {
-        trace('Unauthorized using auth method: ' + authState);
-        /* Unauthorized, change authState and (possibly) try again */
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
+          ErrorManager.dispatchError(parsed.code);
+          dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
           return;
         }
 
