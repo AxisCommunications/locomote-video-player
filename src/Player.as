@@ -222,7 +222,7 @@ package {
         break;
 
       default:
-        ErrorManager.dispatchError(814, [urlParsed.protocol])
+        ErrorManager.dispatchError(811, [urlParsed.protocol])
         return;
       }
 
@@ -236,7 +236,7 @@ package {
 
     public function pause():void {
       if (ns === null) {
-        ErrorManager.dispatchError(811);
+        ErrorManager.dispatchError(808);
         return;
       }
       client.pause();
@@ -244,7 +244,7 @@ package {
 
     public function resume():void {
       if (ns === null) {
-        ErrorManager.dispatchError(812);
+        ErrorManager.dispatchError(809);
         return;
       }
       client.resume();
@@ -252,7 +252,7 @@ package {
 
     public function stop():void {
       if (client === null) {
-        ErrorManager.dispatchError(813);
+        ErrorManager.dispatchError(810);
         return;
       }
       urlParsed = null;
@@ -342,7 +342,7 @@ package {
       if (type === 'axis') {
         audioTransmit.start(url);
       } else {
-        ErrorManager.dispatchError(815);
+        ErrorManager.dispatchError(812);
       }
     }
 

@@ -76,7 +76,7 @@ package com.axis.rtspclient {
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
         if (state !== STATE_INITIAL) {
-          ErrorManager.dispatchError(806);
+          ErrorManager.dispatchError(805);
           return;
         }
 
@@ -116,7 +116,7 @@ package com.axis.rtspclient {
       try {
         sendPauseReq();
       } catch (err:Error) {
-        ErrorManager.dispatchError(803, [err.message]);
+        ErrorManager.dispatchError(802, [err.message]);
         return false;
       }
 
@@ -150,7 +150,7 @@ package com.axis.rtspclient {
         this.ns.dispose();
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       } else {
-        ErrorManager.dispatchError(804);
+        ErrorManager.dispatchError(803);
       }
     }
 
@@ -174,7 +174,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          ErrorManager.dispatchError(805, [data[0].toString(16)]);
+          ErrorManager.dispatchError(804, [data[0].toString(16)]);
           stop();
           break;
       }
@@ -257,7 +257,7 @@ package com.axis.rtspclient {
         trace("RTSPClient: STATE_DESCRIBE");
 
         if (!sdp.parse(body)) {
-          ErrorManager.dispatchError(809);
+          ErrorManager.dispatchError(806);
           return;
         }
 
@@ -266,7 +266,7 @@ package com.axis.rtspclient {
         trace('SDP contained ' + tracks.length + ' track(s). Calling SETUP for each.');
 
         if (0 === tracks.length) {
-          ErrorManager.dispatchError(810);
+          ErrorManager.dispatchError(807);
           return;
         }
 
