@@ -4,6 +4,7 @@ package com.axis.audioclient {
   import com.axis.http.auth;
   import com.axis.http.request;
   import com.axis.http.url;
+  import com.axis.Logger;
 
   import flash.events.ErrorEvent;
   import flash.events.Event;
@@ -173,7 +174,7 @@ package com.axis.audioclient {
           return;
         }
 
-        trace('AxisTransmit: switching http-authorization from ' + authState + ' to ' + newAuthState);
+        Logger.log('AxisTransmit: switching http-authorization from ' + authState + ' to ' + newAuthState);
         authState = newAuthState;
         conn.close();
         conn.connect(this.urlParsed.host, this.urlParsed.port);

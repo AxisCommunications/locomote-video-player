@@ -1,4 +1,5 @@
 package com.axis.rtspclient {
+  import com.axis.Logger;
   import com.axis.rtspclient.ByteArrayUtils;
 
   import flash.events.Event;
@@ -39,7 +40,7 @@ package com.axis.rtspclient {
 
       media = sdp.getMediaBlockByPayloadType(pt);
       if (null === media || -1 === media.fmt.indexOf(pt)) {
-        trace('Media description for payload type: ' + pt + ' not provided.');
+        Logger.log('Media description for payload type: ' + pt + ' not provided.');
       }
 
       super(media.type.toUpperCase() + '_PACKET', false, false);

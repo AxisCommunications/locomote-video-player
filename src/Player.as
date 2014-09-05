@@ -1,10 +1,11 @@
 package {
+  import com.axis.audioclient.AxisTransmit;
   import com.axis.ClientEvent;
   import com.axis.ErrorManager;
-  import com.axis.IClient;
-  import com.axis.audioclient.AxisTransmit;
   import com.axis.http.url;
   import com.axis.httpclient.HTTPClient;
+  import com.axis.IClient;
+  import com.axis.Logger;
   import com.axis.rtmpclient.RTMPClient;
   import com.axis.rtspclient.IRTSPHandle;
   import com.axis.rtspclient.RTSPClient;
@@ -71,12 +72,12 @@ package {
       Security.allowDomain("*");
       Security.allowInsecureDomain("*");
 
-      trace('Loaded Locomote, version ' + StringUtil.trim(new Version().toString()));
+      Logger.log('Loaded Locomote, version ' + StringUtil.trim(new Version().toString()));
 
       if (ExternalInterface.available) {
           setupAPICallbacks();
       } else {
-        trace("External interface is not available for this container.");
+        Logger.log("External interface is not available for this container.");
       }
 
       /* Set default speaker volume */
@@ -149,7 +150,7 @@ package {
       video.width = meta.width;
       video.height = meta.height;
       if ((scale < 1.0) || (scale > 1.0 && true === config.scaleUp)) {
-        trace('scaling video, scale:', scale.toFixed(2), ' (aspect ratio: ' +  (video.width / video.height).toFixed(2) + ')');
+        Logger.log('scaling video, scale:' + scale.toFixed(2) + ' (aspect ratio: ' +  (video.width / video.height).toFixed(2) + ')');
         video.width = meta.width * scale;
         video.height = meta.height * scale;
       }
@@ -275,11 +276,11 @@ package {
     }
 
     public function seek(timestamp:String):void {
-      trace('seek, timestamp->' + timestamp);
+      Logger.log('seek, timestamp->' + timestamp);
     }
 
     public function playbackSpeed(speed:Number):void {
-      trace('playbackSpeed, speed->' + speed);
+      Logger.log('playbackSpeed, speed->' + speed);
     }
 
     public function streamStatus():Object {

@@ -1,6 +1,7 @@
 package com.axis.rtmpclient {
   import com.axis.ClientEvent;
   import com.axis.IClient;
+  import com.axis.Logger;
 
   import flash.events.AsyncErrorEvent;
   import flash.events.EventDispatcher;
@@ -33,9 +34,9 @@ package com.axis.rtmpclient {
       this.streamServer += urlParsed.host;
       this.streamServer += ((urlParsed.portDefined) ? (':' + urlParsed.port) : '')
       this.streamServer += urlParsed.basepath;
-      trace(this.streamServer);
+      Logger.log(this.streamServer);
 
-      trace('RTMPClient: connecting to server: \'' + streamServer + '\'');
+      Logger.log('RTMPClient: connecting to server: \'' + streamServer + '\'');
       nc.connect(streamServer);
 
       return true;
@@ -59,12 +60,12 @@ package com.axis.rtmpclient {
 
     private function onConnectionStatus(event:NetStatusEvent):void {
       if ('NetConnection.Connect.Success' === event.info.code) {
-        trace('RTMPClient: connected');
+        Logger.log('RTMPClient: connected');
         this.ns = new NetStream(this.nc);
         dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
         this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
         this.video.attachNetStream(this.ns);
-        trace('RTMPClient: starting stream: \'' + this.streamId + '\'');
+        Logger.log('RTMPClient: starting stream: \'' + this.streamId + '\'');
         this.ns.play(this.streamId);
       }
 
@@ -74,7 +75,7 @@ package com.axis.rtmpclient {
     }
 
     private function asyncErrorHandler(event:AsyncErrorEvent):void {
-      trace('RTMPClient: Async Error Event:', event.error);
+      Logger.log('RTMPClient: Async Error Event:' + event.error);
     }
 
     public function onBWDone(arg:*):void {

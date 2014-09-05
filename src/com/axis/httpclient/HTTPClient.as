@@ -1,6 +1,7 @@
 package com.axis.httpclient {
   import com.axis.ClientEvent;
   import com.axis.IClient;
+  import com.axis.Logger;
 
   import flash.events.Event;
   import flash.events.EventDispatcher;
@@ -22,7 +23,7 @@ package com.axis.httpclient {
     }
 
     public function start():Boolean {
-      trace('HTTPClient: playing:', urlParsed.full);
+      Logger.log('HTTPClient: playing:' + urlParsed.full);
 
       nc = new NetConnection();
       nc.connect(null);

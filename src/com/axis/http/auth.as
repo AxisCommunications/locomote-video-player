@@ -1,6 +1,7 @@
 package com.axis.http {
   import com.adobe.crypto.MD5;
 
+  import com.axis.Logger;
   import com.axis.rtspclient.GUID;
 
   import flash.net.Socket;
@@ -29,7 +30,7 @@ package com.axis.http {
       /* NOTE: Unsupported: md5-sess and auth-int */
 
       if (qop && 'auth' !== qop) {
-        trace('unsupported quality of protection: ' + qop);
+        Logger.log('unsupported quality of protection: ' + qop);
         return "";
       }
 

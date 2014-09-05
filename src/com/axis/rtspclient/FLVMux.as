@@ -1,4 +1,5 @@
 package com.axis.rtspclient {
+  import com.axis.Logger;
   import com.axis.rtspclient.ByteArrayUtils;
   import com.axis.rtspclient.RTP;
 
@@ -76,7 +77,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          trace("Unknown type in ECMA array:", typeof contents[key]);
+          Logger.log("Unknown type in ECMA array:" + typeof contents[key]);
 
           break;
         }
