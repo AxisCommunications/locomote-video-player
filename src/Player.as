@@ -51,8 +51,7 @@ package {
     private var config:Object = {
       'buffer': 1,
       'scaleUp': false,
-      'allowFullscreen': true,
-      'debugLogger': {'trace': false, 'js': false}
+      'allowFullscreen': true
     };
     private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
@@ -182,6 +181,16 @@ package {
 
         if (!config.allowFullscreen)
           this.stage.displayState = StageDisplayState.NORMAL;
+      }
+
+      if (iconfig.debugLogger !== undefined) {
+        if (iconfig.debugLogger.trace) {
+          Player.debugLogger.trace = iconfig.debugLogger.trace;
+        }
+
+        if (iconfig.debugLogger.js) {
+          Player.debugLogger.js = iconfig.debugLogger.js;
+        }
       }
     }
 
