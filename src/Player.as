@@ -39,6 +39,7 @@ package {
     [Embed(source = "../VERSION", mimeType = "application/octet-stream")] private var Version:Class;
 
     public static var locomoteID:String = null;
+    public static var debugLogger:Object = {'trace': false, 'js': false};
 
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
@@ -50,7 +51,8 @@ package {
     private var config:Object = {
       'buffer': 1,
       'scaleUp': false,
-      'allowFullscreen': true
+      'allowFullscreen': true,
+      'debugLogger': {'trace': false, 'js': false}
     };
     private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
