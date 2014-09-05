@@ -184,11 +184,11 @@ package {
       }
 
       if (iconfig.debugLogger !== undefined) {
-        if (iconfig.debugLogger.trace) {
+        if (iconfig.debugLogger.trace !== undefined) {
           Player.debugLogger.trace = iconfig.debugLogger.trace;
         }
 
-        if (iconfig.debugLogger.js) {
+        if (iconfig.debugLogger.js !== undefined) {
           Player.debugLogger.js = iconfig.debugLogger.js;
         }
       }

@@ -5,6 +5,7 @@ package com.axis.rtspclient {
   import com.axis.http.request;
   import com.axis.http.url;
   import com.axis.IClient;
+  import com.axis.Logger;
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.SDP;
@@ -290,7 +291,8 @@ package com.axis.rtspclient {
         break;
 
       case STATE_PLAY:
-        trace("RTSPClient: STATE_PLAY");
+        Logger.log("RTSPClient: STATE_PLAY");
+        //trace("RTSPClient: STATE_PLAY");
         state = STATE_PLAYING;
 
         if (this.flvmux) {
