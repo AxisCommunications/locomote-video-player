@@ -203,7 +203,7 @@ use this yet.
 
 > Dispatched when fixed length video stream reaches end of stream. The streamStopped event is also dispatched just before this event.
 
-#### streamError(error)
+#### error(error)
 
 > Dispatched when video stream fails. `error` can be either
 > protocol error (rtsp etc) or Locomote internal error.

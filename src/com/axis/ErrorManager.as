@@ -108,7 +108,7 @@ package com.axis {
         'code': errorCode,
         'message': errorMessage
       };
-      ExternalInterface.call(functionName, "streamError", errorInfo);
+      ExternalInterface.call(functionName, "error", errorInfo);
     }
 
     public static function resolveErrorString(errorString:String, errorData:Array):String {
