@@ -40,7 +40,7 @@ package {
     [Embed(source = "../VERSION", mimeType = "application/octet-stream")] private var Version:Class;
 
     public static var locomoteID:String = null;
-    public static var debugLogger:Object = {'trace': false, 'js': false};
+    public static var debugLogger:Object = {'trace': false, 'console': false};
 
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
@@ -72,12 +72,12 @@ package {
       Security.allowDomain("*");
       Security.allowInsecureDomain("*");
 
-      Logger.log('Loaded Locomote, version ' + StringUtil.trim(new Version().toString()));
+      trace('Loaded Locomote, version ' + StringUtil.trim(new Version().toString()));
 
       if (ExternalInterface.available) {
           setupAPICallbacks();
       } else {
-        Logger.log("External interface is not available for this container.");
+        trace("External interface is not available for this container.");
       }
 
       /* Set default speaker volume */
@@ -189,8 +189,8 @@ package {
           Player.debugLogger.trace = iconfig.debugLogger.trace;
         }
 
-        if (iconfig.debugLogger.js !== undefined) {
-          Player.debugLogger.js = iconfig.debugLogger.js;
+        if (iconfig.debugLogger.console !== undefined) {
+          Player.debugLogger.console = iconfig.debugLogger.console;
         }
       }
     }

@@ -9,7 +9,7 @@ package com.axis {
         trace(message);
       }
 
-      if (Player.debugLogger.js) {
+      if (Player.debugLogger.console) {
         ExternalInterface.call("console.log", message);
       }
     }
