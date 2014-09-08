@@ -1,4 +1,5 @@
 package com.axis.rtspclient {
+  import com.axis.Logger;
   import com.axis.rtspclient.ByteArrayUtils;
   import com.axis.rtspclient.RTP;
 
@@ -33,7 +34,7 @@ package com.axis.rtspclient {
 
       if (NALTYPE_FU_A !== naltype && NALTYPE_FU_B !== naltype) {
         /* 30 - 31 is undefined, ignore those (RFC3984). */
-        trace('Undefined NAL unit, type: ' + naltype);
+        Logger.log('Undefined NAL unit, type: ' + naltype);
         return;
       }
 

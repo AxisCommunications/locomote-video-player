@@ -5,6 +5,7 @@ package com.axis.rtspclient {
   import com.axis.http.request;
   import com.axis.http.url;
   import com.axis.IClient;
+  import com.axis.Logger;
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.SDP;
@@ -206,7 +207,7 @@ package com.axis.rtspclient {
           return false;
         }
 
-        trace('RTSPClient: switching http-authorization from ' + authState + ' to ' + newAuthState);
+        Logger.log('RTSPClient: switching http-authorization from ' + authState + ' to ' + newAuthState);
         authState = newAuthState;
         state = STATE_INITIAL;
         data = new ByteArray();
@@ -245,16 +246,16 @@ package com.axis.rtspclient {
 
       switch (state) {
       case STATE_INITIAL:
-        trace("RTSPClient: STATE_INITIAL");
+        Logger.log("RTSPClient: STATE_INITIAL");
 
       case STATE_OPTIONS:
-        trace("RTSPClient: STATE_OPTIONS");
+        Logger.log("RTSPClient: STATE_OPTIONS");
         this.methods = parsed.headers.public.split(/[ ]*,[ ]*/);
         sendDescribeReq();
 
         break;
       case STATE_DESCRIBE:
-        trace("RTSPClient: STATE_DESCRIBE");
+        Logger.log("RTSPClient: STATE_DESCRIBE");
 
         if (!sdp.parse(body)) {
           ErrorManager.dispatchError(809);
@@ -263,7 +264,7 @@ package com.axis.rtspclient {
 
         contentBase = parsed.headers['content-base'];
         tracks = sdp.getMediaBlockList();
-        trace('SDP contained ' + tracks.length + ' track(s). Calling SETUP for each.');
+        Logger.log('SDP contained ' + tracks.length + ' track(s). Calling SETUP for each.');
 
         if (0 === tracks.length) {
           ErrorManager.dispatchError(810);
@@ -272,7 +273,7 @@ package com.axis.rtspclient {
 
         /* Fall through, it's time for setup */
       case STATE_SETUP:
-        trace("RTSPClient: STATE_SETUP");
+        Logger.log("RTSPClient: STATE_SETUP");
 
         if (parsed.headers['session']) {
           session = parsed.headers['session'];
@@ -290,7 +291,7 @@ package com.axis.rtspclient {
         break;
 
       case STATE_PLAY:
-        trace("RTSPClient: STATE_PLAY");
+        Logger.log("RTSPClient: STATE_PLAY");
         state = STATE_PLAYING;
 
         if (this.flvmux) {
@@ -310,17 +311,17 @@ package com.axis.rtspclient {
         break;
 
       case STATE_PLAYING:
-        trace("RTSPClient: STATE_PLAYING");
+        Logger.log("RTSPClient: STATE_PLAYING");
         break;
 
       case STATE_PAUSE:
-        trace("RTSPClient: STATE_PAUSE");
+        Logger.log("RTSPClient: STATE_PAUSE");
         state = STATE_PAUSED;
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         break;
 
       case STATE_TEARDOWN:
-        trace('RTSPClient: STATE_TEARDOWN');
+        Logger.log('RTSPClient: STATE_TEARDOWN');
         this.handle.disconnect();
         break;
       }
@@ -387,7 +388,7 @@ package com.axis.rtspclient {
         return contentBase + block.control;
       }
 
-      trace('Can\'t determine track URL from ' +
+      Logger.log('Can\'t determine track URL from ' +
             'block.control:' + block.control + ', ' +
             'session.control:' + sessionBlock.control + ', and ' +
             'content-base:' + contentBase);
@@ -405,7 +406,7 @@ package com.axis.rtspclient {
         return contentBase + u; /* If content base is not set, this will be session control only only */
       }
 
-      trace('Can\'t determine control URL from ' +
+      Logger.log('Can\'t determine control URL from ' +
               'session.control:' + sessionBlock.control + ', and ' +
               'content-base:' + contentBase);
       throw new Error('Unable to determine control URL.');
@@ -439,7 +440,7 @@ package com.axis.rtspclient {
       var interleavedChannels:String = interleaveChannelIndex++ + "-" + interleaveChannelIndex++;
       var setupUrl:String = getSetupURL(block);
 
-      trace('Setting up track: ' + setupUrl);
+      Logger.log('Setting up track: ' + setupUrl);
       var req:String =
         "SETUP " + setupUrl + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +

@@ -173,6 +173,7 @@ use this yet.
 > - `buffer` - The number of seconds that should be buffered. The default value is `1`.
 > - `scaleUp` - Specifies if the video can be scaled up or not. The default value is `false`.
 > - `allowFullscreen` - Specifices if fullscreen mode is allowed or not. The default value is `true`.
+> - `debugLogger` - Specifices if debug messages should be shown or not. `debugLogger` is an object which contains `true` or `false` values for `trace` and/or `console`. `true` values will lead to information being logged in either the Flash console or in the Javascript console. Example `debugLogger: { trace: true, console: false }` causes debug messages to be shown in Flash but not in the Javascript console. The default value is `false` for both.
 
 #### on(eventName:String, callback:Function)
 

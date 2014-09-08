@@ -1,4 +1,6 @@
 package com.axis.rtspclient {
+  import com.axis.Logger;
+
   import flash.utils.ByteArray;
 
   import mx.utils.StringUtil;
@@ -29,7 +31,7 @@ package com.axis.rtspclient {
         switch (line.charAt(0)) {
         case 'v':
           if (-1 !== version) {
-            trace('Version present multiple times in SDP');
+            Logger.log('Version present multiple times in SDP');
             return false;
           }
           success &&= parseVersion(line);
@@ -37,7 +39,7 @@ package com.axis.rtspclient {
 
         case 'o':
           if (null !== origin) {
-            trace('Origin present multiple times in SDP');
+            Logger.log('Origin present multiple times in SDP');
             return false;
           }
           success &&= parseOrigin(line);
@@ -45,7 +47,7 @@ package com.axis.rtspclient {
 
         case 's':
           if (null !== sessionName) {
-            trace('Session Name present multiple times in SDP');
+            Logger.log('Session Name present multiple times in SDP');
             return false;
           }
           success &&= parseSessionName(line);
@@ -53,7 +55,7 @@ package com.axis.rtspclient {
 
         case 't':
           if (null !== timing) {
-            trace('Timing present multiple times in SDP');
+            Logger.log('Timing present multiple times in SDP');
             return false;
           }
           success &&= parseTiming(line);
@@ -76,7 +78,7 @@ package com.axis.rtspclient {
           break;
 
         default:
-          trace('Ignored unknown SDP directive: ' + line);
+          Logger.log('Ignored unknown SDP directive: ' + line);
           break;
         }
       }
@@ -89,13 +91,13 @@ package com.axis.rtspclient {
     private function parseVersion(line:String):Boolean {
       var matches:Array = line.match(/^v=([0-9]+)$/);
       if (0 === matches.length) {
-        trace('\'v=\' (Version) formatted incorrectly: ' + line);
+        Logger.log('\'v=\' (Version) formatted incorrectly: ' + line);
         return false;
       }
 
       version = matches[1];
       if (0 !== version) {
-        trace('Unsupported SDP version:', version);
+        Logger.log('Unsupported SDP version:' + version);
         return false;
       }
 
@@ -105,7 +107,7 @@ package com.axis.rtspclient {
     private function parseOrigin(line:String):Boolean {
       var matches:Array = line.match(/^o=([^ ]+) ([0-9]+) ([0-9]+) (IN) (IP4|IP6) ([^ ]+)$/);
       if (0 === matches.length) {
-        trace('\'o=\' (Origin) formatted incorrectly: ' + line);
+        Logger.log('\'o=\' (Origin) formatted incorrectly: ' + line);
         return false;
       }
 
@@ -123,7 +125,7 @@ package com.axis.rtspclient {
     private function parseSessionName(line:String):Boolean {
       var matches:Array = line.match(/^s=([^\r\n]+)$/);
       if (0 === matches.length) {
-        trace('\'s=\' (Session Name) formatted incorrectly: ' + line);
+        Logger.log('\'s=\' (Session Name) formatted incorrectly: ' + line);
         return false;
       }
 
@@ -135,7 +137,7 @@ package com.axis.rtspclient {
     private function parseTiming(line:String):Boolean {
       var matches:Array = line.match(/^t=([0-9]+) ([0-9]+)$/);
       if (0 === matches.length) {
-        trace('\'t=\' (Timing) formatted incorrectly: ' + line);
+        Logger.log('\'t=\' (Timing) formatted incorrectly: ' + line);
         return false;
       }
 
@@ -149,7 +151,7 @@ package com.axis.rtspclient {
     private function parseMediaDescription(line:String, media:Object):Boolean {
       var matches:Array = line.match(/^m=([^ ]+) ([^ ]+) ([^ ]+)[ ]/);
       if (0 === matches.length) {
-        trace('\'m=\' (Media) formatted incorrectly: ' + line);
+        Logger.log('\'m=\' (Media) formatted incorrectly: ' + line);
         return false;
       }
 
@@ -188,7 +190,7 @@ package com.axis.rtspclient {
       case 'a=rtpmap':
         matches = line.match(/^a=rtpmap:(\d+) (.*)$/);
         if (null === matches) {
-          trace('Could not parse \'rtpmap\' of \'a=\'');
+          Logger.log('Could not parse \'rtpmap\' of \'a=\'');
           return false;
         }
 
@@ -207,7 +209,7 @@ package com.axis.rtspclient {
       case 'a=fmtp':
         matches = line.match(/^a=fmtp:(\d+) (.*)$/);
         if (0 === matches.length) {
-          trace('Could not parse \'fmtp\'  of \'a=\'');
+          Logger.log('Could not parse \'fmtp\'  of \'a=\'');
           return false;
         }
 

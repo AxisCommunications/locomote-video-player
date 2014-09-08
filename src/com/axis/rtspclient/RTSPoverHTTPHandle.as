@@ -4,6 +4,7 @@ package com.axis.rtspclient {
   import com.axis.http.auth;
   import com.axis.http.request;
   import com.axis.http.url;
+  import com.axis.Logger;
   import com.axis.rtspclient.GUID;
 
   import flash.events.ErrorEvent;
@@ -130,6 +131,8 @@ package com.axis.rtspclient {
       }
 
       if (401 === parsed.code) {
+        Logger.log('Unauthorized using auth method: ' + authState);
+        /* Unauthorized, change authState and (possibly) try again */
         authOpts = parsed.headers['www-authenticate'];
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
@@ -138,7 +141,7 @@ package com.axis.rtspclient {
           return;
         }
 
-        trace('switching http-authorization from ' + authState + ' to ' + newAuthState);
+        Logger.log('switching http-authorization from ' + authState + ' to ' + newAuthState);
         authState = newAuthState;
         getChannelData = new ByteArray();
         getChannel.close();
