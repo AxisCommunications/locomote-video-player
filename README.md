@@ -217,11 +217,11 @@ use this yet.
 
 > For detailed information about the errors, please see the [ErrorManager](https://github.com/AxisCommunications/locomote-video-player/blob/master/src/com/axis/ErrorManager.as) class.
 
-#### audioStarted
+#### audioTransmitStarted
 
 > Dispatched when audio transmission starts.
 
-#### audioStopped
+#### audioTransmitStopped
 
 > Dispatched when audio transmission stops.
 

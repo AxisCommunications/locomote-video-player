@@ -97,7 +97,10 @@ package com.axis {
       '812': "Unsupported audio transmit protocol.",
       '813': "Denied access to microphone.",
       '814': "Already connected to microphone.",
-      '815': "No audio transmit url provided."
+      '815': "No audio transmit url provided.",
+      '816': "Denied access to microphone.",
+      '817': "Already connected to microphone.",
+      '818': "No audio transmit url provided."
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null):void {
