@@ -1,6 +1,7 @@
 package com.axis.audioclient {
   import com.axis.audioclient.IAudioClient;
   import com.axis.codec.g711;
+  import com.axis.ErrorManager;
   import com.axis.http.auth;
   import com.axis.http.request;
   import com.axis.http.url;
@@ -42,7 +43,7 @@ package com.axis.audioclient {
       }
 
       if ('Microphone.Muted' === event.code) {
-        trace('AxisTransmit: Denied access to microphone');
+        ErrorManager.dispatchError(813);
         return;
       }
 
@@ -53,14 +54,14 @@ package com.axis.audioclient {
 
     public function start(iurl:String = null):void {
       if (conn.connected) {
-        trace('already connected');
+        ErrorManager.dispatchError(814);
         return;
       }
 
       var currentUrl:String = (iurl) ? iurl : savedUrl;
 
       if (!currentUrl) {
-        trace("no url provided");
+        ErrorManager.dispatchError(815);
         return;
       }
 
@@ -82,7 +83,7 @@ package com.axis.audioclient {
       conn.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 
       if (true === mic.muted) {
-        trace('Not allowed access to microphone, delay connect');
+        ErrorManager.dispatchError(813);
         return;
       }
 
@@ -91,7 +92,7 @@ package com.axis.audioclient {
 
     public function stop():void {
       if (!conn.connected) {
-        trace('not connected');
+        ErrorManager.dispatchError(810);
         return;
       }
 
