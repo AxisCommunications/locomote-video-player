@@ -1,6 +1,7 @@
 package com.axis.audioclient {
   import com.axis.audioclient.IAudioClient;
   import com.axis.codec.g711;
+  import com.axis.ErrorManager;
   import com.axis.http.auth;
   import com.axis.http.request;
   import com.axis.http.url;
