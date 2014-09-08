@@ -161,7 +161,7 @@ package com.axis.audioclient {
 
       if ("stopped" === this.currentState) {
         this.currentState = "playing";
-        this.callAPI(EVENT_TRANSMIT_AUDIO_STARTED);
+        this.callAPI(EVENT_AUDIO_TRANSMIT_STARTED);
       }
 
       while (event.data.bytesAvailable) {
