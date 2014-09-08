@@ -101,7 +101,14 @@ package com.axis {
       '816': "Denied access to microphone.",
       '817': "Audio transmit already connected.",
       '818': "No audio transmit url provided.",
-      '819': "No microphone available."
+      '819': "BitArray: Bit ranges must be 1 - 32.",
+      '820': "BitArray: exp-golomb larger than 32 bits is unsupported.",
+      '821': "ByteArray: Unsupported Pattern",
+      '822': "FLVMux: No support for parsing Chroma/Luma parameters",
+      '823': "FLVMux: No support for parsing 'pic_order_cnt_type' != 0",
+      '824': "RTSPClient: Unable to determine control URL.",
+      '825': "RTSPClient: Pause is not supported by server.",
+      '826': "No media block for payload type: %p"
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null):void {

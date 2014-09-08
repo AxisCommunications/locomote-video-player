@@ -392,7 +392,7 @@ package com.axis.rtspclient {
             'block.control:' + block.control + ', ' +
             'session.control:' + sessionBlock.control + ', and ' +
             'content-base:' + contentBase);
-      throw new Error('Unable to determine control URL.');
+      ErrorManager.dispatchError(824);
     }
 
     private function getControlURL():String {
@@ -409,7 +409,7 @@ package com.axis.rtspclient {
       Logger.log('Can\'t determine control URL from ' +
               'session.control:' + sessionBlock.control + ', and ' +
               'content-base:' + contentBase);
-      throw new Error('Unable to determine control URL.');
+      ErrorManager.dispatchError(824);
     }
 
     private function sendOptionsReq():void {
@@ -471,7 +471,7 @@ package com.axis.rtspclient {
 
     private function sendPauseReq():void {
       if (-1 === this.supportCommand("PAUSE")) {
-        throw new Error('Pause is not supported by server.');
+        ErrorManager.dispatchError(825);
       }
 
       state = STATE_PAUSE;

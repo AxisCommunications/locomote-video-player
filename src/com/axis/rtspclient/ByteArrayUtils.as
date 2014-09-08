@@ -1,4 +1,6 @@
 package com.axis.rtspclient {
+  import com.axis.ErrorManager;
+
   import flash.utils.ByteArray;
 
   public class ByteArrayUtils {
@@ -8,8 +10,8 @@ package com.axis.rtspclient {
       var toFind:ByteArray = toByteArray(pattern);
       if (toFind == null) {
         // ** type of pattern unsupported **
-        throw new Error("Unsupported Pattern");
-        return;
+        ErrorManager.dispatchError(821);
+        return -1;
       }
 
       a = toFind.length;
