@@ -100,6 +100,7 @@ package com.axis.audioclient {
     public function stop():void {
       if (!conn.connected) {
         ErrorManager.dispatchError(813);
+        this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
         return;
       }
 
