@@ -109,8 +109,6 @@ use this yet.
 > - audio (bool) - if the stream contains audio.
 > - video (bool) - if the stream contains video.
 > - state - current playback state (playing, paused, stopped).
-> - isSeekable (bool) - if it is possible to seek in the stream.
-> - isPlaybackSpeedChangeable (bool) - if the playback speed can be altered.
 > - streamURL - the source of the current media.
 
 #### playerStatus()
@@ -199,7 +197,7 @@ use this yet.
 
 > Dispatched when video stream fails. `error` can be either
 > protocol error (rtsp etc) or Locomote internal error.
-> Includes socket and seek errors.`error` is a generic object.
+> `error` is a generic object.
 
 > Locomote reports the following types of errors:
 > - `RTSP` - The default error codes that are sent from the RTSP stream. Error codes: 100 - 551.
@@ -215,10 +213,6 @@ use this yet.
 #### audioTransmitStopped
 
 > Dispatched when audio transmission stops.
-
-#### seekCompleted
-
-> Dispatched when seek has completed.
 
 #### fullscreenEntered
 

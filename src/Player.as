@@ -286,8 +286,6 @@ package {
         'audio': (this.ns) ? this.streamHasAudio : null,
         'video': (this.ns) ? this.streamHasVideo : null,
         'state': this.currentState,
-        'isSeekable': false,
-        'isPlaybackSpeedChangeable': false,
         'streamURL': (this.urlParsed) ? this.urlParsed.full : null
       };
 
