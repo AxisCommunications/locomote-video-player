@@ -97,15 +97,6 @@ use this yet.
 
 > Resumes video from paused state.
 
-#### seek(timestamp)
-
-> Seeks to `timestamp` ms from  start of stream.
-> The current stream state is preserved - paused or playing.
-
-#### playbackSpeed(speed)
-
-> Fast forward video stream with playback speed multiplied with `speed`.
-
 #### streamStatus()
 
 > Returns a status object with the following data:
