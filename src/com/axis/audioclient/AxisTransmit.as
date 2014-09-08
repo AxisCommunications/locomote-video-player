@@ -21,8 +21,8 @@ package com.axis.audioclient {
   import flash.utils.ByteArray;
 
   public class AxisTransmit implements IAudioClient {
-    private static const EVENT_AUDIO_STARTED:String = "audioStarted";
-    private static const EVENT_AUDIO_STOPPED:String = "audioStopped";
+    private static const EVENT_AUDIO_TRANSMIT_STARTED:String = "audioTransmitStarted";
+    private static const EVENT_AUDIO_TRANSMIT_STOPPED:String = "audioTransmitStopped";
 
     private var urlParsed:Object = {};
     private var conn:Socket = new Socket();
@@ -90,6 +90,7 @@ package com.axis.audioclient {
 
       if (true === mic.muted) {
         ErrorManager.dispatchError(816);
+        this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
         return;
       }
 
@@ -149,7 +150,7 @@ package com.axis.audioclient {
     public function onClosed(event:Event):void {
       if ("playing" === this.currentState) {
         this.currentState = "stopped";
-        this.callAPI(EVENT_AUDIO_STOPPED);
+        this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
       }
     }
 
@@ -160,7 +161,7 @@ package com.axis.audioclient {
 
       if ("stopped" === this.currentState) {
         this.currentState = "playing";
-        this.callAPI(EVENT_AUDIO_STARTED);
+        this.callAPI(EVENT_TRANSMIT_AUDIO_STARTED);
       }
 
       while (event.data.bytesAvailable) {
