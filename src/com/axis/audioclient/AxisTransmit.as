@@ -90,7 +90,6 @@ package com.axis.audioclient {
 
       if (true === mic.muted) {
         ErrorManager.dispatchError(816);
-        this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
         return;
       }
 
