@@ -116,18 +116,6 @@ Locomote.prototype = {
     return this;
   },
 
-  seek: function(timestamp) {
-    'use strict';
-
-    console.log('seek, timestamp->' + timestamp);
-  },
-
-  playbackSpeed: function(speed) {
-    'use strict';
-
-    console.log('playbackSpeed, speed->' + speed);
-  },
-
   streamStatus: function() {
     'use strict';
 
