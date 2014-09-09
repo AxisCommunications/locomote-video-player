@@ -50,9 +50,13 @@ package {
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
 
     private var config:Object = {
-      'buffer': 1,
+      'buffer': 3,
       'scaleUp': false,
-      'allowFullscreen': true
+      'allowFullscreen': true,
+      'debugLogger': {
+        'console': false,
+        'trace': false
+      }
     };
     private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
@@ -99,6 +103,8 @@ package {
         videoResize();
         (StageDisplayState.NORMAL === stage.displayState) ? callAPI(EVENT_FULLSCREEN_EXITED) : callAPI(EVENT_FULLSCREEN_ENTERED);
       });
+
+      this.setConfig(this.config)
     }
 
     /**
