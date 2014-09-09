@@ -114,8 +114,6 @@ package {
       ExternalInterface.addCallback("pause", pause);
       ExternalInterface.addCallback("resume", resume);
       ExternalInterface.addCallback("stop", stop);
-      ExternalInterface.addCallback("seek", seek);
-      ExternalInterface.addCallback("playbackSpeed", playbackSpeed);
       ExternalInterface.addCallback("streamStatus", streamStatus);
       ExternalInterface.addCallback("playerStatus", playerStatus);
       ExternalInterface.addCallback("speakerVolume", speakerVolume);
@@ -275,14 +273,6 @@ package {
       this.streamHasVideo = false;
     }
 
-    public function seek(timestamp:String):void {
-      Logger.log('seek, timestamp->' + timestamp);
-    }
-
-    public function playbackSpeed(speed:Number):void {
-      Logger.log('playbackSpeed, speed->' + speed);
-    }
-
     public function streamStatus():Object {
       if (this.currentState === 'playing') {
         this.streamHasAudio = (this.streamHasAudio || this.ns.info.audioBufferByteLength);
@@ -296,8 +286,6 @@ package {
         'audio': (this.ns) ? this.streamHasAudio : null,
         'video': (this.ns) ? this.streamHasVideo : null,
         'state': this.currentState,
-        'isSeekable': false,
-        'isPlaybackSpeedChangeable': false,
         'streamURL': (this.urlParsed) ? this.urlParsed.full : null
       };
 
