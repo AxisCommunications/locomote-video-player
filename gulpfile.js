@@ -5,6 +5,8 @@ var gutil = require('gulp-util');
 var rimraf = require('gulp-rimraf');
 var jshint = require('gulp-jshint');
 var jscs = require('gulp-jscs');
+var rename = require('gulp-rename');
+var uglify = require('gulp-uglify');
 
 function exec(cmd, options, cb) {
   'use strict';
@@ -37,6 +39,14 @@ gulp.task('lint-jscs', function() {
 
   return gulp.src([ 'jslib/*.js', 'gulpfile.js' ])
     .pipe(jscs());
+});
+
+gulp.task('minify', function()
+{
+  gulp.src('jslib/locomote.js')
+    .pipe(uglify())
+    .pipe(rename('locomote.min.js'))
+    .pipe(gulp.dest('jslib'))
 });
 
 gulp.task('submodule', function(cb) {
@@ -95,7 +105,7 @@ gulp.task('build-locomote', [ 'build-as3corelib', 'version' ], function(cb) {
 
 gulp.task('test', [ 'lint-jshint', 'lint-jscs' ]);
 
-gulp.task('default', [ 'build-as3corelib', 'build-locomote' ]);
+gulp.task('default', [ 'build-as3corelib', 'build-locomote', 'minify' ]);
 
 gulp.task('clean', function() {
   'use strict';
