@@ -7,6 +7,7 @@ var jshint = require('gulp-jshint');
 var jscs = require('gulp-jscs');
 var rename = require('gulp-rename');
 var uglify = require('gulp-uglify');
+var git = require('gulp-git');
 
 function exec(cmd, options, cb) {
   'use strict';
@@ -103,9 +104,17 @@ gulp.task('build-locomote', [ 'build-as3corelib', 'version' ], function(cb) {
   exec('./node_modules/.bin/mxmlc ' + optString + ' src/Player.as', cb);
 });
 
+gulp.task('commit-release', function(){
+  return gulp.src([ 'jslib/locomote.min.js', 'build/Player.swf' ])
+    .pipe(git.add())
+    .pipe(git.commit('Committed release build.'));
+});
+
 gulp.task('test', [ 'lint-jshint', 'lint-jscs' ]);
 
 gulp.task('default', [ 'build-as3corelib', 'build-locomote', 'minify' ]);
+
+gulp.task('release', [ 'commit-release' ]);
 
 gulp.task('clean', function() {
   'use strict';
