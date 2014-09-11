@@ -11,6 +11,8 @@ To build `Locomote`, simply run `npm install` in the root directory.
 This will download [Adobe Flex SDK](http://www.adobe.com/devnet/flex/flex-sdk-download.html),
 and other required modules and build the `SWF` file to `build/`.
 
+After `npm` has been installed, `gulp` can also be used to build `Locomote`.
+
 ### Building Locomote with Flash Builder
 It's also possible to build Locomote with Flash Builder. Follow the steps below to set up a Flash Builder project.
 
