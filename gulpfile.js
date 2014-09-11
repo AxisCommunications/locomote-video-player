@@ -29,7 +29,7 @@ gulp.task('version', function(cb) {
 gulp.task('lint-jshint', function() {
   'use strict';
 
-  return gulp.src([ 'jslib/*.js', 'gulpfile.js' ])
+  return gulp.src([ 'jslib/locomote.js', 'gulpfile.js' ])
     .pipe(jshint())
     .pipe(jshint.reporter('default'))
     .pipe(jshint.reporter('fail'));
@@ -38,16 +38,18 @@ gulp.task('lint-jshint', function() {
 gulp.task('lint-jscs', function() {
   'use strict';
 
-  return gulp.src([ 'jslib/*.js', 'gulpfile.js' ])
+  return gulp.src([ 'jslib/locomote.js', 'gulpfile.js' ])
     .pipe(jscs());
 });
 
 gulp.task('minify', function()
 {
+  'use strict';
+
   gulp.src('jslib/locomote.js')
     .pipe(uglify())
     .pipe(rename('locomote.min.js'))
-    .pipe(gulp.dest('jslib'))
+    .pipe(gulp.dest('jslib'));
 });
 
 gulp.task('submodule', function(cb) {
@@ -104,7 +106,9 @@ gulp.task('build-locomote', [ 'build-as3corelib', 'version' ], function(cb) {
   exec('./node_modules/.bin/mxmlc ' + optString + ' src/Player.as', cb);
 });
 
-gulp.task('commit-release', function(){
+gulp.task('commit-release', function() {
+  'use strict';
+
   return gulp.src([ 'jslib/locomote.min.js', 'build/Player.swf' ])
     .pipe(git.add())
     .pipe(git.commit('Committed release build.'));
