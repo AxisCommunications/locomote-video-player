@@ -11,6 +11,22 @@ To build `Locomote`, simply run `npm install` in the root directory.
 This will download [Adobe Flex SDK](http://www.adobe.com/devnet/flex/flex-sdk-download.html),
 and other required modules and build the `SWF` file to `build/`.
 
+After `npm` has been installed, `gulp` can also be used to build `Locomote`.
+
+### Building Locomote with Flash Builder
+It's also possible to build Locomote with Flash Builder. Follow the steps below to set up a Flash Builder project.
+
+- Clone the Locomote repository from Github.
+- Build the project with `npm` as described above. This will build as3corelib and the VERSION file which are both required dependencies.
+- Create a new ActionScript project from Flash Builder and save it in the root folder of the cloned repository.
+- Inside Flash Builder, right click the `Player.as` file that is now in the `default package` and select "Set as Default Application".
+- Remove the `.as` file with the same name you used for the project that was automatically created in `default package`.
+- Add as3corelib to the project by selecting "Properties" in the "Project menu" and then "ActionScript Build Path". Click "Add SWC..." and add as3corelib which is located here: `/ext/as3corelib/bin/as3corelib.swc`. Make sure that the library is merged into the code. Please note that the as3corelib.swc file will only be available after you have built the project with `npm`.
+- You may need to change the path to the default HTML file in "Run/Debug Settings". Edit the `Player` launch configuration and make sure that the correct url to the HTML file is selected.
+- The project can now be built by Flash Builder. Please note that you also need to modify the default HTML template provided with the Flash Builder project to load the swf and Javascript file properly. An example of a minimal HTML file is provided below.
+
+The Flash Builder project files and build folders will be ignored by git automatically so you shouldn't have to add anything to the repository after setting up the project.
+
 
 ### Running Locomote
 
