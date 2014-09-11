@@ -10,7 +10,8 @@ package com.axis {
       }
 
       if (Player.debugLogger.console) {
-        ExternalInterface.call("console.log", message);
+        var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
+        ExternalInterface.call(functionName, 'log', message);
       }
     }
   }

@@ -177,7 +177,7 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 
 #### off(eventName:String, callback:Function)
 
-> Stops listening for events with eventName. Calls `callback` when event triggers.
+> Stops listening for events with eventName.
 
 ### Events
 
@@ -229,3 +229,7 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 #### fullscreenExited
 
 > Dispatched when the player exits fullscreen mode.
+
+#### log
+
+> Dispatched when a log message is sent from the player. This event will only be dispatched if the `console` property of the `debugLogger` has been set to `true`.
