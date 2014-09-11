@@ -66,7 +66,7 @@ and the javascript library (`locomote.js` in example below). Use a simple page l
 
 ### Socket Policy Server
 
-`Locomote` uses sockets to connect to a video stream.
+`Locomote` uses sockets to connect to RTSP video streams which requires a socket policy server to be implemented. For RTMP and HTTP streams no socket policy server is required.
 
 Flash Player 9 and above implements a strict access policy for Flash applications that make Socket or XMLSocket connections to a remote host. It now requires the presence of a socket policy file on the server.
 
