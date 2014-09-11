@@ -64,6 +64,41 @@ and the javascript library (`locomote.js` in example below). Use a simple page l
 </html>
 ```
 
+### Socket Policy Server
+
+`Locomote` uses sockets to connect to RTSP video streams which requires a socket policy server to be implemented. For RTMP and HTTP streams no socket policy server is required.
+
+Flash Player 9 and above implements a strict access policy for Flash applications that make Socket or XMLSocket connections to a remote host. It now requires the presence of a socket policy file on the server.
+
+When the Flash Player tries to make a connection, it checks in two places for the socket policy:
+
+- Port 843. If you are the administrator of a server, you can set up an application to listen on this port and return a server-wide socket policy.
+- The destination port. If you're running your own xml server, you can configure it to send the socket policy file.
+
+The Flash player always tries port 843 first; if there's no response after 3 seconds, then it tries the destination port.
+
+When the Flash player makes a connection, it sends the following XML string to the server:
+
+```
+<policy-file-request/>
+```
+
+Your server then must send the following XML in reply:
+
+```
+<cross-domain-policy>
+     <allow-access-from domain="*" to-ports="*" />
+</cross-domain-policy>
+```
+
+* is the wildcard and means "all ports/domains". If you want to restrict access to a particular port, enter the port number, or a list or range of numbers.
+
+For more info about socket policy files and how to set up a server please read the following articles:
+
+[Setting up a socket policy file server](http://www.adobe.com/devnet/flashplayer/articles/socket_policy_files.html)
+
+[Policy file changes in Flash Player 9 and Flash Player 10](http://www.adobe.com/devnet/flashplayer/articles/fplayer9_security.html)
+
 ## API Specification
 
 **NB:** This API is only a draft, and parts of it are not implemented. Do not
