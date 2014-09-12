@@ -40,7 +40,7 @@ package {
     [Embed(source = "../VERSION", mimeType = "application/octet-stream")] private var Version:Class;
 
     public static var locomoteID:String = null;
-    public static var debugLogger:Object = {'trace': false, 'console': false};
+    public static var debugLogger:Boolean = false;
 
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
@@ -53,10 +53,7 @@ package {
       'buffer': 3,
       'scaleUp': false,
       'allowFullscreen': true,
-      'debugLogger': {
-        'console': false,
-        'trace': false
-      }
+      'debugLogger': false
     };
     private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
@@ -189,13 +186,7 @@ package {
       }
 
       if (iconfig.debugLogger !== undefined) {
-        if (iconfig.debugLogger.trace !== undefined) {
-          Player.debugLogger.trace = iconfig.debugLogger.trace;
-        }
-
-        if (iconfig.debugLogger.console !== undefined) {
-          Player.debugLogger.console = iconfig.debugLogger.console;
-        }
+        Player.debugLogger = iconfig.debugLogger;
       }
     }
 
