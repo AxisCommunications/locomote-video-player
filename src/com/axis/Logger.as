@@ -5,13 +5,12 @@ package com.axis {
     public static const STREAM_ERRORS:String = "";
 
     public static function log(message:String = null):void {
-      if (Player.debugLogger.trace) {
+      if (Player.debugLogger) {
         trace(message);
       }
 
-      if (Player.debugLogger.console) {
-        ExternalInterface.call("console.log", message);
-      }
+      var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
+      ExternalInterface.call(functionName, 'log', message);
     }
   }
 }
