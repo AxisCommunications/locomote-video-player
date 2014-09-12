@@ -203,9 +203,22 @@ Locomote.prototype = {
   off: function(eventName, callback) {
     'use strict';
 
+    if ((undefined === eventName) && (undefined === callback)) {
+      this.callbacks = [];
+      return;
+    }
+
     this.callbacks.forEach(function(element, index, array) {
-      if ((element.eventName === eventName) && (element.callback === callback)) {
-        array.splice(index, 1);
+      if (element.callback === callback) {
+        if ((undefined === eventName) || (null === eventName) || (element.eventName === eventName)) {
+          array.splice(index, 1);
+        }
+      }
+
+      if (element.eventName === eventName) {
+        if ((undefined === callback) || (null === callback) || (element.callback === callback)) {
+          array.splice(index, 1);
+        }
       }
     });
   },
