@@ -109,7 +109,7 @@ gulp.task('build-locomote', [ 'build-as3corelib', 'version' ], function(cb) {
 gulp.task('commit-release', function() {
   'use strict';
 
-  return gulp.src([ 'jslib/locomote.min.js', 'dist/Player.swf' ])
+  return gulp.src([ 'dist/locomote.min.js', 'dist/Player.swf' ])
     .pipe(git.add())
     .pipe(git.commit('Committed release build.'));
 });
@@ -123,6 +123,6 @@ gulp.task('release', [ 'commit-release' ]);
 gulp.task('clean', function() {
   'use strict';
 
-  gulp.src([ 'build/', 'ext/as3corelib/', 'VERSION' ], { read: false })
+  gulp.src([ 'dist/', 'ext/as3corelib/', 'VERSION' ], { read: false })
     .pipe(rimraf({ force: true }));
 });
