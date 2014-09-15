@@ -210,13 +210,14 @@ Locomote.prototype = {
 
     this.callbacks.forEach(function(element, index, array) {
       if (element.callback === callback) {
-        if ((undefined === eventName) || (null === eventName) || (element.eventName === eventName)) {
+        if (!eventName || (element.eventName === eventName)) {
           array.splice(index, 1);
+          return;
         }
       }
 
       if (element.eventName === eventName) {
-        if ((undefined === callback) || (null === callback) || (element.callback === callback)) {
+        if (!callback || (element.callback === callback)) {
           array.splice(index, 1);
         }
       }
