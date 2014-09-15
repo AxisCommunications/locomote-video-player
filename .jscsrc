@@ -29,7 +29,6 @@
   "maximumLineLength": 120,
   "excludeFiles": [
     "node_modules/**",
-    ".git/**",
-    "jslib/locomote.min.js"
+    ".git/**"
   ]
 }
