@@ -216,7 +216,6 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 > - `buffer` - The number of seconds that should be buffered. The default value is `3`.
 > - `scaleUp` - Specifies if the video can be scaled up or not. The default value is `false`.
 > - `allowFullscreen` - Specifices if fullscreen mode is allowed or not. The default value is `true`.
-<<<<<<< HEAD
 > - `debugLogger` - Specifices if debug messages should be shown in the Flash console or not. The default value is `false`.
 
 #### on(eventName:String, callback:Function)
