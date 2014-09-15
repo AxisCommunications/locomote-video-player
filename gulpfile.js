@@ -106,8 +106,8 @@ gulp.task('version', function(cb) {
   'use strict';
 
   return gulp.src('package.json')
-  .pipe(bump({ type:argv.ver }))
-  .pipe(gulp.dest(''));
+    .pipe(bump({ type:argv.ver }))
+    .pipe(gulp.dest(''));
 });
 
 gulp.task('version-file', [ 'version' ], function() {
@@ -144,9 +144,7 @@ gulp.task('test', [ 'lint-jshint', 'lint-jscs' ]);
 
 gulp.task('default', [ 'build-as3corelib', 'build-locomote', 'minify' ]);
 
-gulp.task('release', [ 'version', 'version-file',
-  'build-as3corelib', 'build-locomote', 'minify',
-  'commit-release', 'tag-release' ]);
+gulp.task('release', [ 'tag-release' ]);
 
 gulp.task('clean', function() {
   'use strict';
