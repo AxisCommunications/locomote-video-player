@@ -20,9 +20,9 @@
     "gulp-rimraf": "^0.1.0",
     "gulp-jshint": "^1.7.1",
     "gulp-jscs": "^0.6.0",
-    "gulp-uglify": "~1.0.1",
-    "gulp-rename": "~1.2.0",
-    "gulp-git": "~0.5.0"
+    "gulp-uglify": "^1.0.1",
+    "gulp-rename": "^1.2.0",
+    "gulp-git": "^0.5.0"
   },
   "engines": {
     "node": "0.10.x"
