@@ -9,7 +9,7 @@ Since `npm` is bundled with `nodejs`, you only need to download and install `nod
 
 To build `Locomote`, simply run `npm install` in the root directory.
 This will download [Adobe Flex SDK](http://www.adobe.com/devnet/flex/flex-sdk-download.html),
-and other required modules and build the `SWF` file to `build/`.
+and other required modules and build the `SWF` file and the `JavaScript` library to `dist/`.
 
 After `npm` has been installed, `gulp` can also be used to build `Locomote`.
 
@@ -31,7 +31,7 @@ The Flash Builder project files and build folders will be ignored by git automat
 ### Running Locomote
 
 To run Locomote in a web page, you need to host both the SWF (`Player.swf` in example below),
-and the javascript library (`locomote.js` in example below). Use a simple page like:
+and the JavaScript library (`locomote.min.js` in example below). Use a simple page like:
 
 ```html
 <html>
@@ -43,7 +43,7 @@ and the javascript library (`locomote.js` in example below). Use a simple page l
         height: 240px;
       }
     </style>
-    <script src="locomote.js"></script>
+    <script src="locomote.min.js"></script>
     <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
     <script type="text/javascript">
 

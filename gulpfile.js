@@ -5,6 +5,9 @@ var gutil = require('gulp-util');
 var rimraf = require('gulp-rimraf');
 var jshint = require('gulp-jshint');
 var jscs = require('gulp-jscs');
+var rename = require('gulp-rename');
+var uglify = require('gulp-uglify');
+var git = require('gulp-git');
 
 function exec(cmd, options, cb) {
   'use strict';
@@ -26,7 +29,7 @@ gulp.task('version', function(cb) {
 gulp.task('lint-jshint', function() {
   'use strict';
 
-  return gulp.src([ 'jslib/*.js', 'gulpfile.js' ])
+  return gulp.src([ 'jslib/locomote.js', 'gulpfile.js' ])
     .pipe(jshint())
     .pipe(jshint.reporter('default'))
     .pipe(jshint.reporter('fail'));
@@ -35,8 +38,18 @@ gulp.task('lint-jshint', function() {
 gulp.task('lint-jscs', function() {
   'use strict';
 
-  return gulp.src([ 'jslib/*.js', 'gulpfile.js' ])
+  return gulp.src([ 'jslib/locomote.js', 'gulpfile.js' ])
     .pipe(jscs());
+});
+
+gulp.task('minify', function()
+{
+  'use strict';
+
+  gulp.src('jslib/locomote.js')
+    .pipe(uglify())
+    .pipe(rename('locomote.min.js'))
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('submodule', function(cb) {
@@ -71,7 +84,7 @@ gulp.task('build-locomote', [ 'build-as3corelib', 'version' ], function(cb) {
     'allow-source-path-overlap': false,
     'target-player': 11.1,
     'locale': 'en_US',
-    'output': 'build/Player.swf',
+    'output': 'dist/Player.swf',
     'debug': true,
     'benchmark': false,
     'verbose-stacktraces': false,
@@ -93,13 +106,23 @@ gulp.task('build-locomote', [ 'build-as3corelib', 'version' ], function(cb) {
   exec('./node_modules/.bin/mxmlc ' + optString + ' src/Player.as', cb);
 });
 
+gulp.task('commit-release', function() {
+  'use strict';
+
+  return gulp.src([ 'dist/locomote.min.js', 'dist/Player.swf' ])
+    .pipe(git.add())
+    .pipe(git.commit('Committed release build.'));
+});
+
 gulp.task('test', [ 'lint-jshint', 'lint-jscs' ]);
 
-gulp.task('default', [ 'build-as3corelib', 'build-locomote' ]);
+gulp.task('default', [ 'build-as3corelib', 'build-locomote', 'minify' ]);
+
+gulp.task('release', [ 'commit-release' ]);
 
 gulp.task('clean', function() {
   'use strict';
 
-  gulp.src([ 'build/', 'ext/as3corelib/', 'VERSION' ], { read: false })
+  gulp.src([ 'dist/', 'ext/as3corelib/', 'VERSION' ], { read: false })
     .pipe(rimraf({ force: true }));
 });
