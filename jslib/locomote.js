@@ -203,7 +203,7 @@ Locomote.prototype = {
   off: function(eventName, callback) {
     'use strict';
 
-    if ((undefined === eventName) && (undefined === callback)) {
+    if (!eventName && !callback) {
       this.callbacks = [];
       return;
     }
