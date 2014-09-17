@@ -22,6 +22,39 @@ function exec(cmd, options, cb) {
   });
 }
 
+function build(cb) {
+  'use strict';
+
+  var mxmlcOptions = {
+    'use-network': true,
+    'static-link-runtime-shared-libraries': true,
+    'use-resource-bundle-metadata': true,
+    'accessible': false,
+    'allow-source-path-overlap': false,
+    'target-player': 11.1,
+    'locale': 'en_US',
+    'output': 'dist/Player.swf',
+    'debug': true,
+    'benchmark': false,
+    'verbose-stacktraces': false,
+    'strict': true,
+    'warnings': true,
+    'show-unused-type-selector-warnings': true,
+    'show-actionscript-warnings': true,
+    'show-binding-warnings': true,
+    'show-invalid-css-property-warnings': true,
+    'incremental': false,
+    'es': false,
+    'include-libraries': 'ext/as3corelib/bin/as3corelib.swc'
+  };
+
+  var optString = _.reduce(mxmlcOptions, function(memo, value, index) {
+    return memo + ' -' + index + '=' + value.toString();
+  }, '');
+
+  exec('./node_modules/.bin/mxmlc ' + optString + ' src/Player.as', cb);
+}
+
 gulp.task('lint-jshint', function() {
   'use strict';
 
@@ -69,37 +102,16 @@ gulp.task('build-as3corelib', [ 'submodule' ], function(cb) {
   exec('ant -f ext/as3corelib/build/build.xml', options, cb);
 });
 
-gulp.task('build-locomote', [ 'build-as3corelib', 'version-file' ], function(cb) {
+gulp.task('build-locomote', [ 'build-as3corelib' ], function(cb) {
   'use strict';
 
-  var mxmlcOptions = {
-    'use-network': true,
-    'static-link-runtime-shared-libraries': true,
-    'use-resource-bundle-metadata': true,
-    'accessible': false,
-    'allow-source-path-overlap': false,
-    'target-player': 11.1,
-    'locale': 'en_US',
-    'output': 'dist/Player.swf',
-    'debug': true,
-    'benchmark': false,
-    'verbose-stacktraces': false,
-    'strict': true,
-    'warnings': true,
-    'show-unused-type-selector-warnings': true,
-    'show-actionscript-warnings': true,
-    'show-binding-warnings': true,
-    'show-invalid-css-property-warnings': true,
-    'incremental': false,
-    'es': false,
-    'include-libraries': 'ext/as3corelib/bin/as3corelib.swc'
-  };
+  build(cb);
+});
 
-  var optString = _.reduce(mxmlcOptions, function(memo, value, index) {
-    return memo + ' -' + index + '=' + value.toString();
-  }, '');
+gulp.task('build-locomote-version', [ 'build-as3corelib', 'version-file' ], function(cb) {
+  'use strict';
 
-  exec('./node_modules/.bin/mxmlc ' + optString + ' src/Player.as', cb);
+  build(cb);
 });
 
 gulp.task('version', function(cb) {
@@ -118,7 +130,7 @@ gulp.task('version-file', [ 'version' ], function() {
   fs.writeFile('VERSION', pkg.version);
 });
 
-gulp.task('commit-release', [ 'build-locomote', 'minify' ], function(cb) {
+gulp.task('commit-release', [ 'build-locomote-version', 'minify' ], function(cb) {
   'use strict';
 
   var pkg = require('./package.json');
