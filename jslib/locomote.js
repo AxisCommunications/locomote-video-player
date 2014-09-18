@@ -88,11 +88,19 @@
 
       element += '</object>';
 
-      // Insert the object into the provided tag
-      document.getElementById(tag).innerHTML = element;
+      if (('string' === typeof tag) && document.getElementById(tag)) {
+        // Insert the object into the provided tag
+        document.getElementById(tag).innerHTML = element;
 
-      // Save the reference to the Flash Player object
-      this.e = document.getElementById(tempTag);
+        // Save the reference to the Flash Player object
+        this.e = document.getElementById(tempTag);
+      } else {
+        // Insert the object into the provided element
+        tag.innerHTML = element;
+
+        // Save the reference to the Flash Player object
+        this.e = tag.getElementsByClassName('locomote-player')[0];
+      }
     },
 
     __swfReady: function() {
