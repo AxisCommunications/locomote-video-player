@@ -99,7 +99,14 @@
         tag.innerHTML = element;
 
         // Save the reference to the Flash Player object
-        this.e = tag.getElementsByClassName('locomote-player')[0];
+        var players = tag.getElementsByClassName('locomote-player');
+
+        for (var i = 0; i < players.length; i++) {
+           if (players[i].getAttribute('id') === tempTag) {
+              this.e = players[i];
+              break;
+           }
+        }
       }
     },
 
