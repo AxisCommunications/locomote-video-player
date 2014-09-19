@@ -1,5 +1,6 @@
 package com.axis.httpclient {
   import com.axis.ClientEvent;
+  import com.axis.ErrorManager;
   import com.axis.IClient;
   import com.axis.Logger;
 
@@ -16,6 +17,7 @@ package com.axis.httpclient {
     private var nc:NetConnection;
     private var ns:NetStream;
     public var ended:Boolean = false;
+    private var currentState:String = "stopped";
 
     public function HTTPClient(video:Video, urlParsed:Object) {
       this.urlParsed = urlParsed;
@@ -42,15 +44,25 @@ package com.axis.httpclient {
     public function stop():Boolean {
       ns.dispose();
       nc.close();
+      this.currentState = "stopped";
       return true;
     }
 
     public function pause():Boolean {
+      if (this.currentState !== 'playing') {
+        ErrorManager.dispatchError(800);
+        return false;
+      }
       ns.pause();
+      this.currentState = "paused";
       return true;
     }
 
     public function resume():Boolean {
+      if (this.currentState !== 'paused') {
+        ErrorManager.dispatchError(801);
+        return false;
+      }
       ns.resume();
       return true;
     }
@@ -64,12 +76,14 @@ package com.axis.httpclient {
     private function onConnectionStatus(event:NetStatusEvent):void {
       if ('NetConnection.Connect.Closed' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+        this.currentState = "stopped";
       }
     }
 
     private function onNetStatus(event:NetStatusEvent):void {
       if ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+        this.currentState = "playing";
         return;
       }
 
@@ -80,11 +94,13 @@ package com.axis.httpclient {
 
       if (!ended && 'NetStream.Buffer.Empty' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+        this.currentState = "paused";
         return;
       }
 
       if ('NetStream.Pause.Notify' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
+        this.currentState = "paused";
         return;
       }
     }
