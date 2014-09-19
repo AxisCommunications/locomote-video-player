@@ -100,7 +100,8 @@ package com.axis {
       '815': "No audio transmit url provided.",
       '816': "Denied access to microphone.",
       '817': "Audio transmit already connected.",
-      '818': "No audio transmit url provided."
+      '818': "No audio transmit url provided.",
+      '819': "No microphone available."
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null):void {
