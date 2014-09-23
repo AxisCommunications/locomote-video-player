@@ -1,5 +1,6 @@
 package com.axis.rtmpclient {
   import com.axis.ClientEvent;
+  import com.axis.ErrorManager;
   import com.axis.IClient;
   import com.axis.Logger;
 
@@ -17,6 +18,7 @@ package com.axis.rtmpclient {
     private var ns:NetStream;
     private var streamServer:String;
     private var streamId:String;
+    private var currentState:String = "stopped";
 
     public function RTMPClient(video:Video, urlParsed:Object) {
       this.video = video;
@@ -45,15 +47,25 @@ package com.axis.rtmpclient {
     public function stop():Boolean {
       ns.dispose();
       nc.close();
+      this.currentState = "stopped";
       return true;
     }
 
     public function pause():Boolean {
+      if (this.currentState !== 'playing') {
+        ErrorManager.dispatchError(800);
+        return false;
+      }
       ns.pause();
+      this.currentState = "paused";
       return true;
     }
 
     public function resume():Boolean {
+      if (this.currentState !== 'paused') {
+        ErrorManager.dispatchError(801);
+        return false;
+      }
       ns.resume();
       return true;
     }
@@ -71,6 +83,7 @@ package com.axis.rtmpclient {
 
       if ('NetConnection.Connect.Closed' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+        this.currentState = "stopped";
       }
     }
 
@@ -95,27 +108,32 @@ package com.axis.rtmpclient {
       if (this.ns.bufferTime === 0 && 'NetStream.Play.Start' === event.info.code) {
         // Buffer is set to 0, dispatch start event immediately
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+        this.currentState = "playing";
         return;
       }
 
       if (this.ns.bufferTime === 0 && 'NetStream.Unpause.Notify' === event.info.code) {
         // Buffer is set to 0, dispatch start event immediately
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+        this.currentState = "playing";
         return;
       }
 
       if ('NetStream.Buffer.Full' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+        this.currentState = "playing";
         return;
       }
 
       if ('NetStream.Buffer.Empty' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+        this.currentState = "paused";
         return;
       }
 
       if ('NetStream.Pause.Notify' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
+        this.currentState = "paused";
         return;
       }
     }
