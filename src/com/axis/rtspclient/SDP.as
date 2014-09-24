@@ -241,7 +241,7 @@ package com.axis.rtspclient {
         }
       }
 
-      ErrorManager.dispatchError(826, [pt]);
+      ErrorManager.dispatchError(826, [pt], true);
 
       return null;
     }

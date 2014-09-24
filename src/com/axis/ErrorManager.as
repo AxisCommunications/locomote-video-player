@@ -111,7 +111,7 @@ package com.axis {
       '826': "No media block for payload type: %p"
     };
 
-    public static function dispatchError(errorCode:Number, errorData:Array = null):void {
+    public static function dispatchError(errorCode:Number, errorData:Array = null, throwError:Boolean = false):void {
       var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
       var errorMessage:String = (errorData) ? ErrorManager.resolveErrorString(STREAM_ERRORS[errorCode], errorData) : STREAM_ERRORS[errorCode];
       if (null === errorMessage) {
@@ -122,6 +122,9 @@ package com.axis {
         'message': errorMessage
       };
       ExternalInterface.call(functionName, "error", errorInfo);
+      if (throwError) {
+        throw new Error(errorMessage);
+      }
     }
 
     public static function resolveErrorString(errorString:String, errorData:Array):String {

@@ -10,7 +10,7 @@ package com.axis.rtspclient {
       var toFind:ByteArray = toByteArray(pattern);
       if (toFind == null) {
         // ** type of pattern unsupported **
-        ErrorManager.dispatchError(821);
+        ErrorManager.dispatchError(821, null, true);
         return -1;
       }
 
