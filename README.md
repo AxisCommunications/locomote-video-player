@@ -48,9 +48,10 @@ and the JavaScript library (`locomote.min.js` in example below). Use a simple pa
     <script type="text/javascript">
 
       $(document).ready(function() {
-        /* Instansiate Locomote. First argument is the id of the DOM
-           element where Locomote should embed the player. The second
-           argument is the URL to the player SWF */
+        /* Instansiate Locomote. First argument is either the id of the
+           DOM element or a reference to the DOM element where Locomote
+           should embed the player. The second argument is the URL to
+           the player SWF */
         var locomote = new Locomote('player', 'Player.swf');
 
         /* Set up a listener for when the API is ready to be used */
