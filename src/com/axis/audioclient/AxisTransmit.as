@@ -112,7 +112,6 @@ package com.axis.audioclient {
       if (mic) {
         mic.removeEventListener(StatusEvent.STATUS, onMicStatus);
         mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
-        mic = null;
       }
       conn.close();
     }
