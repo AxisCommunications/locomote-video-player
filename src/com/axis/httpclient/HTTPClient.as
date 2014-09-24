@@ -17,7 +17,7 @@ package com.axis.httpclient {
     private var nc:NetConnection;
     private var ns:NetStream;
     public var ended:Boolean = false;
-    private var currentState:String = "stopped";
+    private var currentState:String = 'stopped';
 
     public function HTTPClient(video:Video, urlParsed:Object) {
       this.urlParsed = urlParsed;
@@ -44,7 +44,7 @@ package com.axis.httpclient {
     public function stop():Boolean {
       ns.dispose();
       nc.close();
-      this.currentState = "stopped";
+      this.currentState = 'stopped';
       return true;
     }
 
@@ -54,7 +54,6 @@ package com.axis.httpclient {
         return false;
       }
       ns.pause();
-      this.currentState = "paused";
       return true;
     }
 
@@ -76,14 +75,14 @@ package com.axis.httpclient {
     private function onConnectionStatus(event:NetStatusEvent):void {
       if ('NetConnection.Connect.Closed' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
-        this.currentState = "stopped";
+        this.currentState = 'stopped';
       }
     }
 
     private function onNetStatus(event:NetStatusEvent):void {
       if ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
-        this.currentState = "playing";
+        this.currentState = 'playing';
         return;
       }
 
@@ -94,13 +93,13 @@ package com.axis.httpclient {
 
       if (!ended && 'NetStream.Buffer.Empty' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
-        this.currentState = "paused";
+        this.currentState = 'paused';
         return;
       }
 
       if ('NetStream.Pause.Notify' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
-        this.currentState = "paused";
+        this.currentState = 'paused';
         return;
       }
     }
