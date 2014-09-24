@@ -1,4 +1,5 @@
 package com.axis.rtspclient {
+  import com.axis.ErrorManager;
   import com.axis.Logger;
   import com.axis.rtspclient.ByteArrayUtils;
   import com.axis.rtspclient.RTP;
@@ -114,7 +115,7 @@ package com.axis.rtspclient {
       var seq_parameter_set_id:uint = sps.readUnsignedExpGolomb();
       if (-1 !== [100, 110, 122, 244, 44, 83, 86, 118, 128, 138].indexOf(profile)) {
         /* Parse chroma/luma parameters */
-        throw new Error("No support for parsing Chroma/Luma parameters");
+        ErrorManager.dispatchError(822, null, true);
       }
 
       var log2_max_frame_num_minus4:uint = sps.readUnsignedExpGolomb();
@@ -122,7 +123,7 @@ package com.axis.rtspclient {
       if (0 == pic_order_cnt_type) {
         var log2_max_pic_order_cnt_lsb_minus4:uint = sps.readUnsignedExpGolomb();
       } else if (1 == pic_order_cnt_type) {
-        throw new Error("No support for parsing 'pic_order_cnt_type' != 0");
+        ErrorManager.dispatchError(823, null, true);
       }
 
       var max_num_ref_frames:uint                   = sps.readUnsignedExpGolomb();

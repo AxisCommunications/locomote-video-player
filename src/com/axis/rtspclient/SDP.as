@@ -1,4 +1,5 @@
 package com.axis.rtspclient {
+  import com.axis.ErrorManager;
   import com.axis.Logger;
 
   import flash.utils.ByteArray;
@@ -240,7 +241,9 @@ package com.axis.rtspclient {
         }
       }
 
-      throw new Error('No media block for payload type: ' + pt);
+      ErrorManager.dispatchError(826, [pt], true);
+
+      return null;
     }
 
     public function getMediaBlockList():Array {
