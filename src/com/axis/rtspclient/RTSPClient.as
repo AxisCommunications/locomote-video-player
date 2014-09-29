@@ -21,6 +21,8 @@ package com.axis.rtspclient {
   import flash.net.NetStream;
   import flash.net.Socket;
   import flash.utils.ByteArray;
+  import flash.events.TimerEvent;
+  import flash.utils.Timer;
 
   import mx.utils.StringUtil;
 
@@ -62,6 +64,10 @@ package com.axis.rtspclient {
     private var authOpts:Object = {};
     private var digestNC:uint = 1;
 
+    private var bcTimer:Timer;
+
+    private var nc:NetConnection = null;
+
     public function RTSPClient(video:Video, urlParsed:Object, handle:IRTSPHandle) {
       this.userAgent = "Locomote " + StringUtil.trim(new Version().toString());
       this.state = STATE_INITIAL;
@@ -74,6 +80,9 @@ package com.axis.rtspclient {
     }
 
     public function start():Boolean {
+      bcTimer = new Timer(Player.connectionTimeout * 1000, 1);
+      bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
         if (state !== STATE_INITIAL) {
@@ -93,7 +102,7 @@ package com.axis.rtspclient {
         }
       });
 
-      var nc:NetConnection = new NetConnection();
+      nc = new NetConnection();
       nc.connect(null);
       nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       nc.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
@@ -136,6 +145,11 @@ package com.axis.rtspclient {
 
     public function stop():Boolean {
       sendTeardownReq();
+      nc.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
+      nc.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      nc.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
+      nc.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
+      bcTimer.stop();
       return true;
     }
 
@@ -156,6 +170,9 @@ package com.axis.rtspclient {
     }
 
     private function onData(event:Event):void {
+      bcTimer.reset();
+      bcTimer.start();
+
       if (0 < data.bytesAvailable) {
         /* Determining byte have already been read. This is a continuation */
       } else {
@@ -610,11 +627,32 @@ package com.axis.rtspclient {
 
       if ('NetStream.Buffer.Empty' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+
         return;
       }
     }
 
+    private function bcTimerHandler(e:TimerEvent):void {
+      if (state === STATE_TEARDOWN) {
+        return;
+      }
+
+      this.handle.disconnect();
+      this.handle = null;
+      bcTimer.stop();
+      bcTimer = null;
+
+      nc.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
+      nc.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      nc.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
+      nc.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
+
+      ErrorManager.dispatchError(827);
+      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
+    }
+
     private function onAborted(event:ClientEvent):void {
+      bcTimer.stop();
       this.handle.disconnect();
       this.handle = null;
       dispatchEvent(new ClientEvent(ClientEvent.ABORTED));

@@ -215,6 +215,7 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 > Sets configuration values of the player. `config` is a JavaScript object that can have the following optional values:
 
 > - `buffer` - The number of seconds that should be buffered. The default value is `3`.
+> - `connectionTimeout` - The number of seconds before a broken connection times out and is closed. The default value is `10`.
 > - `scaleUp` - Specifies if the video can be scaled up or not. The default value is `false`.
 > - `allowFullscreen` - Specifices if fullscreen mode is allowed or not. The default value is `true`.
 > - `debugLogger` - Specifices if debug messages should be shown in the Flash console or not. The default value is `false`.
