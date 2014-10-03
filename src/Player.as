@@ -101,7 +101,7 @@ package {
         (StageDisplayState.NORMAL === stage.displayState) ? callAPI(EVENT_FULLSCREEN_EXITED) : callAPI(EVENT_FULLSCREEN_ENTERED);
       });
 
-      this.setConfig(this.config)
+      this.setConfig(this.config);
     }
 
     /**
