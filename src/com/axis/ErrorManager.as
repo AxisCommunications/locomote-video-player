@@ -104,7 +104,7 @@ package com.axis {
       '819': "BitArray: Bit ranges must be 1 - 32.",
       '820': "BitArray: exp-golomb larger than 32 bits is unsupported.",
       '821': "ByteArray: Unsupported Pattern",
-      '822': "FLVMux: No support for parsing Chroma/Luma parameters",
+      '822': "FLVMux: No support for Chroma/Luma scaling matrix",
       '823': "FLVMux: No support for parsing 'pic_order_cnt_type' != 0",
       '824': "RTSPClient: Unable to determine control URL.",
       '825': "RTSPClient: Pause is not supported by server.",

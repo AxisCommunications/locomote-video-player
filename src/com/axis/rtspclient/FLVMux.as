@@ -108,14 +108,31 @@ package com.axis.rtspclient {
 
     private function parseSPS(sps:BitArray):Object {
       var nalhdr:uint      = sps.readBits(8);
+
       var profile:uint     = sps.readBits(8);
+      Logger.log('FLVMux: sps profile =', profile);
+
       var constraints:uint = sps.readBits(8);
+      Logger.log('FLVMUX: sps constraints =', constraints);
+
       var level:uint       = sps.readBits(8);
+      Logger.log('FLVMux: sps level =', level);
 
       var seq_parameter_set_id:uint = sps.readUnsignedExpGolomb();
       if (-1 !== [100, 110, 122, 244, 44, 83, 86, 118, 128, 138].indexOf(profile)) {
         /* Parse chroma/luma parameters */
-        ErrorManager.dispatchError(822, null, true);
+        var chroma_format_idc:uint = sps.readUnsignedExpGolomb();
+        if (3 === chroma_format_idc) {
+          var separate_colour_plane_flag:uint = sps.readBits(1);
+        }
+
+        var bit_depth_luma_minus8:uint = sps.readUnsignedExpGolomb();
+        var bit_depth_chroma_minus8:uint = sps.readUnsignedExpGolomb();
+        var qpprime_y_zero_transform_bypass_flag:uint = sps.readBits(1);
+        var seq_scaling_matrix_present_flag:uint = sps.readBits(1);
+        if (1 === seq_scaling_matrix_present_flag) {
+          ErrorManager.dispatchError(822, null, true);
+        }
       }
 
       var log2_max_frame_num_minus4:uint = sps.readUnsignedExpGolomb();
@@ -171,6 +188,7 @@ package com.axis.rtspclient {
       spsdec.decode(sets[0]);
       var sps:BitArray = new BitArray(spsdec.toByteArray());
       var params:Object = parseSPS(sps);
+      Logger.log('FLVMux: stream params = ', params);
 
       /* Arguments */
       size += writeECMAArray({
