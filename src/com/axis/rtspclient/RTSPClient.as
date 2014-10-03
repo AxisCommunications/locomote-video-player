@@ -524,14 +524,17 @@ package com.axis.rtspclient {
     }
 
     private function onAsyncError(event:AsyncErrorEvent):void {
+      bcTimer.stop();
       ErrorManager.dispatchError(728);
     }
 
     private function onIOError(event:IOErrorEvent):void {
+      bcTimer.stop();
       ErrorManager.dispatchError(729, [event.text]);
     }
 
     private function onSecurityError(event:SecurityErrorEvent):void {
+      bcTimer.stop();
       ErrorManager.dispatchError(730, [event.text]);
     }
 
@@ -618,6 +621,7 @@ package com.axis.rtspclient {
         }
 
         if (errorCode) {
+          bcTimer.stop();
           ErrorManager.dispatchError(errorCode);
         }
       }
@@ -640,11 +644,11 @@ package com.axis.rtspclient {
         return;
       }
 
+      bcTimer.stop();
+      bcTimer = null;
       connectionBroken = true;
       this.handle.disconnect();
       this.handle = null;
-      bcTimer.stop();
-      bcTimer = null;
 
       nc.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       nc.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
