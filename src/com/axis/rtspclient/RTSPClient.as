@@ -65,6 +65,7 @@ package com.axis.rtspclient {
     private var digestNC:uint = 1;
 
     private var bcTimer:Timer;
+    private var connectionBroken:Boolean = false;
 
     private var nc:NetConnection = null;
 
@@ -165,13 +166,15 @@ package com.axis.rtspclient {
         this.ns.dispose();
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       } else {
-        ErrorManager.dispatchError(803);
+        if (!connectionBroken)
+          ErrorManager.dispatchError(803);
       }
     }
 
     private function onData(event:Event):void {
       bcTimer.reset();
       bcTimer.start();
+      connectionBroken = false;
 
       if (0 < data.bytesAvailable) {
         /* Determining byte have already been read. This is a continuation */
@@ -637,6 +640,7 @@ package com.axis.rtspclient {
         return;
       }
 
+      connectionBroken = true;
       this.handle.disconnect();
       this.handle = null;
       bcTimer.stop();
