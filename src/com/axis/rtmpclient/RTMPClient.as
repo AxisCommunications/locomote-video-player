@@ -41,7 +41,6 @@ package com.axis.rtmpclient {
       this.streamServer += urlParsed.host;
       this.streamServer += ((urlParsed.portDefined) ? (':' + urlParsed.port) : '')
       this.streamServer += urlParsed.basepath;
-      Logger.log(this.streamServer);
 
       Logger.log('RTMPClient: connecting to server: \'' + streamServer + '\'');
       nc.connect(streamServer);
