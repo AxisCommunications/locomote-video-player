@@ -6,7 +6,9 @@ package com.axis.rtmpclient {
 
   import flash.events.AsyncErrorEvent;
   import flash.events.EventDispatcher;
+  import flash.events.IOErrorEvent;
   import flash.events.NetStatusEvent;
+  import flash.events.SecurityErrorEvent;
   import flash.media.Video;
   import flash.net.NetConnection;
   import flash.net.NetStream;
@@ -18,7 +20,7 @@ package com.axis.rtmpclient {
     private var ns:NetStream;
     private var streamServer:String;
     private var streamId:String;
-    private var currentState:String = "stopped";
+    private var currentState:String = 'stopped';
 
     public function RTMPClient(video:Video, urlParsed:Object) {
       this.video = video;
@@ -29,6 +31,9 @@ package com.axis.rtmpclient {
       this.nc = new NetConnection();
       nc.addEventListener(NetStatusEvent.NET_STATUS, onConnectionStatus);
       nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);
+      nc.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      nc.addEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
+      nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       nc.client = this;
 
       this.streamId = urlParsed.basename;
@@ -47,7 +52,7 @@ package com.axis.rtmpclient {
     public function stop():Boolean {
       ns.dispose();
       nc.close();
-      this.currentState = "stopped";
+      this.currentState = 'stopped';
       return true;
     }
 
@@ -57,7 +62,7 @@ package com.axis.rtmpclient {
         return false;
       }
       ns.pause();
-      this.currentState = "paused";
+      this.currentState = 'paused';
       return true;
     }
 
@@ -83,7 +88,7 @@ package com.axis.rtmpclient {
 
       if ('NetConnection.Connect.Closed' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
-        this.currentState = "stopped";
+        this.currentState = 'stopped';
       }
     }
 
@@ -108,33 +113,129 @@ package com.axis.rtmpclient {
       if (this.ns.bufferTime === 0 && 'NetStream.Play.Start' === event.info.code) {
         // Buffer is set to 0, dispatch start event immediately
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
-        this.currentState = "playing";
+        this.currentState = 'playing';
         return;
       }
 
       if (this.ns.bufferTime === 0 && 'NetStream.Unpause.Notify' === event.info.code) {
         // Buffer is set to 0, dispatch start event immediately
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
-        this.currentState = "playing";
+        this.currentState = 'playing';
         return;
       }
 
       if ('NetStream.Buffer.Full' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
-        this.currentState = "playing";
+        this.currentState = 'playing';
         return;
       }
 
       if ('NetStream.Buffer.Empty' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
-        this.currentState = "paused";
+        this.currentState = 'paused';
         return;
       }
 
       if ('NetStream.Pause.Notify' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
-        this.currentState = "paused";
+        this.currentState = 'paused';
         return;
+      }
+    }
+
+    private function onIOError(event:IOErrorEvent):void {
+      ErrorManager.dispatchError(729, [event.text]);
+    }
+
+    private function onSecurityError(event:SecurityErrorEvent):void {
+      ErrorManager.dispatchError(730, [event.text]);
+    }
+
+    private function onNetStatusError(event:NetStatusEvent):void {
+      if (event.info.status === 'error') {
+        var errorCode:int = 0;
+        switch (event.info.code) {
+        case 'NetConnection.Call.BadVersion':
+          errorCode = 700;
+          break;
+        case 'NetConnection.Call.Failed':
+          errorCode = 701;
+          break;
+        case 'NetConnection.Call.Prohibited':
+          errorCode = 702;
+          break;
+        case 'NetConnection.Connect.AppShutdown':
+          errorCode = 703;
+          break;
+        case 'NetConnection.Connect.Failed':
+          errorCode = 704;
+          break;
+        case 'NetConnection.Connect.InvalidApp':
+          errorCode = 705;
+          break;
+        case 'NetConnection.Connect.Rejected':
+          errorCode = 706;
+          break;
+        case 'NetGroup.Connect.Failed':
+          errorCode = 707;
+          break;
+        case 'NetGroup.Connect.Rejected':
+          errorCode = 708;
+          break;
+        case 'NetStream.Connect.Failed':
+          errorCode = 709;
+          break;
+        case 'NetStream.Connect.Rejected':
+          errorCode = 710;
+          break;
+        case 'NetStream.Failed':
+          errorCode = 711;
+          break;
+        case 'NetStream.Play.Failed':
+          errorCode = 712;
+          break;
+        case 'NetStream.Play.FileStructureInvalid':
+          errorCode = 713;
+          break;
+        case 'NetStream.Play.InsufficientBW':
+          errorCode = 714;
+          break;
+        case 'NetStream.Play.StreamNotFound':
+          errorCode = 715;
+          break;
+        case 'NetStream.Publish.BadName':
+          errorCode = 716;
+          break;
+        case 'NetStream.Record.Failed':
+          errorCode = 717;
+          break;
+        case 'NetStream.Record.NoAccess':
+          errorCode = 718;
+          break;
+        case 'NetStream.Seek.Failed':
+          errorCode = 719;
+          break;
+        case 'NetStream.Seek.InvalidTime':
+          errorCode = 720;
+          break;
+        case 'SharedObject.BadPersistence':
+          errorCode = 721;
+          break;
+        case 'SharedObject.Flush.Failed':
+          errorCode = 722;
+          break;
+        case 'SharedObject.UriMismatch':
+          errorCode = 723;
+          break;
+
+        default:
+          ErrorManager.dispatchError(724, [event.info.code]);
+          return;
+        }
+
+        if (errorCode) {
+          ErrorManager.dispatchError(errorCode);
+        }
       }
     }
   }
