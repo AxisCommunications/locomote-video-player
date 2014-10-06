@@ -60,6 +60,8 @@ package com.axis.rtspclient {
     private var rtpChannel:int = -1;
     private var tracks:Array;
 
+    private var prevMethod:Function;
+
     private var authState:String = "none";
     private var authOpts:Object = {};
     private var digestNC:uint = 1;
@@ -220,6 +222,13 @@ package com.axis.rtspclient {
       if (401 === parsed.code) {
         /* Unauthorized, change authState and (possibly) try again */
         authOpts = parsed.headers['www-authenticate'];
+
+        if (authOpts.stale.toUpperCase() === 'TRUE') {
+          requestReset();
+          prevMethod();
+          return false;
+        }
+
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
           ErrorManager.dispatchError(parsed.code);
@@ -440,6 +449,8 @@ package com.axis.rtspclient {
         "User-Agent: " + userAgent + "\r\n" +
         "\r\n";
       handle.writeUTFBytes(req);
+
+      prevMethod = sendOptionsReq;
     }
 
     private function sendDescribeReq():void {
@@ -453,6 +464,8 @@ package com.axis.rtspclient {
         auth.authorizationHeader("DESCRIBE", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
       handle.writeUTFBytes(req);
+
+      prevMethod = sendDescribeReq;
     }
 
     private function sendSetupReq(block:Object):void {
@@ -471,6 +484,8 @@ package com.axis.rtspclient {
         "Date: " + new Date().toUTCString() + "\r\n" +
         "\r\n";
       handle.writeUTFBytes(req);
+
+      prevMethod = sendSetupReq;
     }
 
     private function sendPlayReq():void {
@@ -487,6 +502,8 @@ package com.axis.rtspclient {
         auth.authorizationHeader("PLAY", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
       handle.writeUTFBytes(req);
+
+      prevMethod = sendPlayReq;
     }
 
     private function sendPauseReq():void {
@@ -509,6 +526,8 @@ package com.axis.rtspclient {
         auth.authorizationHeader("PAUSE", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
       handle.writeUTFBytes(req);
+
+      prevMethod = sendPauseReq;
     }
 
     private function sendTeardownReq():void {
@@ -521,6 +540,8 @@ package com.axis.rtspclient {
         auth.authorizationHeader("TEARDOWN", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
       handle.writeUTFBytes(req);
+
+      prevMethod = sendTeardownReq;
     }
 
     private function onAsyncError(event:AsyncErrorEvent):void {
