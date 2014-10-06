@@ -217,14 +217,13 @@
       });
     },
 
-    __playerEvent: function(eventName, data) {
+    __playerEvent: function(eventName /* ... args */) {
+      var params = [];
+      params.push.apply(params, arguments);
+      params.shift(); /* First element is event name */
       this.callbacks.forEach(function(element, index, array) {
         if (element.eventName === eventName && element.callback) {
-          if (data) {
-            element.callback.call(this, data);
-          } else {
-            element.callback.call();
-          }
+          element.callback.apply(null, params);
         }
       });
     },
