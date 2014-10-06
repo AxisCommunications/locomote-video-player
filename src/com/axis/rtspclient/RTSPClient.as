@@ -542,78 +542,30 @@ package com.axis.rtspclient {
       if (event.info.status === 'error') {
         var errorCode:int = 0;
         switch (event.info.code) {
-        case 'NetConnection.Call.BadVersion':
-          errorCode = 700;
-          break;
-        case 'NetConnection.Call.Failed':
-          errorCode = 701;
-          break;
-        case 'NetConnection.Call.Prohibited':
-          errorCode = 702;
-          break;
-        case 'NetConnection.Connect.AppShutdown':
-          errorCode = 703;
-          break;
-        case 'NetConnection.Connect.Failed':
-          errorCode = 704;
-          break;
-        case 'NetConnection.Connect.InvalidApp':
-          errorCode = 705;
-          break;
-        case 'NetConnection.Connect.Rejected':
-          errorCode = 706;
-          break;
-        case 'NetGroup.Connect.Failed':
-          errorCode = 707;
-          break;
-        case 'NetGroup.Connect.Rejected':
-          errorCode = 708;
-          break;
-        case 'NetStream.Connect.Failed':
-          errorCode = 709;
-          break;
-        case 'NetStream.Connect.Rejected':
-          errorCode = 710;
-          break;
-        case 'NetStream.Failed':
-          errorCode = 711;
-          break;
-        case 'NetStream.Play.Failed':
-          errorCode = 712;
-          break;
-        case 'NetStream.Play.FileStructureInvalid':
-          errorCode = 713;
-          break;
-        case 'NetStream.Play.InsufficientBW':
-          errorCode = 714;
-          break;
-        case 'NetStream.Play.StreamNotFound':
-          errorCode = 715;
-          break;
-        case 'NetStream.Publish.BadName':
-          errorCode = 716;
-          break;
-        case 'NetStream.Record.Failed':
-          errorCode = 717;
-          break;
-        case 'NetStream.Record.NoAccess':
-          errorCode = 718;
-          break;
-        case 'NetStream.Seek.Failed':
-          errorCode = 719;
-          break;
-        case 'NetStream.Seek.InvalidTime':
-          errorCode = 720;
-          break;
-        case 'SharedObject.BadPersistence':
-          errorCode = 721;
-          break;
-        case 'SharedObject.Flush.Failed':
-          errorCode = 722;
-          break;
-        case 'SharedObject.UriMismatch':
-          errorCode = 723;
-          break;
+        case 'NetConnection.Call.BadVersion':       errorCode = 700; break;
+        case 'NetConnection.Call.Failed':           errorCode = 701; break;
+        case 'NetConnection.Call.Prohibited':       errorCode = 702; break;
+        case 'NetConnection.Connect.AppShutdown':   errorCode = 703; break;
+        case 'NetConnection.Connect.Failed':        errorCode = 704; break;
+        case 'NetConnection.Connect.InvalidApp':    errorCode = 705; break;
+        case 'NetConnection.Connect.Rejected':      errorCode = 706; break;
+        case 'NetGroup.Connect.Failed':             errorCode = 707; break;
+        case 'NetGroup.Connect.Rejected':           errorCode = 708; break;
+        case 'NetStream.Connect.Failed':            errorCode = 709; break;
+        case 'NetStream.Connect.Rejected':          errorCode = 710; break;
+        case 'NetStream.Failed':                    errorCode = 711; break;
+        case 'NetStream.Play.Failed':               errorCode = 712; break;
+        case 'NetStream.Play.FileStructureInvalid': errorCode = 713; break;
+        case 'NetStream.Play.InsufficientBW':       errorCode = 714; break;
+        case 'NetStream.Play.StreamNotFound':       errorCode = 715; break;
+        case 'NetStream.Publish.BadName':           errorCode = 716; break;
+        case 'NetStream.Record.Failed':             errorCode = 717; break;
+        case 'NetStream.Record.NoAccess':           errorCode = 718; break;
+        case 'NetStream.Seek.Failed':               errorCode = 719; break;
+        case 'NetStream.Seek.InvalidTime':          errorCode = 720; break;
+        case 'SharedObject.BadPersistence':         errorCode = 721; break;
+        case 'SharedObject.Flush.Failed':           errorCode = 722; break;
+        case 'SharedObject.UriMismatch':            errorCode = 723; break;
 
         default:
           ErrorManager.dispatchError(724, [event.info.code]);
