@@ -41,6 +41,7 @@ package {
 
     public static var locomoteID:String = null;
     public static var debugLogger:Boolean = false;
+    public static var connectionTimeout:Number = 10;
 
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
@@ -51,6 +52,7 @@ package {
 
     private var config:Object = {
       'buffer': 3,
+      'connectionTimeout': 10,
       'scaleUp': false,
       'allowFullscreen': true,
       'debugLogger': false
@@ -187,6 +189,10 @@ package {
 
       if (iconfig.debugLogger !== undefined) {
         Player.debugLogger = iconfig.debugLogger;
+      }
+
+      if (iconfig.connectionTimeout !== undefined) {
+        Player.connectionTimeout = iconfig.connectionTimeout;
       }
     }
 

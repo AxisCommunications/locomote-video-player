@@ -108,7 +108,8 @@ package com.axis {
       '823': "FLVMux: No support for parsing 'pic_order_cnt_type' != 0",
       '824': "RTSPClient: Unable to determine control URL.",
       '825': "RTSPClient: Pause is not supported by server.",
-      '826': "No media block for payload type: %p"
+      '826': "No media block for payload type: %p",
+      '827': "Connection broken. The stream has been stopped."
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null, throwError:Boolean = false):void {

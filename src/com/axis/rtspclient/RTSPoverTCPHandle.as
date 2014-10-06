@@ -47,11 +47,7 @@ package com.axis.rtspclient {
 
     public function disconnect():void {
       channel.close();
-
-      channel.removeEventListener(Event.CONNECT, onConnect);
-      channel.removeEventListener(ProgressEvent.SOCKET_DATA, onData);
-      channel.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
-      channel.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
+      channel = null;
 
       /* should probably wait for close, but it doesn't seem to fire properly */
       dispatchEvent(new Event("closed"));
