@@ -9,7 +9,7 @@
     define(factory);
   } else {
     /* Browser global */
-    root.Locomote = factory();
+    factory();
   }
 }
 (this, function() {
@@ -228,6 +228,8 @@
       });
     },
   };
+
+  window.Locomote = Locomote;
 
   return Locomote;
 }));
