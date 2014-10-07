@@ -223,6 +223,7 @@ package {
         break;
 
       case 'http':
+      case 'https':
         /* Progressive download over HTTP */
         client = new HTTPClient(this.video, urlParsed);
         break;
