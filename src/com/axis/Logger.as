@@ -9,7 +9,7 @@ package com.axis {
         trace.apply(null, args);
       }
 
-      var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
+      var functionName:String = "LocomoteMap['" + Player.locomoteID + "'].__playerEvent";
       args.unshift(functionName, 'log');
       ExternalInterface.call.apply(ExternalInterface, args);
     }

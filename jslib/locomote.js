@@ -65,7 +65,7 @@
         'name="' + tag + '" ' +
         'width="100%" ' +
         'height="100%" ' +
-        'allowFullScreen="true"';
+        'allowFullScreen="true">';
 
       // Default Flash Player options
       var opts = {
