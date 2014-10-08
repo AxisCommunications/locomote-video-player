@@ -102,6 +102,9 @@ package {
         videoResize();
         (StageDisplayState.NORMAL === stage.displayState) ? callAPI(EVENT_FULLSCREEN_EXITED) : callAPI(EVENT_FULLSCREEN_ENTERED);
       });
+      this.stage.addEventListener(Event.RESIZE, function(event:Event):void {
+        videoResize();
+      });
 
       this.setConfig(this.config);
     }
