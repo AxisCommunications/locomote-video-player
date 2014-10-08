@@ -371,6 +371,26 @@ package {
       this.videoResize();
     }
 
+    private function onXMPData(event:Event):void {
+      Logger.log('XMPData received');
+    }
+
+    private function onCuePoint(cuePoint:Object):void {
+      Logger.log('CuePoint received: ' + cuePoint.name);
+    }
+
+    private function onImageData(imageData:Object):void {
+      Logger.log('ImageData received');
+    }
+
+    private function onSeekPoint(event:Event):void {
+      Logger.log('SeekPoint received');
+    }
+
+    private function onTextData(textData:Object):void {
+      Logger.log('TextData received');
+    }
+
     public function onNetStreamCreated(ev:ClientEvent):void {
       this.ns = ev.data.ns;
       ev.data.ns.bufferTime = config.buffer;
