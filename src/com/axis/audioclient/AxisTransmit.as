@@ -253,7 +253,7 @@ package com.axis.audioclient {
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
-      var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
+      var functionName:String = "LocomoteMap['" + Player.locomoteID + "'].__playerEvent";
       if (data) {
         ExternalInterface.call(functionName, eventName, data);
       } else {

@@ -9,7 +9,7 @@
     define(factory);
   } else {
     /* Browser global */
-    factory();
+    root.Locomote = factory();
   }
 }
 (this, function() {
@@ -65,7 +65,7 @@
         'name="' + tag + '" ' +
         'width="100%" ' +
         'height="100%" ' +
-        'allowFullScreen="true"';
+        'allowFullScreen="true">';
 
       // Default Flash Player options
       var opts = {
@@ -228,8 +228,6 @@
       });
     },
   };
-
-  window.Locomote = Locomote;
 
   return Locomote;
 }));

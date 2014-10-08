@@ -363,7 +363,7 @@ package {
 
     private function onStageAdded(e:Event):void {
       Player.locomoteID = LoaderInfo(this.root.loaderInfo).parameters.locomoteID.toString();
-      ExternalInterface.call("Locomote('" + Player.locomoteID + "').__swfReady");
+      ExternalInterface.call("LocomoteMap['" + Player.locomoteID + "'].__swfReady");
     }
 
     public function onMetaData(item:Object):void {
@@ -472,7 +472,7 @@ package {
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
-      var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
+      var functionName:String = "LocomoteMap['" + Player.locomoteID + "'].__playerEvent";
       if (data) {
         ExternalInterface.call(functionName, eventName, data);
       } else {
