@@ -86,8 +86,8 @@ package com.axis.rtmpclient {
       }
 
       if ('NetConnection.Connect.Closed' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
         this.currentState = 'stopped';
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       }
     }
 
@@ -111,33 +111,33 @@ package com.axis.rtmpclient {
     private function onNetStatus(event:NetStatusEvent):void {
       if (this.ns.bufferTime === 0 && 'NetStream.Play.Start' === event.info.code) {
         // Buffer is set to 0, dispatch start event immediately
-        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         this.currentState = 'playing';
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         return;
       }
 
       if (this.ns.bufferTime === 0 && 'NetStream.Unpause.Notify' === event.info.code) {
         // Buffer is set to 0, dispatch start event immediately
-        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         this.currentState = 'playing';
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         return;
       }
 
       if ('NetStream.Buffer.Full' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         this.currentState = 'playing';
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         return;
       }
 
       if ('NetStream.Buffer.Empty' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
         this.currentState = 'paused';
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
         return;
       }
 
       if ('NetStream.Pause.Notify' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         this.currentState = 'paused';
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         return;
       }
     }
