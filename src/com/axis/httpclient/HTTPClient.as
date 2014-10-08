@@ -74,15 +74,15 @@ package com.axis.httpclient {
 
     private function onConnectionStatus(event:NetStatusEvent):void {
       if ('NetConnection.Connect.Closed' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
         this.currentState = 'stopped';
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       }
     }
 
     private function onNetStatus(event:NetStatusEvent):void {
       if ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         this.currentState = 'playing';
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         return;
       }
 
@@ -92,14 +92,14 @@ package com.axis.httpclient {
       }
 
       if (!ended && 'NetStream.Buffer.Empty' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
         this.currentState = 'paused';
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
         return;
       }
 
       if ('NetStream.Pause.Notify' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         this.currentState = 'paused';
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         return;
       }
     }
