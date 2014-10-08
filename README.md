@@ -128,6 +128,8 @@ use this yet.
 
 > The second argument is the URL to the player SWF.
 
+> The player will load asynchronously. When the player is loaded an `apiReady` event is sent. Before the `apiReady` event, no API methods can be used except `on` and `off`.
+
 ### Actions
 
 #### play(url:String)
@@ -236,6 +238,10 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 > Stops listening for events with eventName.
 
 ### Events
+
+#### apiReady
+
+> Dispatched when the player is fully initialized. This is always the first event to be sent. Before the `apiReady` event no API methods can be called except `on` and `off`.
 
 #### streamStarted
 
