@@ -105,7 +105,7 @@ Your server then must send the following XML in reply:
 </cross-domain-policy>
 ```
 
-* is the wildcard and means "all ports/domains". If you want to restrict access to a particular port, enter the port number, or a list or range of numbers.
+`*` is the wildcard and means "all ports/domains". If you want to restrict access to a particular port, enter the port number, or a list or range of numbers.
 
 For more info about socket policy files and how to set up a server please read the following articles:
 
@@ -145,6 +145,7 @@ use this yet.
 > - `rtmpt` - RTMP over HTTP
 > - `rtmps` - RTMP over SSL
 > - `http` - Progressive download via HTTP
+> - `https` - Progressive download via HTTP over SSL
 
 #### stop()
 
