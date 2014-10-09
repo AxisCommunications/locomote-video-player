@@ -113,7 +113,7 @@ package com.axis {
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null, throwError:Boolean = false):void {
-      var functionName:String = "Locomote('" + Player.locomoteID + "').__playerEvent";
+      var functionName:String = "LocomoteMap['" + Player.locomoteID + "'].__playerEvent";
       var errorMessage:String = (errorData) ? ErrorManager.resolveErrorString(STREAM_ERRORS[errorCode], errorData) : STREAM_ERRORS[errorCode];
       if (null === errorMessage) {
         errorMessage = "An unknown error has occurred.";
