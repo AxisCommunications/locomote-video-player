@@ -69,6 +69,12 @@ package {
     private var streamHasAudio:Boolean = false;
     private var streamHasVideo:Boolean = false;
 
+    public var onXMPData:Function = null;
+    public var onCuePoint:Function = null;
+    public var onImageData:Function = null;
+    public var onSeekPoint:Function = null;
+    public var onTextData:Function = null;
+
     public function Player() {
       var self:Player = this;
 
@@ -374,23 +380,23 @@ package {
       this.videoResize();
     }
 
-    private function onXMPData(event:Event):void {
-      Logger.log('XMPData received');
+    public function onXMPDataHandler(xmpData:Object):void {
+      Logger.log('XMPData received->' + xmpData.data);
     }
 
-    private function onCuePoint(cuePoint:Object):void {
+    public function onCuePointHandler(cuePoint:Object):void {
       Logger.log('CuePoint received: ' + cuePoint.name);
     }
 
-    private function onImageData(imageData:Object):void {
+    public function onImageDataHandler(imageData:Object):void {
       Logger.log('ImageData received');
     }
 
-    private function onSeekPoint(event:Event):void {
+    public function onSeekPointHandler(seekPoint:Object):void {
       Logger.log('SeekPoint received');
     }
 
-    private function onTextData(textData:Object):void {
+    public function onTextDataHandler(textData:Object):void {
       Logger.log('TextData received');
     }
 
@@ -398,6 +404,11 @@ package {
       this.ns = ev.data.ns;
       ev.data.ns.bufferTime = config.buffer;
       ev.data.ns.client = this;
+      this.onXMPData = onXMPDataHandler;
+      this.onCuePoint = onCuePointHandler;
+      this.onImageData = onImageDataHandler;
+      this.onSeekPoint = onSeekPointHandler;
+      this.onTextData = onTextDataHandler;
       this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
       this.ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       this.ns.addEventListener(DRMErrorEvent.DRM_ERROR, onDRMError);
