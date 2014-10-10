@@ -1,0 +1,30 @@
+{
+  "name": "locomote",
+  "version": "0.0.0",
+  "authors": [
+    "Alexander Olsson <alexo@axis.com>"
+  ],
+  "description": "Media player in Adobe Flash with RTSP, RTMP and HTTP support",
+  "moduleType": [
+    "amd",
+    "globals"
+  ],
+  "keywords": [
+    "media",
+    "rtsp",
+    "rtmp",
+    "http",
+    "progressive",
+    "h264"
+  ],
+  "license": "GPLv2",
+  "homepage": "https://github.com/AxisCommunications/locomote-video-player",
+  "ignore": [
+    "ext",
+    "gulpfile.js",
+    "jslib",
+    "node_modules",
+    "package.json",
+    "src"
+  ]
+}
