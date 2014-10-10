@@ -77,15 +77,16 @@ package com.axis.rtspclient {
       this.handle = handle;
       this.video = video;
       this.urlParsed = urlParsed;
+      this.bcTimer = new Timer(Player.connectionTimeout * 1000, 1);
+      this.bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+      this.bcTimer.stop(); // Don't start timeout immediately
+
 
       handle.addEventListener('data', this.onData);
       handle.addEventListener(ClientEvent.ABORTED, onAborted);
     }
 
     public function start():Boolean {
-      bcTimer = new Timer(Player.connectionTimeout * 1000, 1);
-      bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
-
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
         if (state !== STATE_INITIAL) {
@@ -142,6 +143,10 @@ package com.axis.rtspclient {
         return false;
       }
 
+      /* Start time here so we can get a connection broken if the socket has gone away */
+      bcTimer.reset();
+      bcTimer.start();
+
       sendPlayReq();
       return true;
     }
@@ -152,7 +157,6 @@ package com.axis.rtspclient {
       nc.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
       nc.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
       nc.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
-      bcTimer.stop();
       return true;
     }
 
@@ -174,9 +178,11 @@ package com.axis.rtspclient {
     }
 
     private function onData(event:Event):void {
-      bcTimer.reset();
-      bcTimer.start();
-      connectionBroken = false;
+      if (state === STATE_PLAYING) {
+        bcTimer.reset();
+        bcTimer.start();
+        connectionBroken = false;
+      }
 
       if (0 < data.bytesAvailable) {
         /* Determining byte have already been read. This is a continuation */
@@ -347,10 +353,12 @@ package com.axis.rtspclient {
         Logger.log("RTSPClient: STATE_PAUSE");
         state = STATE_PAUSED;
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
+        this.bcTimer.stop();
         break;
 
       case STATE_TEARDOWN:
         Logger.log('RTSPClient: STATE_TEARDOWN');
+        this.bcTimer.stop();
         this.handle.disconnect();
         break;
       }
@@ -613,10 +621,6 @@ package com.axis.rtspclient {
     }
 
     private function bcTimerHandler(e:TimerEvent):void {
-      if (state === STATE_TEARDOWN) {
-        return;
-      }
-
       bcTimer.stop();
       bcTimer = null;
       connectionBroken = true;
