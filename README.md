@@ -177,11 +177,13 @@ use this yet.
 
 > Returns a status object with the following data:
 
+> - buffer - The length of the buffer in seconds.
 > - microphoneVolume - the volume of the microphone when capturing audio
 > - speakerVolume - the volume of the speakers (i.e. the stream volume).
 > - microphoneMuted (bool) - if the microphone is muted.
 > - speakerMuted (bool) - if the speakers are muted.
 > - fullScreen (bool) - if the player is currently in fullscreen mode.
+> - version - the Locomote version number.
 
 #### speakerVolume(vol)
 
