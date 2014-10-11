@@ -309,6 +309,7 @@ package {
       var mic:Microphone = Microphone.getMicrophone();
 
       var status:Object = {
+        'version': StringUtil.trim(new Version().toString()),
         'microphoneVolume': audioTransmit.microphoneVolume,
         'speakerVolume': this.savedSpeakerVolume,
         'microphoneMuted': (mic.gain === 0),
