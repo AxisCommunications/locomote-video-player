@@ -21,8 +21,8 @@ package com.axis.audioclient {
   import flash.utils.ByteArray;
 
   public class AxisTransmit implements IAudioClient {
-    private static const EVENT_AUDIO_TRANSMIT_STARTED:String = "audioTransmitStarted";
-    private static const EVENT_AUDIO_TRANSMIT_STOPPED:String = "audioTransmitStopped";
+    private static const EVENT_AUDIO_TRANSMIT_STARTED:String = 'audioTransmitStarted';
+    private static const EVENT_AUDIO_TRANSMIT_STOPPED:String = 'audioTransmitStopped';
 
     private var urlParsed:Object = {};
     private var conn:Socket = new Socket();
@@ -35,7 +35,7 @@ package com.axis.audioclient {
     private var mic:Microphone = Microphone.getMicrophone();
     private var _microphoneVolume:Number;
 
-    private var currentState:String = "stopped";
+    private var currentState:String = 'stopped';
 
     public function AxisTransmit() {
       /* Set default microphone volume */
@@ -105,7 +105,6 @@ package com.axis.audioclient {
     public function stop():void {
       if (!conn.connected) {
         ErrorManager.dispatchError(813);
-        this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
         return;
       }
 
@@ -113,6 +112,8 @@ package com.axis.audioclient {
         mic.removeEventListener(StatusEvent.STATUS, onMicStatus);
         mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
       }
+      this.currentState = 'stopped';
+      this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
       conn.close();
     }
 
@@ -155,8 +156,8 @@ package com.axis.audioclient {
     }
 
     public function onClosed(event:Event):void {
-      if ("playing" === this.currentState) {
-        this.currentState = "stopped";
+      if ('playing' === this.currentState) {
+        this.currentState = 'stopped';
         this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
       }
     }
@@ -166,8 +167,8 @@ package com.axis.audioclient {
         return;
       }
 
-      if ("stopped" === this.currentState) {
-        this.currentState = "playing";
+      if ('stopped' === this.currentState) {
+        this.currentState = 'playing';
         this.callAPI(EVENT_AUDIO_TRANSMIT_STARTED);
       }
 
