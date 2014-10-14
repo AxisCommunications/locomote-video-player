@@ -377,8 +377,11 @@ package {
     }
 
     public function onMetaData(item:Object):void {
+      if (this.meta.width !== item.width || this.meta.height !== item.height) {
+        this.videoResize();
+      }
+
       this.meta = item;
-      this.videoResize();
     }
 
     public function onXMPDataHandler(xmpData:Object):void {
