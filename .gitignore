@@ -16,6 +16,7 @@ libs/
 .actionScriptProperties
 .flexProperties
 .project
+.DS_Store
 
 locomote.sublime-workspace
 locomote.sublime-project
