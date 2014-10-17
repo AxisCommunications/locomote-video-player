@@ -96,9 +96,6 @@ For more info about socket policy files and how to set up a server please read t
 
 ## API Specification
 
-**NB:** This API is only a draft, and parts of it are not implemented. Do not
-use this yet.
-
 ### Construction
 
 #### Locomote(element, url)
@@ -280,7 +277,9 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 
 > Dispatched when a log message is sent from the player.
 
-### Building Locomote
+## Building Locomote
+
+### Building with npm
 
 To compile the project, [nodejs](http://www.nodejs.org) and [npm](http://www.npmjs.org) is required.
 Since `npm` is bundled with `nodejs`, you only need to download and install `nodejs`.
@@ -291,7 +290,8 @@ and other required modules and build the `SWF` file and the `JavaScript` library
 
 After `npm` has been installed, `gulp` can also be used to build `Locomote`.
 
-### Building Locomote with Flash Builder
+### Building with Flash Builder
+
 It's also possible to build Locomote with Flash Builder. Follow the steps below to set up a Flash Builder project.
 
 - Clone the Locomote repository from Github.
