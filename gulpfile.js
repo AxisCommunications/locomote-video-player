@@ -114,7 +114,7 @@ gulp.task('build-locomote-version', [ 'build-as3corelib', 'version-file' ], fun
   build(cb);
 });
 
-gulp.task('version', function(cb) {
+gulp.task('package-version', function(cb) {
   'use strict';
 
   return gulp.src('package.json')
@@ -122,7 +122,15 @@ gulp.task('version', function(cb) {
     .pipe(gulp.dest(''));
 });
 
-gulp.task('version-file', [ 'version' ], function() {
+gulp.task('bower-version', function(cb) {
+  'use strict';
+
+  return gulp.src('bower.json')
+    .pipe(bump({ type:argv.ver }))
+    .pipe(gulp.dest(''));
+});
+
+gulp.task('version-file', [ 'package-version', 'bower-version' ], function() {
   'use strict';
 
   var pkg = require('./package.json');
@@ -135,7 +143,7 @@ gulp.task('commit-release', [ 'build-locomote-version', 'minify' ], function(cb)
 
   var pkg = require('./package.json');
 
-  return gulp.src([ 'package.json', 'VERSION', 'dist/locomote.min.js', 'dist/Player.swf' ])
+  return gulp.src([ 'package.json', 'bower.json', 'VERSION', 'dist/locomote.min.js', 'dist/Player.swf' ])
     .pipe(git.add())
     .pipe(git.commit('Committed release, version ' + pkg.version + '.'));
 });
