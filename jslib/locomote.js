@@ -192,6 +192,10 @@
       this.e.setConfig(config);
     },
 
+    videoResize: function() {
+      this.e.videoResize();
+    },
+
     on: function(eventName, callback) {
       this.callbacks.push({ eventName: eventName, callback: callback });
 
