@@ -161,10 +161,10 @@ package com.axis.rtspclient {
     }
 
 
-	public function seek(position:Number):Boolean{
+    public function seek(position:Number):Boolean{
         ErrorManager.dispatchError(719);
-		return false;
-	}
+        return false;
+    }
 
     public function forceBuffering():Boolean {
       ns.close();

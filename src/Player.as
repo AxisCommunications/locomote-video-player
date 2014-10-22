@@ -258,13 +258,13 @@ package {
       client.start();
     }
 
-	public function seek(position:String):void{
+    public function seek(position:String):void{
       if (ns === null) {
         ErrorManager.dispatchError(828);
         return;
       }
       client.seek(Number(position));
-	}
+    }
 
     public function pause():void {
       if (ns === null) {
