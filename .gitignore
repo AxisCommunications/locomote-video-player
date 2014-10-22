@@ -22,3 +22,6 @@ locomote.sublime-workspace
 locomote.sublime-project
 .atom-build.json
 node_modules
+
+#netbeans IDE
+nbproject/
