@@ -129,6 +129,16 @@ For more info about socket policy files and how to set up a server please read t
 
 > Stops video stream.
 
+#### seek(offset)
+
+> Seeks to the position specified by `offset` (calculated from the start of stream).
+>
+> If the currently player stream is RTMP, it may not work with seeking if the stream is live. Even if the material played is recorded
+> it may not work depending on RTMP server implementation.
+> In the RTMP case, this is really just delegated to [the implementation in the NetStream class][NetStream:seek].
+>
+> This does not work for RTSP at all (yet).
+
 #### pause()
 
 > Pauses video stream.
@@ -304,3 +314,5 @@ It's also possible to build Locomote with Flash Builder. Follow the steps below 
 - The project can now be built by Flash Builder. Please note that you also need to modify the default HTML template provided with the Flash Builder project to load the swf and Javascript file properly. An example of a minimal HTML file is provided below.
 
 The Flash Builder project files and build folders will be ignored by git automatically so you shouldn't have to add anything to the repository after setting up the project.
+
+[NetStream:seek]: http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/NetStream.html#seek()
