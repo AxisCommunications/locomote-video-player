@@ -318,7 +318,7 @@ The Flash Builder project files and build folders will be ignored by git automat
 [SocketPolicySetup]: http://www.adobe.com/devnet/flashplayer/articles/socket_policy_files.html
 [SocketPolicyChanges]: http://www.adobe.com/devnet/flashplayer/articles/fplayer9_security.html
 [RTSP/TCP]: http://www.ietf.org/rfc/rfc2326.txt
-[RTSP/HTTP]: (http://www.opensource.apple.com/source/QuickTimeStreamingServer/QuickTimeStreamingServer-412.42/Documentation/RTSP_Over_HTTP.pdf)
+[RTSP/HTTP]: http://www.opensource.apple.com/source/QuickTimeStreamingServer/QuickTimeStreamingServer-412.42/Documentation/RTSP_Over_HTTP.pdf
 [RTMP]: http://www.adobe.com/devnet/rtmp.html
 [ErrorManager]: https://github.com/AxisCommunications/locomote-video-player/blob/master/src/com/axis/ErrorManager.as
 [NetStream:seek]: http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/NetStream.html#seek()
