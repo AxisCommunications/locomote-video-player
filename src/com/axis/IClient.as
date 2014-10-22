@@ -24,9 +24,9 @@ package com.axis {
 
     /**
      * Called when the client should seek in the stream
-     * to a givenPosition (in Sec).
+     * to a given position (in sec).
      */
-    function seek(posision:Number):Boolean;
+    function seek(position:Number):Boolean;
 
     /**
      * Called when the client should pause the stream. This should
