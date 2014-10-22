@@ -128,6 +128,7 @@ package {
       ExternalInterface.addCallback("pause", pause);
       ExternalInterface.addCallback("resume", resume);
       ExternalInterface.addCallback("stop", stop);
+      ExternalInterface.addCallback("seek", seek);
       ExternalInterface.addCallback("streamStatus", streamStatus);
       ExternalInterface.addCallback("playerStatus", playerStatus);
       ExternalInterface.addCallback("speakerVolume", speakerVolume);
@@ -255,6 +256,14 @@ package {
       client.addEventListener(ClientEvent.PAUSED, onPaused);
       client.addEventListener(ClientEvent.ABORTED, onAborted);
       client.start();
+    }
+
+    public function seek(position:String):void{
+      if (ns === null) {
+        ErrorManager.dispatchError(828);
+        return;
+      }
+      client.seek(Number(position));
     }
 
     public function pause():void {

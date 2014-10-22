@@ -55,6 +55,11 @@ package com.axis.rtmpclient {
       return true;
     }
 
+    public function seek(position:Number):Boolean{
+        ns.seek(position);
+        return true;
+    }
+
     public function pause():Boolean {
       if (this.currentState !== 'playing') {
         ErrorManager.dispatchError(800);

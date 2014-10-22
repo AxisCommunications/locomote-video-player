@@ -109,7 +109,8 @@ package com.axis {
       '824': "RTSPClient: Unable to determine control URL.",
       '825': "RTSPClient: Pause is not supported by server.",
       '826': "No media block for payload type: %p",
-      '827': "Connection broken. The stream has been stopped."
+      '827': "Connection broken. The stream has been stopped.",
+      '828': "Unable to seek. No active stream."
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null, throwError:Boolean = false):void {
