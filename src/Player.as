@@ -137,6 +137,7 @@ package {
       ExternalInterface.addCallback("muteMicrophone", muteMicrophone);
       ExternalInterface.addCallback("unmuteMicrophone", unmuteMicrophone);
       ExternalInterface.addCallback("setConfig", setConfig);
+      ExternalInterface.addCallback("videoResize", videoResize);
 
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
