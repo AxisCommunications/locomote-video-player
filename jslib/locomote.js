@@ -125,6 +125,11 @@
       return this;
     },
 
+    seek: function(position) {
+      this.e.seek(position);
+      return this;
+    },
+
     pause: function() {
       this.e.pause();
       return this;

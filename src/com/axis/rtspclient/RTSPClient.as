@@ -160,6 +160,12 @@ package com.axis.rtspclient {
       return true;
     }
 
+
+	public function seek(position:Number):Boolean{
+        ErrorManager.dispatchError(719);
+		return false;
+	}
+
     public function forceBuffering():Boolean {
       ns.close();
       dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
