@@ -45,6 +45,7 @@
 
   Locomote.prototype = {
     __embed: function(tag, swf) {
+      this.tag = tag;
 
       var guid = (function() {
         function s4() {
@@ -192,10 +193,6 @@
       this.e.setConfig(config);
     },
 
-    videoResize: function() {
-      this.e.videoResize();
-    },
-
     on: function(eventName, callback) {
       this.callbacks.push({ eventName: eventName, callback: callback });
 
@@ -236,6 +233,16 @@
         }
       });
     },
+	
+	destroy:function(){
+      this.e = null;
+      window.LocomoteMap[this.tag] = undefined;
+      if (('string' === typeof this.tag) && document.getElementById(this.tag)) {
+        document.getElementById(this.tag).innerHTML = null;
+      } else {
+        this.tag.innerHTML = null;
+      }
+	}
   };
 
   return Locomote;
