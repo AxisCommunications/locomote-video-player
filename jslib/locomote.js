@@ -102,10 +102,10 @@
         var players = tag.getElementsByClassName('locomote-player');
 
         for (var i = 0; i < players.length; i++) {
-           if (players[i].getAttribute('id') === tempTag) {
-              this.e = players[i];
-              break;
-           }
+          if (players[i].getAttribute('id') === tempTag) {
+            this.e = players[i];
+            break;
+          }
         }
       }
     },
