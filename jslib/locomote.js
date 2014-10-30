@@ -234,7 +234,7 @@
       });
     },
 	
-	destroy:function(){
+    destroy: function() {
       this.e = null;
       window.LocomoteMap[this.tag] = undefined;
       if (('string' === typeof this.tag) && document.getElementById(this.tag)) {
