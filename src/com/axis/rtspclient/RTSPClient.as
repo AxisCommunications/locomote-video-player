@@ -82,7 +82,6 @@ package com.axis.rtspclient {
       this.bcTimer.stop(); // Don't start timeout immediately
 
       handle.addEventListener('data', this.onData);
-      handle.addEventListener(ClientEvent.ABORTED, onAborted);
     }
 
     public function start():Boolean {
@@ -242,7 +241,6 @@ package com.axis.rtspclient {
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
           ErrorManager.dispatchError(parsed.code);
-          dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
           return false;
         }
 
@@ -592,14 +590,7 @@ package com.axis.rtspclient {
       nc.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
       ErrorManager.dispatchError(827);
-      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
-    }
-
-    private function onAborted(event:ClientEvent):void {
-      bcTimer.stop();
-      this.handle.disconnect();
-      this.handle = null;
-      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
+      dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
     }
   }
 }

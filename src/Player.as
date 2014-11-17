@@ -246,7 +246,6 @@ package {
       client.addEventListener(ClientEvent.STOPPED, onStopped);
       client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.addEventListener(ClientEvent.PAUSED, onPaused);
-      client.addEventListener(ClientEvent.ABORTED, onAborted);
       client.addEventListener(ClientEvent.META, onMeta);
       client.start();
       this.newPlaylistItem = false;
@@ -402,12 +401,6 @@ package {
       if (this.newPlaylistItem) {
         start();
       }
-    }
-
-    private function onAborted(event:ClientEvent):void {
-      video.clear();
-      client = null;
-      urlParsed = null;
     }
 
     private function callAPI(eventName:String, data:Object = null):void {
