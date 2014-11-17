@@ -1,5 +1,6 @@
 package com.axis.rtspclient {
   import com.axis.ClientEvent;
+  import com.axis.NetStreamClient;
   import com.axis.ErrorManager;
   import com.axis.http.auth;
   import com.axis.http.request;
@@ -26,7 +27,7 @@ package com.axis.rtspclient {
 
   import mx.utils.StringUtil;
 
-  public class RTSPClient extends EventDispatcher implements IClient {
+  public class RTSPClient extends NetStreamClient implements IClient {
     [Embed(source = "../../../../VERSION", mimeType = "application/octet-stream")] private var Version:Class;
     private var userAgent:String;
 
@@ -42,7 +43,6 @@ package com.axis.rtspclient {
 
     private var state:int = STATE_INITIAL;
     private var handle:IRTSPHandle;
-    private var ns:NetStream;
     private var video:Video;
 
     private var sdp:SDP = new SDP();
@@ -77,10 +77,9 @@ package com.axis.rtspclient {
       this.handle = handle;
       this.video = video;
       this.urlParsed = urlParsed;
-      this.bcTimer = new Timer(Player.connectionTimeout * 1000, 1);
+      this.bcTimer = new Timer(Player.config.connectionTimeout * 1000, 1);
       this.bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
       this.bcTimer.stop(); // Don't start timeout immediately
-
 
       handle.addEventListener('data', this.onData);
       handle.addEventListener(ClientEvent.ABORTED, onAborted);
@@ -113,8 +112,7 @@ package com.axis.rtspclient {
       nc.addEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
       nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       this.ns = new NetStream(nc);
-      dispatchEvent(new ClientEvent(ClientEvent.NETSTREAM_CREATED, { ns : this.ns }));
-      this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
+      this.setupNetStream();
       video.attachNetStream(this.ns);
 
       handle.connect();
@@ -160,16 +158,16 @@ package com.axis.rtspclient {
       return true;
     }
 
-
     public function seek(position:Number):Boolean {
       ErrorManager.dispatchError(719);
       return false;
     }
 
-    public function forceBuffering():Boolean {
-      ns.close();
+    public function setBuffer(seconds:Number):Boolean {
+      this.ns.bufferTime = seconds;
+      this.ns.close();
       dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
-      ns.play(null);
+      this.ns.play(null);
       return true;
     }
 
@@ -358,8 +356,10 @@ package com.axis.rtspclient {
       case STATE_PAUSE:
         Logger.log("RTSPClient: STATE_PAUSE");
         state = STATE_PAUSED;
-        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         this.bcTimer.stop();
+
+        /* The ClientEvent must be sent here as we closed the NetStream to avoid long buffering in `pause` */
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         break;
 
       case STATE_TEARDOWN:
@@ -575,54 +575,7 @@ package com.axis.rtspclient {
 
     private function onNetStatusError(event:NetStatusEvent):void {
       if (event.info.status === 'error') {
-        var errorCode:int = 0;
-        switch (event.info.code) {
-        case 'NetConnection.Call.BadVersion':       errorCode = 700; break;
-        case 'NetConnection.Call.Failed':           errorCode = 701; break;
-        case 'NetConnection.Call.Prohibited':       errorCode = 702; break;
-        case 'NetConnection.Connect.AppShutdown':   errorCode = 703; break;
-        case 'NetConnection.Connect.Failed':        errorCode = 704; break;
-        case 'NetConnection.Connect.InvalidApp':    errorCode = 705; break;
-        case 'NetConnection.Connect.Rejected':      errorCode = 706; break;
-        case 'NetGroup.Connect.Failed':             errorCode = 707; break;
-        case 'NetGroup.Connect.Rejected':           errorCode = 708; break;
-        case 'NetStream.Connect.Failed':            errorCode = 709; break;
-        case 'NetStream.Connect.Rejected':          errorCode = 710; break;
-        case 'NetStream.Failed':                    errorCode = 711; break;
-        case 'NetStream.Play.Failed':               errorCode = 712; break;
-        case 'NetStream.Play.FileStructureInvalid': errorCode = 713; break;
-        case 'NetStream.Play.InsufficientBW':       errorCode = 714; break;
-        case 'NetStream.Play.StreamNotFound':       errorCode = 715; break;
-        case 'NetStream.Publish.BadName':           errorCode = 716; break;
-        case 'NetStream.Record.Failed':             errorCode = 717; break;
-        case 'NetStream.Record.NoAccess':           errorCode = 718; break;
-        case 'NetStream.Seek.Failed':               errorCode = 719; break;
-        case 'NetStream.Seek.InvalidTime':          errorCode = 720; break;
-        case 'SharedObject.BadPersistence':         errorCode = 721; break;
-        case 'SharedObject.Flush.Failed':           errorCode = 722; break;
-        case 'SharedObject.UriMismatch':            errorCode = 723; break;
-
-        default:
-          ErrorManager.dispatchError(724, [event.info.code]);
-          return;
-        }
-
-        if (errorCode) {
-          bcTimer.stop();
-          ErrorManager.dispatchError(errorCode);
-        }
-      }
-    }
-
-    private function onNetStatus(event:NetStatusEvent):void {
-      if ('NetStream.Buffer.Full' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
-      }
-
-      if ('NetStream.Buffer.Empty' === event.info.code) {
-        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
-
-        return;
+        bcTimer.stop();
       }
     }
 

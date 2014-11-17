@@ -74,7 +74,7 @@ package com.axis {
       '722': "SharedObject.Flush.Failed - The 'pending' status is resolved, but the SharedObject.flush() failed.",
       '723': "SharedObject.UriMismatch - The video dimensions are available or have changed. Use the Video or StageVideo videoWidth/videoHeight property to query the new video dimensions. New in Flash Player 11.4/AIR 3.4.",
       '724': "Unknown NetStatus error: %p",
-      '725': "NetStream reported an asyncError.",
+      '725': "NetStream reported an asyncError: %p",
       '726': "NetStream reported a DRMError with ID: %p and subID: %p.",
       '727': "NetStream reported an IOError: %p.",
       '728': "NetConnection reported an asyncError.",
@@ -110,7 +110,8 @@ package com.axis {
       '825': "RTSPClient: Pause is not supported by server.",
       '826': "No media block for payload type: %p",
       '827': "Connection broken. The stream has been stopped.",
-      '828': "Unable to seek. No active stream."
+      '828': "Unable to seek. No active stream.",
+      '829': "httpm only supports Content-Type: 'multipart/x-mixed-replace'"
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null, throwError:Boolean = false):void {
