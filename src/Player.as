@@ -206,17 +206,16 @@ package {
       }
     }
 
-    public function play(iurl:String = null):void {
+    public function play(iurl:String = null, streamName:String = null):void {
       this.streamHasAudio = false;
       this.streamHasVideo = false;
       if (client) {
-        urlParsed = url.parse(iurl);
         /* Stop the client, and 'onStopped' will start the new stream. */
         client.stop();
         return;
       }
 
-      urlParsed = url.parse(iurl);
+      urlParsed = url.parse(iurl, streamName);
       start();
     }
 
