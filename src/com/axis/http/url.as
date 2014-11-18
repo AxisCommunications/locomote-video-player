@@ -11,7 +11,7 @@ package com.axis.http {
      *         If URL part is not in the specified url, the corresponding
      *         value is null.
      */
-    public static function parse(url:String):Object {
+    public static function parse(url:String, streamName:String = null):Object {
       var ret:Object = {};
 
       var regex:RegExp = /^(?P<protocol>[^:]+):\/\/(?P<login>[^\/]+)(?P<urlpath>.*)$/;
@@ -21,9 +21,16 @@ package com.axis.http {
       ret.protocol = result.protocol;
       ret.urlpath = result.urlpath;
 
-      var parts:Array = result.urlpath.split('/');
-      ret.basename = parts.pop().split(/\?|#/)[0];
-      ret.basepath = parts.join('/');
+
+
+      if(streamName==null){
+        var parts:Array = result.urlpath.split('/');
+        ret.basename = parts.pop().split(/\?|#/)[0];
+        ret.basepath = parts.join('/');
+      }else{
+        ret.basename = streamName;
+        ret.basepath = result.urlpath;
+      }
 
       var loginSplit:Array = result['login'].split('@');
       var hostport:Array = loginSplit[0].split(':');
