@@ -234,11 +234,11 @@
       });
     },
 	
-    destroy:function(){
+    destroy: function() {
       this.e = null;
       window.LocomoteMap[this.tag] = undefined;
       document.getElementById(this.domId).parentNode.innerHtml = null;
-     }
+    }
   };
 
   return Locomote;
