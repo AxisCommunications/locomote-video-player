@@ -57,12 +57,12 @@
           return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
         };
       })();
-      var tempTag = guid();
+      this.domId = guid();
       var element =
         '<object type="application/x-shockwave-flash" ' +
         'class="locomote-player" ' +
         'data="' + swf + '" ' +
-        'id="' + tempTag + '" ' +
+        'id="' + this.domId + '" ' +
         'name="' + tag + '" ' +
         'width="100%" ' +
         'height="100%" ' +
@@ -94,7 +94,7 @@
         document.getElementById(tag).innerHTML = element;
 
         // Save the reference to the Flash Player object
-        this.e = document.getElementById(tempTag);
+        this.e = document.getElementById(this.domId);
       } else {
         // Insert the object into the provided element
         tag.innerHTML = element;
@@ -103,7 +103,7 @@
         var players = tag.getElementsByClassName('locomote-player');
 
         for (var i = 0; i < players.length; i++) {
-           if (players[i].getAttribute('id') === tempTag) {
+           if (players[i].getAttribute('id') === this.domId) {
               this.e = players[i];
               break;
            }
@@ -234,15 +234,11 @@
       });
     },
 	
-	destroy:function(){
+    destroy:function(){
       this.e = null;
       window.LocomoteMap[this.tag] = undefined;
-      if (('string' === typeof this.tag) && document.getElementById(this.tag)) {
-        document.getElementById(this.tag).innerHTML = null;
-      } else {
-        this.tag.innerHTML = null;
-      }
-	}
+      document.getElementById(this.domId).parentNode.innerHtml = null;
+     }
   };
 
   return Locomote;
