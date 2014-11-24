@@ -115,8 +115,8 @@
       this.__playerEvent('apiReady');
     },
 
-    play: function(url, streamName) {
-      this.e.play(url, streamName);
+    play: function(url) {
+      this.e.play(url);
       return this;
     },
 

@@ -206,7 +206,7 @@ package {
       }
     }
 
-    public function play(iurl:String = null, streamName:String = null):void {
+    public function play(iurl:Object = null):void {
       this.streamHasAudio = false;
       this.streamHasVideo = false;
       if (client) {
@@ -215,7 +215,7 @@ package {
         return;
       }
 
-      urlParsed = url.parse(iurl, streamName);
+      urlParsed = url.parse(iurl);
       start();
     }
 
@@ -385,11 +385,8 @@ package {
     }
 
     public function onMetaData(item:Object):void {
-      if (this.meta.width !== item.width || this.meta.height !== item.height) {
-        this.videoResize();
-      }
-
       this.meta = item;
+      this.videoResize();
     }
 
     public function onXMPDataHandler(xmpData:Object):void {
