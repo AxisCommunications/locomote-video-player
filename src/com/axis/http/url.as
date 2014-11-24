@@ -14,20 +14,7 @@ package com.axis.http {
      *         If URL part is not in the specified url, the corresponding
      *         value is null.
      */
-    public static function parse(param:Object):Object {
-      var url:String;
-      var streamName:String=null;
-
-      if(param is String){
-        //This is a standard url string
-        url = String(param);
-      }else{
-        //This sould be an rtmp connection object
-        url = param.connect;
-        streamName = param.streamName;
-      }
-
-
+    public static function parse(url:String):Object {
       var ret:Object = {};
 
       var regex:RegExp = /^(?P<protocol>[^:]+):\/\/(?P<login>[^\/]+)(?P<urlpath>.*)$/;
@@ -37,16 +24,10 @@ package com.axis.http {
       ret.protocol = result.protocol;
       ret.urlpath = result.urlpath;
 
-      if(param is String){
-        //this is the standard url
-        var parts:Array = result.urlpath.split('/');
-        ret.basename = parts.pop().split(/\?|#/)[0];
-        ret.basepath = parts.join('/');
-      }else{
-        //this is a rtmp connection
-        ret.basename = streamName;
-        ret.basepath = result.urlpath;
-      }
+      //this is the standard url
+      var parts:Array = result.urlpath.split('/');
+      ret.basename = parts.pop().split(/\?|#/)[0];
+      ret.basepath = parts.join('/');
 
       var loginSplit:Array = result['login'].split('@');
       var hostport:Array = loginSplit[0].split(':');

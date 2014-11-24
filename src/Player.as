@@ -206,7 +206,7 @@ package {
       }
     }
 
-    public function play(iurl:Object = null):void {
+    public function play(param:* = null):void {
       this.streamHasAudio = false;
       this.streamHasVideo = false;
       if (client) {
@@ -214,8 +214,15 @@ package {
         client.stop();
         return;
       }
+      
+      if(param is Object){
+        urlParsed = url.parse(param.url);
+        urlParsed.connect = param.url;
+        urlParsed.streamName = param.streamName;
+      }else{
+        urlParsed = url.parse(String(param));
+      }
 
-      urlParsed = url.parse(iurl);
       start();
     }
 
@@ -385,8 +392,11 @@ package {
     }
 
     public function onMetaData(item:Object):void {
+      if (this.meta.width !== item.width || this.meta.height !== item.height) {
+        this.videoResize();
+      }
+
       this.meta = item;
-      this.videoResize();
     }
 
     public function onXMPDataHandler(xmpData:Object):void {
