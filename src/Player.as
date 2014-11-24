@@ -209,18 +209,19 @@ package {
     public function play(param:* = null):void {
       this.streamHasAudio = false;
       this.streamHasVideo = false;
+      
+      if(param is String){
+        urlParsed = url.parse(String(param));
+      }else{
+        urlParsed = url.parse(param.url);
+        urlParsed.connect = param.url;
+        urlParsed.streamName = param.streamName;
+      }
+
       if (client) {
         /* Stop the client, and 'onStopped' will start the new stream. */
         client.stop();
         return;
-      }
-      
-      if(param is Object){
-        urlParsed = url.parse(param.url);
-        urlParsed.connect = param.url;
-        urlParsed.streamName = param.streamName;
-      }else{
-        urlParsed = url.parse(String(param));
       }
 
       start();
