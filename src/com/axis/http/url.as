@@ -26,7 +26,6 @@ package com.axis.http {
         url = param.connect;
         streamName = param.streamName;
       }
-      Logger.log("Url is : "+url);
 
 
       var ret:Object = {};
@@ -43,12 +42,10 @@ package com.axis.http {
         var parts:Array = result.urlpath.split('/');
         ret.basename = parts.pop().split(/\?|#/)[0];
         ret.basepath = parts.join('/');
-        Logger.log("This is not rtmp");
       }else{
         //this is a rtmp connection
         ret.basename = streamName;
         ret.basepath = result.urlpath;
-        Logger.log("This is rtmp, stream name is "+streamName);
       }
 
       var loginSplit:Array = result['login'].split('@');
