@@ -15,14 +15,12 @@ package com.axis.rtmpclient {
   import flash.net.NetStream;
 
   public class RTMPClient extends NetStreamClient implements IClient {
-    private var video:Video;
     private var urlParsed:Object;
     private var nc:NetConnection;
     private var streamServer:String;
     private var streamId:String;
 
-    public function RTMPClient(video:Video, urlParsed:Object) {
-      this.video = video;
+    public function RTMPClient(urlParsed:Object) {
       this.urlParsed = urlParsed;
     }
 
@@ -94,7 +92,7 @@ package com.axis.rtmpclient {
         Logger.log('RTMPClient: connected');
         this.ns = new NetStream(this.nc);
         this.setupNetStream();
-        this.video.attachNetStream(this.ns);
+
         Logger.log('RTMPClient: starting stream: \'' + this.streamId + '\'');
         this.ns.play(this.streamId);
       }

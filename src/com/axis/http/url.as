@@ -53,6 +53,7 @@ package com.axis.http {
         case 'rtsp': return 554;
         case 'http': return 80;
         case 'https': return 443;
+        case 'httpm': return 80;
       }
 
       return 0;

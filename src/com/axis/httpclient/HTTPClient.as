@@ -14,12 +14,10 @@ package com.axis.httpclient {
 
   public class HTTPClient extends NetStreamClient implements IClient {
     private var urlParsed:Object;
-    private var video:Video;
     private var nc:NetConnection;
 
-    public function HTTPClient(video:Video, urlParsed:Object) {
+    public function HTTPClient(urlParsed:Object) {
       this.urlParsed = urlParsed;
-      this.video = video;
     }
 
     public function start():Boolean {
@@ -31,7 +29,6 @@ package com.axis.httpclient {
 
       this.ns = new NetStream(nc);
       this.setupNetStream();
-      this.video.attachNetStream(this.ns);
 
       this.ns.play(urlParsed.full);
       return true;

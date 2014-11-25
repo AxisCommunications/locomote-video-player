@@ -6,6 +6,7 @@ package {
   import com.axis.httpclient.HTTPClient;
   import com.axis.IClient;
   import com.axis.Logger;
+  import com.axis.mjpegclient.MJPEGClient;
   import com.axis.rtmpclient.RTMPClient;
   import com.axis.rtspclient.IRTSPHandle;
   import com.axis.rtspclient.RTSPClient;
@@ -18,6 +19,8 @@ package {
   import flash.display.StageAlign;
   import flash.display.StageDisplayState;
   import flash.display.StageScaleMode;
+  import flash.display.DisplayObject;
+  import flash.display.InteractiveObject;
   import flash.events.Event;
   import flash.events.MouseEvent;
   import flash.external.ExternalInterface;
@@ -52,7 +55,6 @@ package {
       'allowFullscreen': true,
       'debugLogger': false
     };
-    private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
     private var client:IClient;
@@ -85,10 +87,6 @@ package {
       this.stage.align = StageAlign.TOP_LEFT;
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
       addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
-
-      /* Video object setup */
-      video = new Video(stage.stageWidth, stage.stageHeight);
-      addChild(video);
 
       /* Fullscreen support setup */
       this.stage.doubleClickEnabled = true;
@@ -146,6 +144,8 @@ package {
       var stageheight:uint = (StageDisplayState.NORMAL === stage.displayState) ?
         stage.stageHeight : stage.fullScreenHeight;
 
+      var video:DisplayObject = this.client.getDisplayObject();
+
       var scale:Number = ((stagewidth / meta.width) > (stageheight / meta.height)) ?
         (stageheight / meta.height) : (stagewidth / meta.width);
 
@@ -163,8 +163,13 @@ package {
 
     public function setConfig(iconfig:Object):void {
       if (iconfig.buffer !== undefined) {
-        config.buffer = iconfig.buffer;
-        if (this.client) this.client.setBuffer(config.buffer);
+        if (this.client) {
+          if (false === this.client.setBuffer(config.buffer)) {
+            ErrorManager.dispatchError(830);
+          } else {
+            config.buffer = iconfig.buffer;
+          }
+        }
       }
 
       if (iconfig.scaleUp !== undefined) {
@@ -217,31 +222,38 @@ package {
       switch (urlParsed.protocol) {
       case 'rtsph':
         /* RTSP over HTTP */
-        client = new RTSPClient(this.video, urlParsed, new RTSPoverHTTPHandle(urlParsed));
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed));
         break;
 
       case 'rtsp':
         /* RTSP over TCP */
-        client = new RTSPClient(this.video, urlParsed, new RTSPoverTCPHandle(urlParsed));
+        client = new RTSPClient(urlParsed, new RTSPoverTCPHandle(urlParsed));
         break;
 
       case 'http':
       case 'https':
         /* Progressive download over HTTP */
-        client = new HTTPClient(this.video, urlParsed);
+        client = new HTTPClient(urlParsed);
+        break;
+
+      case 'httpm':
+        /* Progressive mjpg download over HTTP (x-mixed-replace) */
+        client = new MJPEGClient(urlParsed);
         break;
 
       case 'rtmp':
       case 'rtmps':
       case 'rtmpt':
         /* RTMP */
-        client = new RTMPClient(this.video, urlParsed);
+        client = new RTMPClient(urlParsed);
         break;
 
       default:
         ErrorManager.dispatchError(811, [urlParsed.protocol])
         return;
       }
+
+      addChild(this.client.getDisplayObject());
 
       client.addEventListener(ClientEvent.STOPPED, onStopped);
       client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
@@ -252,36 +264,30 @@ package {
     }
 
     public function seek(position:String):void{
-      if (!client) {
+      if (!client || !client.seek(Number(position))) {
         ErrorManager.dispatchError(828);
-        return;
       }
-      client.seek(Number(position));
     }
 
     public function pause():void {
-      if (!client) {
+      if (!client || !client.pause()) {
         ErrorManager.dispatchError(808);
-        return;
       }
-      client.pause();
     }
 
     public function resume():void {
-      if (!client) {
+      if (!client || !client.resume()) {
         ErrorManager.dispatchError(809);
-        return;
       }
-      client.resume();
     }
 
     public function stop():void {
-      if (client === null) {
+      if (!client || !client.stop()) {
         ErrorManager.dispatchError(810);
         return;
       }
+
       urlParsed = null;
-      client.stop();
       this.currentState = "stopped";
       this.streamHasAudio = false;
       this.streamHasVideo = false;
@@ -393,8 +399,8 @@ package {
     }
 
     private function onStopped(event:ClientEvent):void {
-      video.clear();
-      client = null;
+      this.removeChild(this.client.getDisplayObject());
+      this.client = null;
       this.callAPI(EVENT_STREAM_STOPPED);
 
       /* If a new `play` has been queued, fire it */

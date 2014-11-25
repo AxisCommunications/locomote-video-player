@@ -43,7 +43,6 @@ package com.axis.rtspclient {
 
     private var state:int = STATE_INITIAL;
     private var handle:IRTSPHandle;
-    private var video:Video;
 
     private var sdp:SDP = new SDP();
     private var flvmux:FLVMux;
@@ -71,11 +70,10 @@ package com.axis.rtspclient {
 
     private var nc:NetConnection = null;
 
-    public function RTSPClient(video:Video, urlParsed:Object, handle:IRTSPHandle) {
+    public function RTSPClient(urlParsed:Object, handle:IRTSPHandle) {
       this.userAgent = "Locomote " + StringUtil.trim(new Version().toString());
       this.state = STATE_INITIAL;
       this.handle = handle;
-      this.video = video;
       this.urlParsed = urlParsed;
       this.bcTimer = new Timer(Player.config.connectionTimeout * 1000, 1);
       this.bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
@@ -112,7 +110,6 @@ package com.axis.rtspclient {
       nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       this.ns = new NetStream(nc);
       this.setupNetStream();
-      video.attachNetStream(this.ns);
 
       handle.connect();
       return true;
@@ -158,7 +155,6 @@ package com.axis.rtspclient {
     }
 
     public function seek(position:Number):Boolean {
-      ErrorManager.dispatchError(719);
       return false;
     }
 

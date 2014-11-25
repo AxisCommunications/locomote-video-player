@@ -1,9 +1,11 @@
 package com.axis {
+  import flash.display.DisplayObject;
   import flash.events.EventDispatcher;
   import flash.events.AsyncErrorEvent;
   import flash.events.DRMErrorEvent;
   import flash.events.IOErrorEvent;
   import flash.events.NetStatusEvent;
+  import flash.media.Video;
   import flash.net.NetStream;
 
   import mx.utils.ObjectUtil;
@@ -16,11 +18,11 @@ package com.axis {
     public var onTextData:Function = null;
 
     private var ended:Boolean = false;
+    private var video:Video = new Video();
     protected var ns:NetStream;
     protected var currentState:String = 'stopped';
 
     public function hasVideo():Boolean {
-      Logger.log(this.ns.info);
       return (0 < this.ns.info.videoBufferByteLength);
     };
 
@@ -44,6 +46,11 @@ package com.axis {
       this.ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       this.ns.addEventListener(DRMErrorEvent.DRM_ERROR, onDRMError);
       this.ns.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      this.video.attachNetStream(this.ns);
+    }
+
+    public function getDisplayObject():DisplayObject {
+      return this.video;
     }
 
     public function onXMPDataHandler(xmpData:Object):void {

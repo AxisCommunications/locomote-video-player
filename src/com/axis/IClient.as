@@ -1,4 +1,5 @@
 package com.axis {
+  import flash.display.DisplayObject;
   import flash.events.IEventDispatcher;
 
   /**
@@ -9,6 +10,13 @@ package com.axis {
    *  - ClientEvent.NETSTREAM_CREATED for automatic video resizing and other goodies.
    */
   public interface IClient extends IEventDispatcher {
+
+    /**
+     * Should return the area where the video the client
+     * produces should be shown. This must be an instance of DisplayObject.
+     */
+    function getDisplayObject():DisplayObject;
+
     /**
      * Called when the client should start the stream.
      * Any connections should be made at this point
