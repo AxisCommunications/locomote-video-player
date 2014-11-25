@@ -36,10 +36,10 @@ package com.axis.rtmpclient {
       nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       nc.client = this;
 
-      if(urlParsed.hasOwnProperty("connect") && urlParsed.hasOwnProperty("streamName")){
+      if (urlParsed.hasOwnProperty("connect") && urlParsed.hasOwnProperty("streamName")) {
         this.streamId = urlParsed.streamName;
         this.streamServer = urlParsed.connect;
-      }else{
+      } else {
         this.streamId = urlParsed.basename;
         this.streamServer  = urlParsed.protocol + '://';
         this.streamServer += urlParsed.host;

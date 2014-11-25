@@ -209,10 +209,10 @@ package {
     public function play(param:* = null):void {
       this.streamHasAudio = false;
       this.streamHasVideo = false;
-      
-      if(param is String){
+
+      if (param is String) {
         urlParsed = url.parse(String(param));
-      }else{
+      } else {
         urlParsed = url.parse(param.url);
         urlParsed.connect = param.url;
         urlParsed.streamName = param.streamName;
