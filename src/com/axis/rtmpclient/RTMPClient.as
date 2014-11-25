@@ -36,11 +36,16 @@ package com.axis.rtmpclient {
       nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
       nc.client = this;
 
-      this.streamId = urlParsed.basename;
-      this.streamServer  = urlParsed.protocol + '://';
-      this.streamServer += urlParsed.host;
-      this.streamServer += ((urlParsed.portDefined) ? (':' + urlParsed.port) : '')
-      this.streamServer += urlParsed.basepath;
+      if(urlParsed.hasOwnProperty("connect") && urlParsed.hasOwnProperty("streamName")){
+        this.streamId = urlParsed.streamName;
+        this.streamServer = urlParsed.connect;
+      }else{
+        this.streamId = urlParsed.basename;
+        this.streamServer  = urlParsed.protocol + '://';
+        this.streamServer += urlParsed.host;
+        this.streamServer += ((urlParsed.portDefined) ? (':' + urlParsed.port) : '')
+        this.streamServer += urlParsed.basepath;
+      }
 
       Logger.log('RTMPClient: connecting to server: \'' + streamServer + '\'');
       nc.connect(streamServer);
