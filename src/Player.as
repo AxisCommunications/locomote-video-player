@@ -221,10 +221,9 @@ package {
       if (client) {
         /* Stop the client, and 'onStopped' will start the new stream. */
         client.stop();
-        return;
+      }else{
+        start();
       }
-
-      start();
     }
 
     private function start():void {
