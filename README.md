@@ -96,7 +96,7 @@ For more info about socket policy files and how to set up a server please read t
 
 ## API Specification
 
-### Construction
+### Construction / Destruction
 
 #### Locomote(element, url)
 
@@ -107,6 +107,16 @@ For more info about socket policy files and how to set up a server please read t
 > The second argument is the URL to the player SWF.
 
 > The player will load asynchronously. When the player is loaded an `apiReady` event is sent. Before the `apiReady` event, no API methods can be used except `on` and `off`.
+
+#### destroy()
+
+> Will remove the tag from the element is was embedded to and remove all references
+> to it held by the javascript library. This can be called as any other action. E.g.
+>
+```javascript
+var locomote = new Locomote('player', 'Player.swf');
+locomote.destroy();
+```
 
 ### Actions
 
