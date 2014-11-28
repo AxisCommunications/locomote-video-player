@@ -45,6 +45,7 @@
 
   Locomote.prototype = {
     __embed: function(tag, swf) {
+      this.tag = tag;
 
       var guid = (function() {
         function s4() {
@@ -232,6 +233,12 @@
         }
       });
     },
+
+    destroy: function() {
+      window.LocomoteMap[this.tag] = undefined;
+      this.e.parentNode.removeChild(this.e);
+      this.e = null;
+    }
   };
 
   return Locomote;
