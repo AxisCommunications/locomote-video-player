@@ -134,6 +134,7 @@ locomote.destroy();
 > - `rtmps` - RTMP over SSL
 > - `http` - Progressive download via HTTP
 > - `https` - Progressive download via HTTP over SSL
+> - `httpm` - [MJPEG over HTTP](MJPEG/HTTP) (via multipart/x-mixed-replace)
 
 #### stop()
 
@@ -332,3 +333,4 @@ The Flash Builder project files and build folders will be ignored by git automat
 [RTMP]: http://www.adobe.com/devnet/rtmp.html
 [ErrorManager]: https://github.com/AxisCommunications/locomote-video-player/blob/master/src/com/axis/ErrorManager.as
 [NetStream:seek]: http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/NetStream.html#seek()
+[MJPEG/HTTP]: http://en.wikipedia.org/wiki/Motion_JPEG#M-JPEG_over_HTTP
