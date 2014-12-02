@@ -144,7 +144,7 @@ gulp.task('commit-release', [ 'build-locomote-version', 'minify' ], function(cb)
   var pkg = require('./package.json');
 
   return gulp.src([ 'package.json', 'bower.json', 'VERSION', 'dist/locomote.min.js', 'dist/Player.swf' ])
-    .pipe(git.add())
+    .pipe(git.add({ args: '-f' }))
     .pipe(git.commit('Committed release, version ' + pkg.version + '.'));
 });
 
@@ -160,11 +160,22 @@ gulp.task('tag-release', [ 'commit-release' ], function() {
   });
 });
 
+gulp.task('clean-release', [ 'tag-release' ], function() {
+  'use strict';
+
+  var pkg = require('./package.json');
+
+  return gulp.src([ 'dist/' ])
+    .pipe(rimraf())
+    .pipe(git.add({ args: '-f -A' }))
+    .pipe(git.commit('Cleaned "dist/" folder after release ' + pkg.version + '.'));
+});
+
 gulp.task('test', [ 'lint-jshint', 'lint-jscs' ]);
 
 gulp.task('default', [ 'build-as3corelib', 'build-locomote', 'minify' ]);
 
-gulp.task('release', [ 'tag-release' ]);
+gulp.task('release', [ 'clean-release' ]);
 
 gulp.task('clean', function() {
   'use strict';
