@@ -134,7 +134,7 @@ locomote.destroy();
 > - `rtmps` - RTMP over SSL
 > - `http` - Progressive download via HTTP
 > - `https` - Progressive download via HTTP over SSL
-> - `httpm` - [MJPEG over HTTP](MJPEG/HTTP) (via multipart/x-mixed-replace)
+> - `httpm` - [MJPEG over HTTP][MJPEG/HTTP] (via multipart/x-mixed-replace)
 
 #### stop()
 
