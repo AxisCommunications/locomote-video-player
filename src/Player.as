@@ -174,7 +174,7 @@ package {
       if (iconfig.scaleUp !== undefined) {
         var scaleUpChanged:Boolean = (config.scaleUp !== iconfig.scaleUp);
         config.scaleUp = iconfig.scaleUp;
-        if (scaleUpChanged)
+        if (scaleUpChanged && this.client)
           this.videoResize();
       }
 
