@@ -92,7 +92,6 @@ package {
       this.stage.doubleClickEnabled = true;
       this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
       this.stage.addEventListener(Event.FULLSCREEN, function(event:Event):void {
-        videoResize();
         (StageDisplayState.NORMAL === stage.displayState) ? callAPI(EVENT_FULLSCREEN_EXITED) : callAPI(EVENT_FULLSCREEN_ENTERED);
       });
       this.stage.addEventListener(Event.RESIZE, function(event:Event):void {
