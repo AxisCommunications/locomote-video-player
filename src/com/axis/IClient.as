@@ -1,4 +1,5 @@
 package com.axis {
+  import flash.display.DisplayObject;
   import flash.events.IEventDispatcher;
 
   /**
@@ -9,6 +10,13 @@ package com.axis {
    *  - ClientEvent.NETSTREAM_CREATED for automatic video resizing and other goodies.
    */
   public interface IClient extends IEventDispatcher {
+
+    /**
+     * Should return the area where the video the client
+     * produces should be shown. This must be an instance of DisplayObject.
+     */
+    function getDisplayObject():DisplayObject;
+
     /**
      * Called when the client should start the stream.
      * Any connections should be made at this point
@@ -45,9 +53,24 @@ package com.axis {
     function resume():Boolean;
 
     /**
-     * Called when the client must ensure that the buffer set on the NetStream
-     * object is in effect.
+     * Called when the client should buffer a certain amount seconds
+     * before continuing playback.
      */
-    function forceBuffering():Boolean;
+    function setBuffer(seconds:Number):Boolean;
+
+    /**
+     * If the stream the client currently is playing has video.
+     */
+    function hasVideo():Boolean;
+
+    /**
+     * If the stream the client currently is playing has audio.
+     */
+    function hasAudio():Boolean;
+
+    /**
+     * Returns the current achieved frames per second for the client.
+     */
+    function currentFPS():Number;
   }
 }

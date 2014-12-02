@@ -6,6 +6,7 @@ package {
   import com.axis.httpclient.HTTPClient;
   import com.axis.IClient;
   import com.axis.Logger;
+  import com.axis.mjpegclient.MJPEGClient;
   import com.axis.rtmpclient.RTMPClient;
   import com.axis.rtspclient.IRTSPHandle;
   import com.axis.rtspclient.RTSPClient;
@@ -18,12 +19,10 @@ package {
   import flash.display.StageAlign;
   import flash.display.StageDisplayState;
   import flash.display.StageScaleMode;
-  import flash.events.AsyncErrorEvent;
-  import flash.events.DRMErrorEvent;
+  import flash.display.DisplayObject;
+  import flash.display.InteractiveObject;
   import flash.events.Event;
-  import flash.events.IOErrorEvent;
   import flash.events.MouseEvent;
-  import flash.events.NetStatusEvent;
   import flash.external.ExternalInterface;
   import flash.media.Microphone;
   import flash.media.SoundMixer;
@@ -41,7 +40,6 @@ package {
 
     public static var locomoteID:String = null;
     public static var debugLogger:Boolean = false;
-    public static var connectionTimeout:Number = 10;
 
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
@@ -50,30 +48,23 @@ package {
     private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
 
-    private var config:Object = {
+    public static var config:Object = {
       'buffer': 3,
       'connectionTimeout': 10,
       'scaleUp': false,
       'allowFullscreen': true,
       'debugLogger': false
     };
-    private var video:Video;
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
     private var client:IClient;
-    private var ns:NetStream;
     private var urlParsed:Object;
     private var savedSpeakerVolume:Number;
     private var fullscreenAllowed:Boolean = true;
     private var currentState:String = "stopped";
     private var streamHasAudio:Boolean = false;
     private var streamHasVideo:Boolean = false;
-
-    public var onXMPData:Function = null;
-    public var onCuePoint:Function = null;
-    public var onImageData:Function = null;
-    public var onSeekPoint:Function = null;
-    public var onTextData:Function = null;
+    private var newPlaylistItem:Boolean = false;
 
     public function Player() {
       var self:Player = this;
@@ -97,10 +88,6 @@ package {
       this.stage.scaleMode = StageScaleMode.NO_SCALE;
       addEventListener(Event.ADDED_TO_STAGE, onStageAdded);
 
-      /* Video object setup */
-      video = new Video(stage.stageWidth, stage.stageHeight);
-      addChild(video);
-
       /* Fullscreen support setup */
       this.stage.doubleClickEnabled = true;
       this.stage.addEventListener(MouseEvent.DOUBLE_CLICK, fullscreen);
@@ -112,7 +99,7 @@ package {
         videoResize();
       });
 
-      this.setConfig(this.config);
+      this.setConfig(Player.config);
     }
 
     /**
@@ -157,6 +144,8 @@ package {
       var stageheight:uint = (StageDisplayState.NORMAL === stage.displayState) ?
         stage.stageHeight : stage.fullScreenHeight;
 
+      var video:DisplayObject = this.client.getDisplayObject();
+
       var scale:Number = ((stagewidth / meta.width) > (stageheight / meta.height)) ?
         (stageheight / meta.height) : (stagewidth / meta.width);
 
@@ -174,11 +163,11 @@ package {
 
     public function setConfig(iconfig:Object):void {
       if (iconfig.buffer !== undefined) {
-        config.buffer = iconfig.buffer;
-        if (this.ns) {
-          this.ns.bufferTime = config.buffer;
-          if (this.currentState === 'playing') {
-            this.client.forceBuffering();
+        if (this.client) {
+          if (false === this.client.setBuffer(config.buffer)) {
+            ErrorManager.dispatchError(830);
+          } else {
+            config.buffer = iconfig.buffer;
           }
         }
       }
@@ -198,11 +187,11 @@ package {
       }
 
       if (iconfig.debugLogger !== undefined) {
-        Player.debugLogger = iconfig.debugLogger;
+        config.debugLogger = iconfig.debugLogger;
       }
 
       if (iconfig.connectionTimeout !== undefined) {
-        Player.connectionTimeout = iconfig.connectionTimeout;
+        config.connectionTimeout = iconfig.connectionTimeout;
       }
     }
 
@@ -218,6 +207,8 @@ package {
         urlParsed.streamName = param.streamName;
       }
 
+      this.newPlaylistItem = true;
+
       if (client) {
         /* Stop the client, and 'onStopped' will start the new stream. */
         client.stop();
@@ -231,25 +222,30 @@ package {
       switch (urlParsed.protocol) {
       case 'rtsph':
         /* RTSP over HTTP */
-        client = new RTSPClient(this.video, urlParsed, new RTSPoverHTTPHandle(urlParsed));
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed));
         break;
 
       case 'rtsp':
         /* RTSP over TCP */
-        client = new RTSPClient(this.video, urlParsed, new RTSPoverTCPHandle(urlParsed));
+        client = new RTSPClient(urlParsed, new RTSPoverTCPHandle(urlParsed));
         break;
 
       case 'http':
       case 'https':
         /* Progressive download over HTTP */
-        client = new HTTPClient(this.video, urlParsed);
+        client = new HTTPClient(urlParsed);
+        break;
+
+      case 'httpm':
+        /* Progressive mjpg download over HTTP (x-mixed-replace) */
+        client = new MJPEGClient(urlParsed);
         break;
 
       case 'rtmp':
       case 'rtmps':
       case 'rtmpt':
         /* RTMP */
-        client = new RTMPClient(this.video, urlParsed);
+        client = new RTMPClient(urlParsed);
         break;
 
       default:
@@ -257,63 +253,63 @@ package {
         return;
       }
 
-      client.addEventListener(ClientEvent.NETSTREAM_CREATED, onNetStreamCreated);
+      addChild(this.client.getDisplayObject());
+
       client.addEventListener(ClientEvent.STOPPED, onStopped);
       client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.addEventListener(ClientEvent.PAUSED, onPaused);
-      client.addEventListener(ClientEvent.ABORTED, onAborted);
+      client.addEventListener(ClientEvent.META, onMeta);
       client.start();
+      this.newPlaylistItem = false;
     }
 
     public function seek(position:String):void{
-      if (ns === null) {
+      if (!client || !client.seek(Number(position))) {
         ErrorManager.dispatchError(828);
-        return;
       }
-      client.seek(Number(position));
     }
 
     public function pause():void {
-      if (ns === null) {
+      if (!client || !client.pause()) {
         ErrorManager.dispatchError(808);
-        return;
       }
-      client.pause();
     }
 
     public function resume():void {
-      if (ns === null) {
+      if (!client || !client.resume()) {
         ErrorManager.dispatchError(809);
-        return;
       }
-      client.resume();
     }
 
     public function stop():void {
-      if (client === null) {
+      if (!client || !client.stop()) {
         ErrorManager.dispatchError(810);
         return;
       }
+
       urlParsed = null;
-      ns = null;
-      client.stop();
       this.currentState = "stopped";
       this.streamHasAudio = false;
       this.streamHasVideo = false;
     }
 
+    public function onMeta(event:ClientEvent):void {
+      this.meta = event.data;
+      this.videoResize();
+    }
+
     public function streamStatus():Object {
       if (this.currentState === 'playing') {
-        this.streamHasAudio = (this.streamHasAudio || this.ns.info.audioBufferByteLength);
-        this.streamHasVideo = (this.streamHasVideo || this.ns.info.videoBufferByteLength);
+        this.streamHasAudio = (this.streamHasAudio || this.client.hasAudio());
+        this.streamHasVideo = (this.streamHasVideo || this.client.hasVideo());
       }
       var status:Object = {
-        'fps': (this.ns) ? Math.floor(this.ns.currentFPS + 0.5) : null,
-        'resolution': (this.ns) ? { width: meta.width, height: meta.height } : null,
-        'playbackSpeed': (this.ns) ? 1.0 : null,
+        'fps': (this.client) ? this.client.currentFPS() : null,
+        'resolution': (this.client) ? { width: meta.width, height: meta.height } : null,
+        'playbackSpeed': (this.client) ? 1.0 : null,
         'protocol': (this.urlParsed) ? this.urlParsed.protocol : null,
-        'audio': (this.ns) ? this.streamHasAudio : null,
-        'video': (this.ns) ? this.streamHasVideo : null,
+        'audio': (this.client) ? this.streamHasAudio : null,
+        'video': (this.client) ? this.streamHasVideo : null,
         'state': this.currentState,
         'streamURL': (this.urlParsed) ? this.urlParsed.full : null
       };
@@ -331,7 +327,7 @@ package {
         'microphoneMuted': (mic.gain === 0),
         'speakerMuted': (flash.media.SoundMixer.soundTransform.volume === 0),
         'fullscreen': (StageDisplayState.FULL_SCREEN === stage.displayState),
-        'buffer': (ns === null) ? 0 : this.ns.bufferTime
+        'buffer': (client === null) ? 0 : Player.config.buffer
       };
 
       return status;
@@ -392,46 +388,6 @@ package {
       ExternalInterface.call("LocomoteMap['" + Player.locomoteID + "'].__swfReady");
     }
 
-    public function onMetaData(item:Object):void {
-      this.meta = item;
-      this.videoResize();
-    }
-
-    public function onXMPDataHandler(xmpData:Object):void {
-      Logger.log('XMPData received->' + xmpData.data);
-    }
-
-    public function onCuePointHandler(cuePoint:Object):void {
-      Logger.log('CuePoint received: ' + cuePoint.name);
-    }
-
-    public function onImageDataHandler(imageData:Object):void {
-      Logger.log('ImageData received');
-    }
-
-    public function onSeekPointHandler(seekPoint:Object):void {
-      Logger.log('SeekPoint received');
-    }
-
-    public function onTextDataHandler(textData:Object):void {
-      Logger.log('TextData received');
-    }
-
-    public function onNetStreamCreated(ev:ClientEvent):void {
-      this.ns = ev.data.ns;
-      ev.data.ns.bufferTime = config.buffer;
-      ev.data.ns.client = this;
-      this.onXMPData = onXMPDataHandler;
-      this.onCuePoint = onCuePointHandler;
-      this.onImageData = onImageDataHandler;
-      this.onSeekPoint = onSeekPointHandler;
-      this.onTextData = onTextDataHandler;
-      this.ns.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
-      this.ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
-      this.ns.addEventListener(DRMErrorEvent.DRM_ERROR, onDRMError);
-      this.ns.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
-    }
-
     private function onStartPlay(event:ClientEvent):void {
       this.currentState = "playing";
       this.callAPI(EVENT_STREAM_STARTED);
@@ -443,83 +399,14 @@ package {
     }
 
     private function onStopped(event:ClientEvent):void {
-      video.clear();
-      client = null;
+      this.removeChild(this.client.getDisplayObject());
+      this.client = null;
       this.callAPI(EVENT_STREAM_STOPPED);
-      if (urlParsed) {
+
+      /* If a new `play` has been queued, fire it */
+      if (this.newPlaylistItem) {
         start();
       }
-    }
-
-    private function onAborted(event:ClientEvent):void {
-      video.clear();
-      client = null;
-      urlParsed = null;
-      ns = null;
-    }
-
-    public function onPlayStatus(event:Object):void {
-      if ('NetStream.Play.Complete' === event.code) {
-        video.clear();
-        client = null;
-        urlParsed = null;
-        ns = null;
-        this.currentState = "stopped";
-        this.callAPI(EVENT_STREAM_STOPPED);
-        this.callAPI(EVENT_STREAM_ENDED);
-      }
-    }
-
-    private function onNetStatus(event:NetStatusEvent):void {
-      if (event.info.status === 'error') {
-        var errorCode:int = 0;
-        switch (event.info.code) {
-        case 'NetConnection.Call.BadVersion':       errorCode = 700; break;
-        case 'NetConnection.Call.Failed':           errorCode = 701; break;
-        case 'NetConnection.Call.Prohibited':       errorCode = 702; break;
-        case 'NetConnection.Connect.AppShutdown':   errorCode = 703; break;
-        case 'NetConnection.Connect.Failed':        errorCode = 704; break;
-        case 'NetConnection.Connect.InvalidApp':    errorCode = 705; break;
-        case 'NetConnection.Connect.Rejected':      errorCode = 706; break;
-        case 'NetGroup.Connect.Failed':             errorCode = 707; break;
-        case 'NetGroup.Connect.Rejected':           errorCode = 708; break;
-        case 'NetStream.Connect.Failed':            errorCode = 709; break;
-        case 'NetStream.Connect.Rejected':          errorCode = 710; break;
-        case 'NetStream.Failed':                    errorCode = 711; break;
-        case 'NetStream.Play.Failed':               errorCode = 712; break;
-        case 'NetStream.Play.FileStructureInvalid': errorCode = 713; break;
-        case 'NetStream.Play.InsufficientBW':       errorCode = 714; break;
-        case 'NetStream.Play.StreamNotFound':       errorCode = 715; break;
-        case 'NetStream.Publish.BadName':           errorCode = 716; break;
-        case 'NetStream.Record.Failed':             errorCode = 717; break;
-        case 'NetStream.Record.NoAccess':           errorCode = 718; break;
-        case 'NetStream.Seek.Failed':               errorCode = 719; break;
-        case 'NetStream.Seek.InvalidTime':          errorCode = 720; break;
-        case 'SharedObject.BadPersistence':         errorCode = 721; break;
-        case 'SharedObject.Flush.Failed':           errorCode = 722; break;
-        case 'SharedObject.UriMismatch':            errorCode = 723; break;
-
-        default:
-          ErrorManager.dispatchError(724, [event.info.code]);
-          return;
-        }
-
-        if (errorCode) {
-          ErrorManager.dispatchError(errorCode);
-        }
-      }
-    }
-
-    private function onAsyncError(event:AsyncErrorEvent):void {
-      ErrorManager.dispatchError(725);
-    }
-
-    private function onDRMError(event:DRMErrorEvent):void {
-      ErrorManager.dispatchError(726, [event.errorID, event.subErrorID]);
-    }
-
-    private function onIOError(event:IOErrorEvent):void {
-      ErrorManager.dispatchError(727, [event.text]);
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

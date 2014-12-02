@@ -1,5 +1,6 @@
 package com.axis.http {
   import com.axis.rtspclient.ByteArrayUtils;
+  import com.axis.Logger;
 
   import flash.utils.ByteArray;
 
@@ -35,10 +36,13 @@ package com.axis.http {
       var statusRegex:RegExp = /^(?P<proto>[^\/]+)\/(?P<version>[^ ]+) (?P<code>[0-9]+) (?P<message>.*)$/;
       var status:Array = statusRegex.exec(lines.shift());
 
-      ret.proto = status.proto;
-      ret.version = status.version;
-      ret.code = uint(status.code);
-      ret.message = status.message;
+      if (status) {
+        /* statusRegex will fail if this is multipart block (in which case these parameters are not valid) */
+        ret.proto = status.proto;
+        ret.version = status.version;
+        ret.code = uint(status.code);
+        ret.message = status.message;
+      }
 
       ret.headers = {};
       for each (var header:String in lines) {

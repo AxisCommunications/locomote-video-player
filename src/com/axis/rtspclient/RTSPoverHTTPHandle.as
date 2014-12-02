@@ -137,7 +137,6 @@ package com.axis.rtspclient {
         var newAuthState:String = auth.nextMethod(authState, authOpts);
         if (authState === newAuthState) {
           ErrorManager.dispatchError(parsed.code);
-          dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
           return;
         }
 
@@ -184,12 +183,12 @@ package com.axis.rtspclient {
 
     private function onIOError(event:IOErrorEvent):void {
       ErrorManager.dispatchError(732, [event.text]);
-      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
+      dispatchEvent(new Event('closed'));
     }
 
     private function onSecurityError(event:SecurityErrorEvent):void {
       ErrorManager.dispatchError(731, [event.text]);
-      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
+      dispatchEvent(new Event('closed'));
     }
   }
 }

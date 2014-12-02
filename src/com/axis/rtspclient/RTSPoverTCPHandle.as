@@ -63,12 +63,12 @@ package com.axis.rtspclient {
 
     private function onIOError(event:IOErrorEvent):void {
       ErrorManager.dispatchError(732, [event.text]);
-      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
+      dispatchEvent(new Event("closed"));
     }
 
     private function onSecurityError(event:SecurityErrorEvent):void {
       ErrorManager.dispatchError(731, [event.text]);
-      dispatchEvent(new ClientEvent(ClientEvent.ABORTED));
+      dispatchEvent(new Event("closed"));
     }
   }
 }
