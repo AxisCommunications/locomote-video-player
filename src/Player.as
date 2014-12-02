@@ -311,7 +311,8 @@ package {
         'audio': (this.client) ? this.streamHasAudio : null,
         'video': (this.client) ? this.streamHasVideo : null,
         'state': this.currentState,
-        'streamURL': (this.urlParsed) ? this.urlParsed.full : null
+        'streamURL': (this.urlParsed) ? this.urlParsed.full : null,
+        'duration': meta.duration ? meta.duration : null
       };
 
       return status;

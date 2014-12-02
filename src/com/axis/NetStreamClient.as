@@ -90,7 +90,8 @@ package com.axis {
 
       dispatchEvent(new ClientEvent(ClientEvent.META, {
         'width': item.width,
-        'height': item.height
+        'height': item.height,
+        'duration': item.duration
       }));
     }
 

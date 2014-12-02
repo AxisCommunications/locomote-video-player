@@ -160,7 +160,7 @@ locomote.destroy();
 
 #### streamStatus()
 
-> Returns a status object with the following data:
+> Returns a status object with the following data (if an entry is unknown, that value will be null):
 
 > - fps - frames per second.
 > - resolution (object) - the stream size `{ width, height }`.
@@ -171,6 +171,7 @@ locomote.destroy();
 > - video (bool) - if the stream contains video.
 > - state - current playback state (playing, paused, stopped).
 > - streamURL - the source of the current media.
+> - duration - the duration of the currently playing media)
 
 #### playerStatus()
 
