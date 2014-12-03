@@ -1,6 +1,7 @@
 {
   "name": "locomote",
   "version": "0.5.0",
+  "main": "dist/locomote.min.js",
   "authors": [
     "Alexander Olsson <alexo@axis.com>"
   ],
@@ -25,6 +26,11 @@
     "jslib",
     "node_modules",
     "package.json",
-    "src"
+    "src",
+    ".gitignore",
+    ".gitmodules",
+    ".jscsrc",
+    ".jshintrc",
+    ".travis.yml"
   ]
 }
