@@ -22,7 +22,9 @@ package com.axis.rtspclient {
       var success:Boolean = true;
       var currentMediaBlock:Object = sessionBlock;
 
-      for each (var line:String in content.toString().split("\n")) {
+      Logger.log(dataString);
+
+      for each (var line:String in dataString.split("\n")) {
         line = line.replace(/\r/, ''); /* Delimiter '\r\n' is allowed, if this is the case, remove '\r' too */
         if (0 === line.length) {
           /* Empty row (last row perhaps?), skip to next */
