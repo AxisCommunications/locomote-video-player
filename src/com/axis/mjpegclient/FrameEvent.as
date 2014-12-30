@@ -9,7 +9,7 @@ package com.axis.mjpegclient {
       this.frame = frame;
     }
 
-    public function getFrame() {
+    public function getFrame():Bitmap {
       return this.frame;
     }
   }
