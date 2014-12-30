@@ -112,7 +112,8 @@ package com.axis {
       '827': "Connection broken. The stream has been stopped.",
       '828': "Unable to seek.",
       '829': "httpm only supports Content-Type: 'multipart/x-mixed-replace'",
-      '830': "Unable to set buffer. This might not work for this stream-type, or this particular stream."
+      '830': "Unable to set buffer. This might not work for this stream-type, or this particular stream.",
+      '831': "Unsupported Audio or Video format: %p"
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null, throwError:Boolean = false):void {

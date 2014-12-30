@@ -336,11 +336,14 @@ package com.axis.rtspclient {
         this.flvmux = new FLVMux(this.ns, this.sdp);
         var analu:ANALU = new ANALU();
         var aaac:AAAC = new AAAC(sdp);
+        var apcma:APCMA = new APCMA();
 
-        this.addEventListener("VIDEO_PACKET", analu.onRTPPacket);
-        this.addEventListener("AUDIO_PACKET", aaac.onRTPPacket);
+        this.addEventListener("VIDEO_H264_PACKET", analu.onRTPPacket);
+        this.addEventListener("AUDIO_MPEG4-GENERIC_PACKET", aaac.onRTPPacket);
+        this.addEventListener("AUDIO_PCMA_PACKET", apcma.onRTPPacket);
         analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
         aaac.addEventListener(AACFrame.NEW_FRAME, flvmux.onAACFrame);
+        apcma.addEventListener(PCMAFrame.NEW_FRAME, flvmux.onPCMAFrame);
         break;
 
       case STATE_PLAYING:

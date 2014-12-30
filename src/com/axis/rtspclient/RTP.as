@@ -43,7 +43,7 @@ package com.axis.rtspclient {
         Logger.log('Media description for payload type: ' + pt + ' not provided.');
       }
 
-      super(media.type.toUpperCase() + '_PACKET', false, false);
+      super(media.type.toUpperCase() + '_' + media.rtpmap[pt].name.toUpperCase() + '_PACKET', false, false);
 
       this.data = pkt;
     }
