@@ -272,7 +272,6 @@ package com.axis.rtspclient {
     }
 
     private function getAudioParameters(name):Object {
-      Logger.log(this.ns.info.audioBufferLength);
       switch (name.toLowerCase()) {
       case 'mpeg4-generic':
         return {
