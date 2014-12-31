@@ -84,7 +84,7 @@ package com.axis {
       '732': "Socket reported an IOError: %p.",
       '800': "Unable to pause a stream if not playing.",
       '801': "Unable to resume a stream if not paused.",
-      '802': "Unable to pause: %p",
+      '802': "################### Unused",
       '803': "RTSPClient: Handle unexpectedly closed.",
       '804': "Unknown determining byte: 0x%p. Stopping stream.",
       '805': "Cannot start unless in initial state.",

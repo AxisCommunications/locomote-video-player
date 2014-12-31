@@ -117,17 +117,10 @@ package com.axis.rtspclient {
 
     public function pause():Boolean {
       if (state !== STATE_PLAYING) {
-        ErrorManager.dispatchError(800);
         return false;
       }
 
-      try {
-        sendPauseReq();
-      } catch (err:Error) {
-        ErrorManager.dispatchError(802, [err.message]);
-        return false;
-      }
-
+      sendPauseReq();
       return true;
     }
 
@@ -248,7 +241,7 @@ package com.axis.rtspclient {
         return false;
       }
 
-      if (200 !== parsed.code) {
+      if (isNaN(parsed.code)) {
         ErrorManager.dispatchError(parsed.code);
         return false;
       }
@@ -518,7 +511,7 @@ package com.axis.rtspclient {
     }
 
     private function sendPauseReq():void {
-      if (-1 === this.supportCommand("PAUSE")) {
+      if (!this.supportCommand("PAUSE")) {
         ErrorManager.dispatchError(825, null, true);
       }
 
