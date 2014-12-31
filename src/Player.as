@@ -288,7 +288,6 @@ package {
         return;
       }
 
-      urlParsed = null;
       this.currentState = "stopped";
       this.streamHasAudio = false;
       this.streamHasVideo = false;

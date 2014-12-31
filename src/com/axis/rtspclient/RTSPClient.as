@@ -233,7 +233,7 @@ package com.axis.rtspclient {
           return false;
         }
 
-        Logger.log('RTSPClient: switching http-authorization from ' + authState + ' to ' + newAuthState);
+        Logger.log('RTSPClient: switching authorization from ' + authState + ' to ' + newAuthState);
         authState = newAuthState;
         state = STATE_INITIAL;
         data = new ByteArray();
@@ -246,6 +246,7 @@ package com.axis.rtspclient {
         return false;
       }
 
+      Logger.log('RTSP IN:', data.toString());
       if (parsed.headers['content-length']) {
         if (data.bytesAvailable < parsed.headers['content-length']) {
           return false;
@@ -300,9 +301,21 @@ package com.axis.rtspclient {
         /* Fall through, it's time for setup */
       case STATE_SETUP:
         Logger.log("RTSPClient: STATE_SETUP");
+        Logger.log(parsed.headers['transport']);
 
         if (parsed.headers['session']) {
           session = parsed.headers['session'];
+        }
+
+        if (state === STATE_SETUP) {
+          /* this is not the case when falling through, e.g. SETUP of first track */
+          if (!/RTP\/AVP\/TCP;unicast;interleaved=/.test(parsed.headers["transport"])) {
+            dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+            connectionBroken = true;
+            handle.disconnect();
+            ErrorManager.dispatchError(461);
+            return;
+          }
         }
 
         if (0 !== tracks.length) {
@@ -433,7 +446,7 @@ package com.axis.rtspclient {
       var u:String = sessCtrl;
       if (url.isAbsolute(u)) {
         return u;
-      } else if ('*' === u) {
+      } else if (!u || '*' === u) {
         return contentBase;
       } else {
         return contentBase + u; /* If content base is not set, this will be session control only only */
@@ -452,6 +465,7 @@ package com.axis.rtspclient {
         "CSeq: " + (++cSeq) + "\r\n" +
         "User-Agent: " + userAgent + "\r\n" +
         "\r\n";
+      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
 
       prevMethod = sendOptionsReq;
@@ -467,6 +481,7 @@ package com.axis.rtspclient {
         "Accept: application/sdp\r\n" +
         auth.authorizationHeader("DESCRIBE", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
+      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
 
       prevMethod = sendDescribeReq;
@@ -487,6 +502,7 @@ package com.axis.rtspclient {
         auth.authorizationHeader("SETUP", authState, authOpts, urlParsed, digestNC++) +
         "Date: " + new Date().toUTCString() + "\r\n" +
         "\r\n";
+      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
 
       prevMethod = sendSetupReq;
@@ -505,6 +521,7 @@ package com.axis.rtspclient {
         "Session: " + session + "\r\n" +
         auth.authorizationHeader("PLAY", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
+      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
 
       prevMethod = sendPlayReq;
@@ -529,6 +546,7 @@ package com.axis.rtspclient {
         "Session: " + session + "\r\n" +
         auth.authorizationHeader("PAUSE", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
+      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
 
       prevMethod = sendPauseReq;
@@ -543,6 +561,7 @@ package com.axis.rtspclient {
         "Session: " + session + "\r\n" +
         auth.authorizationHeader("TEARDOWN", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
+      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
 
       prevMethod = sendTeardownReq;
