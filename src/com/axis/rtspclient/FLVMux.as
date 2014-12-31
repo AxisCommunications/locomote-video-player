@@ -277,15 +277,15 @@ package com.axis.rtspclient {
       case 'mpeg4-generic':
         return {
           format: 0xA, /* AAC */
-          depth: 0x1, /* 16 bits per sample */
           sampling: 0x3, /* 44 kHz */
+          depth: 0x1, /* 16 bits per sample */
           type: 0x1 /* Stereo */
         };
       case 'pcma':
         return {
-          format: 0x3, /* Linear PCM  */
-          depth: 0x0, /* 8 bits per sample */
-          sampling: 0x5, /* 5,5 kHz, which is as close to 8 kHz we can get, this should probably be up-sampled */
+          format: 0x7, /* Logarithmic G.711 A-law  */
+          sampling: 0x0, /* Doesn't matter. Rate is fixed at 8 kHz when format = 0x7 */
+          depth: 0x1, /* 16 bits per sample, but why? */
           type: 0x0 /* Mono */
         };
       default:

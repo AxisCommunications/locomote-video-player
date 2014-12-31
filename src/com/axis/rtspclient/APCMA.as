@@ -7,11 +7,11 @@ package com.axis.rtspclient {
   import flash.external.ExternalInterface;
   import flash.utils.ByteArray;
 
-  /* Assembler of AAC frames */
+  /* Assembler of PCMA frames */
   public class APCMA extends EventDispatcher {
     private var sdp:SDP;
 
-    public function AAAC() {}
+    public function APCMA() {}
 
     public function onRTPPacket(pkt:RTP):void {
       dispatchEvent(new PCMAFrame(pkt.getPayload(), pkt.getTimestampMS()));
