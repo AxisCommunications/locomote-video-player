@@ -276,7 +276,7 @@ package com.axis.rtspclient {
       case 'mpeg4-generic':
         return {
           format: 0xA, /* AAC */
-          sampling: 0x3, /* 44 kHz */
+          sampling: 0x3, /* Should alway be 0x3. Actual rate is determined by AAC header. */
           depth: 0x1, /* 16 bits per sample */
           type: 0x1 /* Stereo */
         };
