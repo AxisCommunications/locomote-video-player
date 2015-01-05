@@ -246,7 +246,6 @@ package com.axis.rtspclient {
         return false;
       }
 
-      Logger.log('RTSP IN:', data.toString());
       if (parsed.headers['content-length']) {
         if (data.bytesAvailable < parsed.headers['content-length']) {
           return false;
@@ -254,6 +253,9 @@ package com.axis.rtspclient {
 
         /* RTSP commands contain no heavy body, so it's safe to read everything */
         data.readBytes(oBody, 0, parsed.headers['content-length']);
+        Logger.log('RTSP IN:', oBody.toString());
+      } else {
+        Logger.log('RTSP IN:', data.toString());
       }
 
       requestReset();
