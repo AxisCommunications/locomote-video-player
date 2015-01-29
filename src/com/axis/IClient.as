@@ -18,6 +18,12 @@ package com.axis {
     function getDisplayObject():DisplayObject;
 
     /**
+     * Should return the position of the playahead, in milliseconds.
+     * Returns -1 if unavailable
+     */
+    function getCurrentTime():Number;
+
+    /**
      * Called when the client should start the stream.
      * Any connections should be made at this point
      */

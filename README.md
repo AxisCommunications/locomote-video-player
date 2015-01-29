@@ -171,7 +171,7 @@ locomote.destroy();
 > - video (bool) - if the stream contains video.
 > - state - current playback state (playing, paused, stopped).
 > - streamURL - the source of the current media.
-> - duration - the duration of the currently playing media)
+> - duration - the duration of the currently playing media, or -1 if not available
 
 #### playerStatus()
 

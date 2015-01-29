@@ -31,6 +31,10 @@ package com.axis.mjpegclient {
       return this.mjpeg;
     };
 
+    public function getCurrentTime():Number {
+      return -1;
+    }
+
     public function start():Boolean {
       this.handle.connect();
       state = "connecting";
