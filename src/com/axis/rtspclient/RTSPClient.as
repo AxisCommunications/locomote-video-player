@@ -221,7 +221,7 @@ package com.axis.rtspclient {
         /* Unauthorized, change authState and (possibly) try again */
         authOpts = parsed.headers['www-authenticate'];
 
-        if (authOpts.stale.toUpperCase() === 'TRUE') {
+        if (authOpts.stale && authOpts.stale.toUpperCase() === 'TRUE') {
           requestReset();
           prevMethod();
           return false;
