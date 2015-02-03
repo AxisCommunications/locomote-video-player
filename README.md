@@ -164,7 +164,7 @@ locomote.destroy();
 
 > - fps - frames per second.
 > - resolution (object) - the stream size `{ width, height }`.
-> - playback speed - current playback speed. 1.0 is normal stream speed.
+> - playbackSpeed - current playback speed. 1.0 is normal stream speed.
 > - current time - ms from start of stream.
 > - protocol - which high-level transport protocol is in use.
 > - audio (bool) - if the stream contains audio.
