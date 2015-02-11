@@ -15,6 +15,15 @@
 (this, function() {
   'use strict';
 
+    function get_tag_id(tag){
+        if (('string' === typeof tag)){
+            return tag;
+        } else if (tag instanceof HTMLElement) {
+            return tag.getAttribute('id');
+        }
+        return 'unknown';
+    }
+
   function Locomote(tag, swf) {
     if (!tag) {
       return null;
@@ -25,18 +34,18 @@
     }
 
     // Instance already initialized. Return it.
-    if (window.LocomoteMap[tag]) {
-      return window.LocomoteMap[tag];
+    if (window.LocomoteMap[get_tag_id(tag)]) {
+      return window.LocomoteMap[get_tag_id(tag)];
     }
 
     // return a new Locomote object if we're in the global scope
     if (this === undefined) {
-      window.LocomoteMap[tag] = new Locomote(tag, swf);
-      return window.LocomoteMap[tag];
+      window.LocomoteMap[get_tag_id(tag)] = new Locomote(tag, swf);
+      return window.LocomoteMap[get_tag_id(tag)];
     }
 
     // Init our element object and return the object
-    window.LocomoteMap[tag] = this;
+    window.LocomoteMap[get_tag_id(tag)] = this;
     this.callbacks = [];
     this.swfready = false;
     this.__embed(tag, swf);
@@ -63,7 +72,7 @@
         'class="locomote-player" ' +
         'data="' + swf + '" ' +
         'id="' + tempTag + '" ' +
-        'name="' + tag + '" ' +
+        'name="' + get_tag_id(tag) + '" ' +
         'width="100%" ' +
         'height="100%" ' +
         'allowFullScreen="true">';
@@ -75,10 +84,10 @@
         allowscriptaccess: 'always',
         wmode: 'transparent',
         quality: 'high',
-        flashvars: 'locomoteID=' + tag,
+        flashvars: 'locomoteID=' + get_tag_id(tag),
         allowFullScreenInteractive: true,
         movie: swf,
-        name: tag
+        name: get_tag_id(tag)
       };
 
       for (var index in opts) {
