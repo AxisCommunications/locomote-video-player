@@ -191,6 +191,7 @@
 
     config: function(config) {
       this.e.setConfig(config);
+      return this;
     },
 
     on: function(eventName, callback) {
@@ -199,6 +200,7 @@
       if (eventName === 'apiReady' && this.swfready) {
         callback.call();
       }
+	  return this;
     },
 
     off: function(eventName, callback) {
@@ -221,6 +223,7 @@
           }
         }
       });
+	  return this;
     },
 
     __playerEvent: function(eventName /* ... args */) {
