@@ -244,7 +244,7 @@
     },
 
     destroy: function() {
-      window.LocomoteMap[this.tag] = undefined;
+      window.LocomoteMap[get_tag_id(this.tag)] = undefined;
       this.e.parentNode.removeChild(this.e);
       this.e = null;
     }
