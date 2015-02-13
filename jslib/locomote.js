@@ -15,14 +15,14 @@
 (this, function() {
   'use strict';
 
-    function get_tag_id(tag){
-        if (('string' === typeof tag)){
-            return tag;
-        } else if (tag instanceof HTMLElement) {
-            return tag.getAttribute('id');
-        }
-        return 'unknown';
+  function get_tag_id(tag){
+    if (('string' === typeof tag)) {
+      return tag;
+    } else if (tag instanceof HTMLElement) {
+      return tag.getAttribute('id');
     }
+    return 'unknown';
+  }
 
   function Locomote(tag, swf) {
     if (!tag) {
@@ -33,19 +33,20 @@
       window.LocomoteMap = {};
     }
 
+    this.tag_id = get_tag_id(tag);
     // Instance already initialized. Return it.
-    if (window.LocomoteMap[get_tag_id(tag)]) {
-      return window.LocomoteMap[get_tag_id(tag)];
+    if (window.LocomoteMap[ this.tag_id ]) {
+      return window.LocomoteMap[ this.tag_id ];
     }
 
     // return a new Locomote object if we're in the global scope
     if (this === undefined) {
-      window.LocomoteMap[get_tag_id(tag)] = new Locomote(tag, swf);
-      return window.LocomoteMap[get_tag_id(tag)];
+      window.LocomoteMap[ this.tag_id ] = new Locomote(tag, swf);
+      return window.LocomoteMap[ this.tag_id ];
     }
 
     // Init our element object and return the object
-    window.LocomoteMap[get_tag_id(tag)] = this;
+    window.LocomoteMap[ this.tag_id ] = this;
     this.callbacks = [];
     this.swfready = false;
     this.__embed(tag, swf);
@@ -72,7 +73,7 @@
         'class="locomote-player" ' +
         'data="' + swf + '" ' +
         'id="' + tempTag + '" ' +
-        'name="' + get_tag_id(tag) + '" ' +
+        'name="' + this.tag_id + '" ' +
         'width="100%" ' +
         'height="100%" ' +
         'allowFullScreen="true">';
@@ -84,7 +85,7 @@
         allowscriptaccess: 'always',
         wmode: 'transparent',
         quality: 'high',
-        flashvars: 'locomoteID=' + get_tag_id(tag),
+        flashvars: 'locomoteID=' + this.tag_id,
         allowFullScreenInteractive: true,
         movie: swf,
         name: get_tag_id(tag)
@@ -92,7 +93,7 @@
 
       for (var index in opts) {
         if (opts.hasOwnProperty(index)) {
-          element += '<param name="' + index + '" value="' + opts[index] + '"/>';
+          element += '<param name="' + index + '" value="' + opts[ index ] + '"/>';
         }
       }
 
@@ -112,8 +113,8 @@
         var players = tag.getElementsByClassName('locomote-player');
 
         for (var i = 0; i < players.length; i++) {
-          if (players[i].getAttribute('id') === tempTag) {
-            this.e = players[i];
+          if (players[ i ].getAttribute('id') === tempTag) {
+            this.e = players[ i ];
             break;
           }
         }
@@ -244,7 +245,7 @@
     },
 
     destroy: function() {
-      window.LocomoteMap[get_tag_id(this.tag)] = undefined;
+      window.LocomoteMap[ get_tag_id(this.tag) ] = undefined;
       this.e.parentNode.removeChild(this.e);
       this.e = null;
     }
