@@ -15,7 +15,7 @@
 (this, function() {
   'use strict';
 
-  function get_tag_id(tag){
+  function getTagId(tag){
     if (('string' === typeof tag)) {
       return tag;
     } else if (tag instanceof HTMLElement) {
@@ -33,20 +33,20 @@
       window.LocomoteMap = {};
     }
 
-    this.tag_id = get_tag_id(tag);
+    this.tagId = getTagId(tag);
     // Instance already initialized. Return it.
-    if (window.LocomoteMap[ this.tag_id ]) {
-      return window.LocomoteMap[ this.tag_id ];
+    if (window.LocomoteMap[ this.tagId ]) {
+      return window.LocomoteMap[ this.tagId ];
     }
 
     // return a new Locomote object if we're in the global scope
     if (this === undefined) {
-      window.LocomoteMap[ this.tag_id ] = new Locomote(tag, swf);
-      return window.LocomoteMap[ this.tag_id ];
+      window.LocomoteMap[ this.tagId ] = new Locomote(tag, swf);
+      return window.LocomoteMap[ this.tagId ];
     }
 
     // Init our element object and return the object
-    window.LocomoteMap[ this.tag_id ] = this;
+    window.LocomoteMap[ this.tagId ] = this;
     this.callbacks = [];
     this.swfready = false;
     this.__embed(tag, swf);
@@ -73,7 +73,7 @@
         'class="locomote-player" ' +
         'data="' + swf + '" ' +
         'id="' + tempTag + '" ' +
-        'name="' + this.tag_id + '" ' +
+        'name="' + this.tagId + '" ' +
         'width="100%" ' +
         'height="100%" ' +
         'allowFullScreen="true">';
@@ -85,10 +85,10 @@
         allowscriptaccess: 'always',
         wmode: 'transparent',
         quality: 'high',
-        flashvars: 'locomoteID=' + this.tag_id,
+        flashvars: 'locomoteID=' + this.tagId,
         allowFullScreenInteractive: true,
         movie: swf,
-        name: get_tag_id(tag)
+        name: getTagId(tag)
       };
 
       for (var index in opts) {
@@ -245,7 +245,7 @@
     },
 
     destroy: function() {
-      window.LocomoteMap[ get_tag_id(this.tag) ] = undefined;
+      window.LocomoteMap[ this.tagId ] = undefined;
       this.e.parentNode.removeChild(this.e);
       this.e = null;
     }
