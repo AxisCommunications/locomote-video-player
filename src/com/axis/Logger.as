@@ -5,7 +5,7 @@ package com.axis {
     public static const STREAM_ERRORS:String = "";
 
     public static function log(... args):void {
-      if (Player.debugLogger) {
+      if (Player.config.debugLogger) {
         trace.apply(null, args);
       }
 
