@@ -39,7 +39,6 @@ package {
     [Embed(source = "../VERSION", mimeType = "application/octet-stream")] private var Version:Class;
 
     public static var locomoteID:String = null;
-    public static var debugLogger:Boolean = false;
 
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
