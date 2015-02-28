@@ -312,8 +312,8 @@ package com.axis.rtspclient {
         if (state === STATE_SETUP) {
           /* this is not the case when falling through, e.g. SETUP of first track */
           if (!(/^RTP\/AVP\/TCP;/.test(parsed.headers["transport"]) &&
-        	/unicast/.test(parsed.headers["transport"]) &&
-        	/interleaved=/.test(parsed.headers["transport"]) )){
+	    /unicast/.test(parsed.headers["transport"]) &&
+            /interleaved=/.test(parsed.headers["transport"]) )){
             dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
             connectionBroken = true;
             handle.disconnect();
