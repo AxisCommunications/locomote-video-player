@@ -168,6 +168,8 @@ package {
           } else {
             config.buffer = iconfig.buffer;
           }
+        } else {
+            config.buffer = iconfig.buffer;
         }
       }
 
@@ -251,7 +253,7 @@ package {
         ErrorManager.dispatchError(811, [urlParsed.protocol])
         return;
       }
-
+        
       addChild(this.client.getDisplayObject());
 
       client.addEventListener(ClientEvent.STOPPED, onStopped);
