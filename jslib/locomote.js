@@ -191,6 +191,7 @@
 
     config: function(config) {
       this.e.setConfig(config);
+      return this;
     },
 
     on: function(eventName, callback) {
@@ -199,19 +200,20 @@
       if (eventName === 'apiReady' && this.swfready) {
         callback.call();
       }
+      return this;
     },
 
     off: function(eventName, callback) {
       if (!eventName && !callback) {
         this.callbacks = [];
-        return;
+        return this;
       }
 
       this.callbacks.forEach(function(element, index, array) {
         if (element.callback === callback) {
           if (!eventName || (element.eventName === eventName)) {
             array.splice(index, 1);
-            return;
+            return this;
           }
         }
 
@@ -221,6 +223,7 @@
           }
         }
       });
+      return this;
     },
 
     __playerEvent: function(eventName /* ... args */) {
