@@ -106,15 +106,6 @@ package com.axis.rtspclient {
       return 1 + 2 + contents.length;
     }
 
-    private function readSE(sps:BitArray):uint {
-        var r:uint = sps.readUnsignedExpGolomb();
-        if (r & 0x01) {
-            r = (r+1)/2;
-        } else {
-            r = -(r/2);
-        }
-        return r;
-    }
 
     private function parseSPS(sps:BitArray):Object {
       var nalhdr:uint      = sps.readBits(8);
@@ -152,7 +143,7 @@ package com.axis.rtspclient {
               var j:uint = 0;
               for (j = 0; j < sizeOfScalingList; j++) {
                 if (nextScale != 0) {
-                  var delta_scale:uint = readSE(sps);
+                  var delta_scale:uint = sps.readSignedExpGolomb();
                   nextScale = (lastScale + delta_scale + 256) % 256;
                 }
                 lastScale = (nextScale == 0) ? lastScale : nextScale;
