@@ -133,8 +133,9 @@ package com.axis.rtspclient {
         var seq_scaling_matrix_present_flag:uint = sps.readBits(1);
 
         if (seq_scaling_matrix_present_flag) {
-          var i:uint  =0;
-          for (i = 0; i < 8; i++) {
+          var i:uint = 0;
+          var loopCount: uint = (3 === chroma_format_idc) ? 12 : 8;
+          for (i = 0; i < loopCount; i++) {
             var seq_scaling_list_present_flag:uint = sps.readBits(1);
             if (seq_scaling_list_present_flag) {
               var sizeOfScalingList:uint = (i < 6) ? 16 : 64;
