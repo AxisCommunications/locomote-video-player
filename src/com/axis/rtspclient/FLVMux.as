@@ -106,7 +106,6 @@ package com.axis.rtspclient {
       return 1 + 2 + contents.length;
     }
 
-
     private function parseSPS(sps:BitArray):Object {
       var nalhdr:uint      = sps.readBits(8);
 
