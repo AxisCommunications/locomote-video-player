@@ -130,8 +130,26 @@ package com.axis.rtspclient {
         var bit_depth_chroma_minus8:uint = sps.readUnsignedExpGolomb();
         var qpprime_y_zero_transform_bypass_flag:uint = sps.readBits(1);
         var seq_scaling_matrix_present_flag:uint = sps.readBits(1);
-        if (1 === seq_scaling_matrix_present_flag) {
-          ErrorManager.dispatchError(822, null, true);
+
+        if (seq_scaling_matrix_present_flag) {
+          var i:uint = 0;
+          var loopCount: uint = (3 === chroma_format_idc) ? 12 : 8;
+          for (i = 0; i < loopCount; i++) {
+            var seq_scaling_list_present_flag:uint = sps.readBits(1);
+            if (seq_scaling_list_present_flag) {
+              var sizeOfScalingList:uint = (i < 6) ? 16 : 64;
+              var lastScale:uint = 8;
+              var nextScale:uint = 8;
+              var j:uint = 0;
+              for (j = 0; j < sizeOfScalingList; j++) {
+                if (nextScale != 0) {
+                  var delta_scale:uint = sps.readSignedExpGolomb();
+                  nextScale = (lastScale + delta_scale + 256) % 256;
+                }
+                lastScale = (nextScale == 0) ? lastScale : nextScale;
+              }
+            }
+          }
         }
       }
 

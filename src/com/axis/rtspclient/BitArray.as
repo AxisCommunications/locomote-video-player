@@ -48,5 +48,15 @@ package com.axis.rtspclient {
 
       return n - 1; /* Because result in exp golomb is one larger */
     }
+    
+    public function readSignedExpGolomb():uint {
+        var r:uint = this.readUnsignedExpGolomb();
+        if (r & 0x01) {
+            r = (r+1) >> 1;
+        } else {
+            r = -(r >> 1);
+        }
+        return r;
+    }
   }
 }
