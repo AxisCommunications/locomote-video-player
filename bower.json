@@ -1,6 +1,6 @@
 {
   "name": "locomote",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "main": "dist/locomote.min.js",
   "authors": [
     "Alexander Olsson <alexo@axis.com>"
