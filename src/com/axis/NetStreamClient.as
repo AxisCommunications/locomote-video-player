@@ -34,6 +34,10 @@ package com.axis {
       return Math.floor(this.ns.currentFPS + 0.5);
     };
 
+    public function getCurrentTime():Number {
+      return (this.ns) ? this.ns.time * 1000 : -1;
+    };
+
     protected function setupNetStream():void {
       this.ns.bufferTime = Player.config.buffer;
       this.ns.client = this;
