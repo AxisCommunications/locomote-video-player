@@ -566,7 +566,13 @@ package com.axis.rtspclient {
         auth.authorizationHeader("TEARDOWN", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
       Logger.log('RTSP OUT:', req);
-      handle.writeUTFBytes(req);
+      try {
+        handle.writeUTFBytes(req);
+      } catch (error) {
+        // If we got an IO error trying to tear down the stream, dispatch
+        // STOPPED to let listeners know the stream is stopped.
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+      }
 
       prevMethod = sendTeardownReq;
     }
