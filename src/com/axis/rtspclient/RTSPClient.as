@@ -50,6 +50,7 @@ package com.axis.rtspclient {
     private var urlParsed:Object;
     private var cSeq:uint = 1;
     private var session:String;
+    private var sessionTimeout:uint = 60;                           // session timeout in secs
     private var contentBase:String;
     private var interleaveChannelIndex:uint = 0;
 
@@ -68,6 +69,8 @@ package com.axis.rtspclient {
     private var bcTimer:Timer;
     private var connectionBroken:Boolean = false;
 
+    private var keepAliveTimer:Timer;
+
     private var nc:NetConnection = null;
 
     public function RTSPClient(urlParsed:Object, handle:IRTSPHandle) {
@@ -78,6 +81,7 @@ package com.axis.rtspclient {
       this.bcTimer = new Timer(Player.config.connectionTimeout * 1000, 1);
       this.bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
       this.bcTimer.stop(); // Don't start timeout immediately
+      this.keepAliveTimer = null;
 
       handle.addEventListener('data', this.onData);
     }
@@ -306,7 +310,17 @@ package com.axis.rtspclient {
         Logger.log(parsed.headers['transport']);
 
         if (parsed.headers['session']) {
-          session = parsed.headers['session'];
+          var temp = parsed.headers['session'].split(";");
+          session = temp[0];
+            Logger.log("RTSP: session: " + session);
+          if (temp.length > 1) {
+            sessionTimeout = temp[1].split("=")[1];
+            this.keepAliveTimer = new Timer((sessionTimeout - 5) * 1000, 1);
+            if (this.keepAliveTimer == null) {
+              this.keepAliveTimer.start()
+              this.keepAliveTimer.addEventListener(TimerEvent.TIMER_COMPLETE, keepAliveTimerHandler);
+            }
+          }
         }
 
         if (state === STATE_SETUP) {
@@ -372,6 +386,8 @@ package com.axis.rtspclient {
       case STATE_TEARDOWN:
         Logger.log('RTSPClient: STATE_TEARDOWN');
         this.bcTimer.stop();
+        this.keepAliveTimer.stop();
+        this.keepAliveTimer = null;
         this.handle.disconnect();
         break;
       }
@@ -595,6 +611,8 @@ package com.axis.rtspclient {
     private function bcTimerHandler(e:TimerEvent):void {
       bcTimer.stop();
       bcTimer = null;
+      this.keepAliveTimer.stop();
+      this.keepAliveTimer = null;
       connectionBroken = true;
       this.handle.disconnect();
       this.handle = null;
@@ -606,6 +624,23 @@ package com.axis.rtspclient {
 
       ErrorManager.dispatchError(827);
       dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+    }
+
+    private function sendKeepAlive():void {
+      // Send an Options command with the session id to keep connection alive.
+      var req:String =
+        "OPTIONS * RTSP/1.0\r\n" +
+        "CSeq: " + (++cSeq) + "\r\n" +
+        "User-Agent: " + userAgent + "\r\n" +
+        "Session: " + session + "\r\n" +
+        "\r\n";
+
+      handle.writeUTFBytes(req);
+    }
+
+    private function keepAliveTimerHandler(e:TimerEvent):void {
+      this.keepAliveTimer.start();
+      this.sendKeepAlive();
     }
   }
 }
