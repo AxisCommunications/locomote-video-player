@@ -17,8 +17,7 @@ package com.axis.rtspclient {
     private var ns:NetStream;
     private var container:ByteArray = new ByteArray();
     private var loggedBytes:ByteArray = new ByteArray();
-    private var videoInitialTimestamp:int = -1;
-    private var audioInitialTimestamp:int = -1;
+    private var lastTimestamp:Number = -1;
 
     public function FLVMux(ns:NetStream, sdp:SDP) {
       container.writeByte(0x46); // 'F'
@@ -355,11 +354,6 @@ package com.axis.rtspclient {
     private function createVideoTag(nalu:NALU):void {
       var start:uint = container.position;
       var ts:uint = nalu.timestamp;
-      if (videoInitialTimestamp == -1) {
-        videoInitialTimestamp = ts;
-      }
-
-      ts -= videoInitialTimestamp;
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
@@ -387,16 +381,12 @@ package com.axis.rtspclient {
 
       /* Previous Tag Size */
       container.writeUnsignedInt(size + 11);
+      this.lastTimestamp = ts;
     }
 
     public function createAudioTag(name:String, frame:*):void {
       var start:uint = container.position;
       var ts:uint = frame.timestamp;
-      if (audioInitialTimestamp === -1) {
-        audioInitialTimestamp = ts;
-      }
-
-      ts -= audioInitialTimestamp;
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
@@ -434,6 +424,11 @@ package com.axis.rtspclient {
 
       /* End of tag */
       container.writeUnsignedInt(size);
+      this.lastTimestamp = ts;
+    }
+
+    public function getLastTimestamp():Number {
+      return this.lastTimestamp;
     }
 
     public function onNALU(nalu:NALU):void {

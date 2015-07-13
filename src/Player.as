@@ -258,6 +258,7 @@ package {
       client.addEventListener(ClientEvent.STOPPED, onStopped);
       client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.addEventListener(ClientEvent.PAUSED, onPaused);
+      client.addEventListener(ClientEvent.ENDED, onEnded);
       client.addEventListener(ClientEvent.META, onMeta);
       client.start();
       this.newPlaylistItem = false;
@@ -301,7 +302,8 @@ package {
 
     public function streamStatus():Object {
       if (this.currentState === 'playing') {
-        this.streamHasAudio = (this.streamHasAudio || this.client.hasAudio());
+        /* This causes a crash in some situations */
+        //this.streamHasAudio = (this.streamHasAudio || this.client.hasAudio());
         this.streamHasVideo = (this.streamHasVideo || this.client.hasVideo());
       }
       var status:Object = {
@@ -394,6 +396,11 @@ package {
     private function onStartPlay(event:ClientEvent):void {
       this.currentState = "playing";
       this.callAPI(EVENT_STREAM_STARTED);
+    }
+
+    private function onEnded(event:ClientEvent):void {
+      this.currentState = "ended";
+      this.callAPI(EVENT_STREAM_ENDED);
     }
 
     private function onPaused(event:ClientEvent):void {

@@ -22,6 +22,10 @@ package com.axis {
     protected var ns:NetStream;
     protected var currentState:String = 'stopped';
 
+    public function hasStreamEnded():Boolean {
+      return false;
+    }
+
     public function hasVideo():Boolean {
       return (0 < this.ns.info.videoBufferByteLength);
     };
@@ -101,12 +105,17 @@ package com.axis {
 
     public function onPlayStatus(event:Object):void {
       Logger.log('onPlayStatus:', event.code);
+      if (event.code === 'NetStream.Play.Complete') {
+        ended = true;
+        this.currentState = 'ended';
+        dispatchEvent(new ClientEvent(ClientEvent.ENDED));
+      }
     }
 
     private function onNetStatus(event:NetStatusEvent):void {
       Logger.log('NetStream status:', event.info.code);
 
-      if (this.ns.bufferTime === 0 && ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code)) {
+      if (!ended && this.ns.bufferTime === 0 && ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code)) {
         this.currentState = 'playing';
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         return;
@@ -119,12 +128,17 @@ package com.axis {
       }
 
       if (!ended && 'NetStream.Buffer.Empty' === event.info.code) {
-        this.currentState = 'paused';
-        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+        if (this.hasStreamEnded()) {
+          this.currentState = 'ended';
+          dispatchEvent(new ClientEvent(ClientEvent.ENDED));
+        } else {
+          this.currentState = 'paused';
+          dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+        }
         return;
       }
 
-      if ('NetStream.Buffer.Full' === event.info.code) {
+      if (!ended && 'NetStream.Buffer.Full' === event.info.code) {
         this.currentState = 'playing';
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         return;

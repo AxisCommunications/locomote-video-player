@@ -8,6 +8,7 @@ package com.axis.rtspclient {
   public class RTP extends Event {
     private var data:ByteArray;
     private var media:Object;
+    private var timing:RTPTiming;
 
     public var version:uint;
     public var padding:uint;
@@ -22,7 +23,8 @@ package com.axis.rtspclient {
     public var headerLength:uint;
     public var bodyLength:uint;
 
-    public function RTP(pkt:ByteArray, sdp:SDP) {
+    public function RTP(pkt:ByteArray, sdp:SDP, timing:RTPTiming) {
+      this.timing = timing;
       var line1:uint = pkt.readUnsignedInt();
 
       version   = (line1 & 0xC0000000) >>> 30;
@@ -53,7 +55,7 @@ package com.axis.rtspclient {
     }
 
     public function getTimestampMS():uint {
-      return 1000 * (timestamp / media.rtpmap[pt].clock);
+      return timing.range.from + (1000 * (timestamp - timing.rtpTimeForControl(media.control)) / media.rtpmap[pt].clock);
     }
 
     public override function toString():String {
