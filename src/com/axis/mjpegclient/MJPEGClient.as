@@ -32,7 +32,7 @@ package com.axis.mjpegclient {
     };
 
     public function getCurrentTime():Number {
-      return -1;
+      return this.mjpeg.getCurrentTime();
     }
 
     public function start():Boolean {

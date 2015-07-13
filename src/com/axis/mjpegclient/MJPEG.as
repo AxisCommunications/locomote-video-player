@@ -21,6 +21,7 @@ package com.axis.mjpegclient {
 
     private var busy:Boolean = false;
     private var timestamps:Vector.<Number> = new Vector.<Number>();
+    private var firstTimestamp:Number = -1;
 
     public function MJPEG() {
       createLoaders();
@@ -71,7 +72,11 @@ package com.axis.mjpegclient {
 
       this.swapChildren(frontBuffer, backbuffer);
 
-      timestamps.push(new Date().getTime());
+      var time:Number = new Date().getTime();
+      timestamps.push(time);
+      if (firstTimestamp == -1) {
+        firstTimestamp = time;
+      }
       if (timestamps.length > FLOATING_AVG_LENGTH) { timestamps.shift(); }
 
       dispatchEvent(new FrameEvent(bitmap));
@@ -106,6 +111,10 @@ package com.axis.mjpegclient {
         loadTimesSum += timestamps[i] - timestamps[i - 1];
       }
       return 1000 * (timestamps.length - 1) / loadTimesSum;
+    }
+
+    public function getCurrentTime():Number {
+      return timestamps.length > 0 ? timestamps[timestamps.length - 1] - firstTimestamp : 0;
     }
   }
 }
