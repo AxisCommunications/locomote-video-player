@@ -47,7 +47,7 @@ package com.axis.rtspclient {
 
     private var sdp:SDP = new SDP();
     private var rtpTiming:RTPTiming;
-    private var evoStreamFix:Boolean = false;
+    private var evoStream:Boolean = false;
     private var flvmux:FLVMux;
 
     private var urlParsed:Object;
@@ -61,6 +61,7 @@ package com.axis.rtspclient {
     private var rtpLength:int = -1;
     private var rtpChannel:int = -1;
     private var tracks:Array;
+    private var startOptions:Object;
 
     private var prevMethod:Function;
 
@@ -85,7 +86,10 @@ package com.axis.rtspclient {
       handle.addEventListener('data', this.onData);
     }
 
-    public function start():Boolean {
+    public function start(options:Object):Boolean {
+
+      this.startOptions = options;
+
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
         if (state !== STATE_INITIAL) {
@@ -132,7 +136,7 @@ package com.axis.rtspclient {
         this.ns.pause();
       }
 
-      if (!this.evoStreamFix) {
+      if (!this.evoStream || this.rtpTiming.live) {
         sendPauseReq();
       } else {
         state = STATE_PAUSED;
@@ -157,7 +161,7 @@ package com.axis.rtspclient {
       }
 
       state = STATE_PLAY;
-      if (!this.evoStreamFix) {
+      if (!this.evoStream || this.rtpTiming.live) {
         sendPlayReq();
       } else {
         state = STATE_PLAYING;
@@ -180,8 +184,8 @@ package com.axis.rtspclient {
 
     override public function getCurrentTime():Number {
       var time:Number = super.getCurrentTime();
-      if (time != -1 && this.rtpTiming) {
-        time += this.rtpTiming.range.from;
+      if (time != -1 && this.startOptions.offset) {
+        time += this.startOptions.offset;
       }
       return time;
     }
@@ -321,6 +325,9 @@ package com.axis.rtspclient {
       case STATE_OPTIONS:
         Logger.log("RTSPClient: STATE_OPTIONS");
         this.methods = parsed.headers.public.split(/[ ]*,[ ]*/);
+        if (parsed.headers['server'] === 'EvoStream Media Server (www.evostream.com)') {
+          this.evoStream = true;
+        }
         sendDescribeReq();
 
         break;
@@ -376,7 +383,7 @@ package com.axis.rtspclient {
         this.ns.play(null);
 
         state = STATE_PLAY;
-        sendPlayReq();
+        sendPlayReq(startOptions.offset);
         break;
 
       case STATE_PLAY:
@@ -384,9 +391,6 @@ package com.axis.rtspclient {
         state = STATE_PLAYING;
 
         rtpTiming = RTPTiming.parse(parsed.headers['rtp-info'], parsed.headers['range']);
-        if (!rtpTiming.live && parsed.headers['server'] === 'EvoStream Media Server (www.evostream.com)') {
-          this.evoStreamFix = true;
-        }
 
         if (this.flvmux) {
           /* If the flvmux have been initialized don't do it again.
@@ -394,7 +398,10 @@ package com.axis.rtspclient {
           break;
         }
 
-        this.flvmux = new FLVMux(this.ns, this.sdp);
+        /* Set actual offset from the stream */
+        this.startOptions.offset = rtpTiming.range.from;
+
+        this.flvmux = new FLVMux(this.ns, this.sdp, this.startOptions.offset);
         var analu:ANALU = new ANALU();
         var aaac:AAAC = new AAAC(sdp);
         var apcma:APCMA = new APCMA();
@@ -563,13 +570,16 @@ package com.axis.rtspclient {
       prevMethod = sendSetupReq;
     }
 
-    private function sendPlayReq():void {
+    private function sendPlayReq(offset:Number = -1):void {
       var req:String =
         "PLAY " + getControlURL() + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
         "User-Agent: " + userAgent + "\r\n" +
-        "Session: " + session + "\r\n" +
-        auth.authorizationHeader("PLAY", authState, authOpts, urlParsed, digestNC++) +
+        "Session: " + session + "\r\n";
+      if (offset >= 0) {
+        req += "Range: npt=" + (offset / 1000) + "-\r\n";
+      }
+      req += auth.authorizationHeader("PLAY", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
       Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);

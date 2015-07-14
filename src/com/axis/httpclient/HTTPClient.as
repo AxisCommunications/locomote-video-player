@@ -20,7 +20,7 @@ package com.axis.httpclient {
       this.urlParsed = urlParsed;
     }
 
-    public function start():Boolean {
+    public function start(options:Object):Boolean {
       Logger.log('HTTPClient: playing:', urlParsed.full);
 
       nc = new NetConnection();

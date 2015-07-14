@@ -64,6 +64,7 @@ package {
     private var streamHasAudio:Boolean = false;
     private var streamHasVideo:Boolean = false;
     private var newPlaylistItem:Boolean = false;
+    private var startOptions:Object = null;
 
     public function Player() {
       var self:Player = this;
@@ -195,7 +196,7 @@ package {
       }
     }
 
-    public function play(param:* = null):void {
+    public function play(param:* = null, options:Object = null):void {
       this.streamHasAudio = false;
       this.streamHasVideo = false;
 
@@ -208,6 +209,7 @@ package {
       }
 
       this.newPlaylistItem = true;
+      this.startOptions = options;
 
       if (client) {
         /* Stop the client, and 'onStopped' will start the new stream. */
@@ -260,7 +262,7 @@ package {
       client.addEventListener(ClientEvent.PAUSED, onPaused);
       client.addEventListener(ClientEvent.ENDED, onEnded);
       client.addEventListener(ClientEvent.META, onMeta);
-      client.start();
+      client.start(this.startOptions);
       this.newPlaylistItem = false;
     }
 

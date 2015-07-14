@@ -116,8 +116,9 @@
       this.__playerEvent('apiReady');
     },
 
-    play: function(url) {
-      this.e.play(url);
+    play: function(url, options) {
+      options = options || {};
+      this.e.play(url, options);
       return this;
     },
 

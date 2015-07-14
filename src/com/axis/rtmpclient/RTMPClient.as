@@ -24,7 +24,7 @@ package com.axis.rtmpclient {
       this.urlParsed = urlParsed;
     }
 
-    public function start():Boolean {
+    public function start(options:Object):Boolean {
       this.nc = new NetConnection();
       this.nc.addEventListener(NetStatusEvent.NET_STATUS, onConnectionStatus);
       this.nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);

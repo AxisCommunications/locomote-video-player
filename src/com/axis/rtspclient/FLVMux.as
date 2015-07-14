@@ -18,8 +18,9 @@ package com.axis.rtspclient {
     private var container:ByteArray = new ByteArray();
     private var loggedBytes:ByteArray = new ByteArray();
     private var lastTimestamp:Number = -1;
+    private var initialOffset:Number;
 
-    public function FLVMux(ns:NetStream, sdp:SDP) {
+    public function FLVMux(ns:NetStream, sdp:SDP, initialOffset:int) {
       container.writeByte(0x46); // 'F'
       container.writeByte(0x4C); // 'L'
       container.writeByte(0x56); // 'V'
@@ -33,6 +34,7 @@ package com.axis.rtspclient {
 
       this.sdp = sdp;
       this.ns = ns;
+      this.initialOffset = initialOffset;
 
       createMetaDataTag();
 
@@ -353,7 +355,7 @@ package com.axis.rtspclient {
 
     private function createVideoTag(nalu:NALU):void {
       var start:uint = container.position;
-      var ts:uint = nalu.timestamp;
+      var ts:uint = nalu.timestamp - this.initialOffset;
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
@@ -386,7 +388,7 @@ package com.axis.rtspclient {
 
     public function createAudioTag(name:String, frame:*):void {
       var start:uint = container.position;
-      var ts:uint = frame.timestamp;
+      var ts:uint = frame.timestamp - this.initialOffset;
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint

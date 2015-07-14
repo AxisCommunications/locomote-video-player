@@ -35,7 +35,7 @@ package com.axis.mjpegclient {
       return this.mjpeg.getCurrentTime();
     }
 
-    public function start():Boolean {
+    public function start(options:Object):Boolean {
       this.handle.connect();
       state = "connecting";
       return true;

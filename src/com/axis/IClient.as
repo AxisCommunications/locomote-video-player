@@ -26,8 +26,10 @@ package com.axis {
     /**
      * Called when the client should start the stream.
      * Any connections should be made at this point
+     * options include optional offset, the time in the stream to start playing
+     * at.
      */
-    function start():Boolean;
+    function start(options:Object):Boolean;
 
     /**
      * Called when the client should stop the stream.
