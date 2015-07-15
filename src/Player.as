@@ -402,7 +402,7 @@ package {
 
     private function onEnded(event:ClientEvent):void {
       this.currentState = "ended";
-      this.callAPI(EVENT_STREAM_ENDED);
+      this.callAPI(EVENT_STREAM_ENDED, event.data);
     }
 
     private function onPaused(event:ClientEvent):void {
@@ -413,7 +413,7 @@ package {
     private function onStopped(event:ClientEvent):void {
       this.removeChild(this.client.getDisplayObject());
       this.client = null;
-      this.callAPI(EVENT_STREAM_STOPPED);
+      this.callAPI(EVENT_STREAM_STOPPED, event.data);
 
       /* If a new `play` has been queued, fire it */
       if (this.newPlaylistItem) {

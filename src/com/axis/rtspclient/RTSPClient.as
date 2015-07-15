@@ -89,6 +89,9 @@ package com.axis.rtspclient {
     public function start(options:Object):Boolean {
 
       this.startOptions = options;
+      if (!this.startOptions.offset) {
+        this.startOptions.offset = 0;
+      }
 
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
@@ -193,7 +196,7 @@ package com.axis.rtspclient {
     override public function hasStreamEnded():Boolean {
       return this.rtpTiming && !this.rtpTiming.live ?
           this.rtpTiming.range.to - 20 <=
-              this.flvmux.getLastTimestamp() + Math.round(1000 / this.ns.currentFPS) :
+              this.flvmux.getLastTimestamp() + startOptions.offset + Math.round(1000 / this.ns.currentFPS) :
           false;
     }
 
@@ -206,8 +209,8 @@ package com.axis.rtspclient {
 
     private function onClose(event:Event):void {
       if (state === STATE_TEARDOWN) {
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
         this.ns.dispose();
-        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       } else {
         if (!connectionBroken)
           ErrorManager.dispatchError(803);
@@ -620,7 +623,7 @@ package com.axis.rtspclient {
       } catch (error) {
         // If we got an IO error trying to tear down the stream, dispatch
         // STOPPED to let listeners know the stream is stopped.
-        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
       }
 
       prevMethod = sendTeardownReq;
@@ -659,8 +662,10 @@ package com.axis.rtspclient {
       nc.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
       nc.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
-      ErrorManager.dispatchError(827);
-      dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+      if (!streamEnded) {
+        ErrorManager.dispatchError(827);
+      }
+      dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
     }
   }
 }
