@@ -194,10 +194,12 @@ package com.axis.rtspclient {
     }
 
     override public function hasStreamEnded():Boolean {
-      return this.rtpTiming && !this.rtpTiming.live ?
-          this.rtpTiming.range.to - 20 <=
-              this.flvmux.getLastTimestamp() + startOptions.offset + Math.round(1000 / this.ns.currentFPS) :
-          false;
+      if (!this.rtpTiming || !this.flvmux || this.rtpTiming.live) {
+        return false;
+      }
+      var streamLastFrame:Number = this.rtpTiming.range.to - Math.ceil(1000 / (this.ns.currentFPS > 1 ? this.ns.currentFPS : 1));
+      var streamCurrentBuffer:Number = (this.ns.time + this.ns.bufferLength) * 1000 + this.startOptions.offset;
+      return streamLastFrame <= streamCurrentBuffer;
     }
 
     public function setBuffer(seconds:Number):Boolean {
@@ -386,9 +388,12 @@ package com.axis.rtspclient {
         this.ns.play(null);
 
         state = STATE_PLAY;
-        sendPlayReq(startOptions.offset);
+        if (this.startOptions.offset > 0) {
+          sendPlayReq(startOptions.offset);
+        } else {
+          sendPlayReq();
+        }
         break;
-
       case STATE_PLAY:
         Logger.log("RTSPClient: STATE_PLAY");
         state = STATE_PLAYING;

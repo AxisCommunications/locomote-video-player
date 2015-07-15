@@ -21,6 +21,7 @@ package com.axis {
     protected var ns:NetStream;
     protected var currentState:String = 'stopped';
     protected var streamEnded:Boolean = false;
+    protected var bufferEmpty:Boolean = true;
 
     public function hasStreamEnded():Boolean {
       return false;
@@ -113,9 +114,9 @@ package com.axis {
     }
 
     private function onNetStatus(event:NetStatusEvent):void {
-      Logger.log('NetStream status:', event.info.code);
+      Logger.log('NetStream status:', { event: event.info.code, ended: streamEnded, bufferEmpty: bufferEmpty });
 
-      if (!streamEnded && this.ns.bufferTime === 0 && ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code)) {
+      if (!streamEnded && !bufferEmpty && ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code)) {
         this.currentState = 'playing';
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         return;
@@ -127,6 +128,7 @@ package com.axis {
       }
 
       if (!streamEnded && 'NetStream.Buffer.Empty' === event.info.code) {
+        bufferEmpty = true;
         if (this.hasStreamEnded()) {
           streamEnded = true;
           this.currentState = 'ended';
@@ -139,6 +141,7 @@ package com.axis {
       }
 
       if (!streamEnded && 'NetStream.Buffer.Full' === event.info.code) {
+        bufferEmpty = false;
         this.currentState = 'playing';
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
         return;
