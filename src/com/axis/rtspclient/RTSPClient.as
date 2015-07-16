@@ -197,7 +197,7 @@ package com.axis.rtspclient {
       if (!this.rtpTiming || !this.flvmux || this.rtpTiming.live) {
         return false;
       }
-      var streamLastFrame:Number = this.rtpTiming.range.to - Math.ceil(1000 / (this.ns.currentFPS > 1 ? this.ns.currentFPS : 1));
+      var streamLastFrame:Number = this.rtpTiming.range.to - Math.ceil(2000 / (this.ns.currentFPS > 1 ? this.ns.currentFPS : 1));
       var streamCurrentBuffer:Number = (this.ns.time + this.ns.bufferLength) * 1000 + this.startOptions.offset;
       return streamLastFrame <= streamCurrentBuffer;
     }

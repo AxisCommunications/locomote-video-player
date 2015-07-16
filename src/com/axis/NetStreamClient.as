@@ -114,7 +114,7 @@ package com.axis {
     }
 
     private function onNetStatus(event:NetStatusEvent):void {
-      Logger.log('NetStream status:', { event: event.info.code, ended: streamEnded, bufferEmpty: bufferEmpty });
+      Logger.log('NetStream status:', { event: event.info.code, ended: this.hasStreamEnded(), bufferEmpty: bufferEmpty });
 
       if (!streamEnded && !bufferEmpty && ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code)) {
         this.currentState = 'playing';
