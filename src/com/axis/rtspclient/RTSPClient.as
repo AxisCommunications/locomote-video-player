@@ -194,7 +194,7 @@ package com.axis.rtspclient {
     }
 
     override public function hasStreamEnded():Boolean {
-      if (!this.rtpTiming || !this.flvmux || this.rtpTiming.live) {
+      if (!this.rtpTiming || !this.flvmux || this.rtpTiming.live || this.rtpTiming.range.to == -1) {
         return false;
       }
       var streamLastFrame:Number = this.rtpTiming.range.to - Math.ceil(2000 / (this.ns.currentFPS > 1 ? this.ns.currentFPS : 1));

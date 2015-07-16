@@ -48,7 +48,7 @@ package com.axis.rtspclient {
       var from:Number = 0;
       var to:Number = rangeTo.length > 0 ? Math.round(parseFloat(rangeTo) * 1000) : -1;
       var live:Boolean = rangeFrom == 'now' || to == -1;
-      if (!live) {
+      if (rangeFrom != 'now') {
         from = Math.round(parseFloat(rangeFrom) * 1000);
         /* Some idiot RTSP servers writes Range: npt=0.000-0.000 in the header... */
         to = to <= from ? -1 : to;
