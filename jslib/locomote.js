@@ -142,6 +142,11 @@
       return this;
     },
 
+    playFrames: function(timestamp) {
+      this.e.playFrames(timestamp);
+      return this;
+    },
+
     streamStatus: function() {
       return this.e.streamStatus();
     },

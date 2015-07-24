@@ -1,8 +1,10 @@
 package com.axis.rtspclient {
+  import com.axis.ClientEvent;
   import com.axis.ErrorManager;
   import com.axis.Logger;
   import com.axis.rtspclient.ByteArrayUtils;
   import com.axis.rtspclient.RTP;
+  import com.axis.rtspclient.FLVTag;
 
   import flash.events.Event;
   import flash.events.EventDispatcher;
@@ -12,9 +14,8 @@ package com.axis.rtspclient {
 
   import mx.utils.Base64Decoder;
 
-  public class FLVMux {
+  public class FLVMux extends EventDispatcher {
     private var sdp:SDP;
-    private var ns:NetStream;
     private var container:ByteArray = new ByteArray();
     private var loggedBytes:ByteArray = new ByteArray();
     private var lastTimestamp:Number = -1;
@@ -24,7 +25,7 @@ package com.axis.rtspclient {
     private var firstAudioTS:Number;
     private var hasFirstAudioTS:Boolean;
 
-    public function FLVMux(ns:NetStream, sdp:SDP, initialOffset:int) {
+    public function FLVMux(sdp:SDP, initialOffset:int) {
       container.writeByte(0x46); // 'F'
       container.writeByte(0x4C); // 'L'
       container.writeByte(0x56); // 'V'
@@ -37,7 +38,6 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(0x0) // Previous tag size: shall be 0
 
       this.sdp = sdp;
-      this.ns = ns;
       this.initialOffset = initialOffset;
 
       createMetaDataTag();
@@ -55,8 +55,6 @@ package com.axis.rtspclient {
       if (sdp.getMediaBlock('audio')) {
         createAudioSpecificConfigTag(sdp.getMediaBlock('audio'));
       }
-
-      pushData();
     }
 
     private function writeECMAArray(contents:Object):uint {
@@ -393,6 +391,8 @@ package com.axis.rtspclient {
       /* Previous Tag Size */
       container.writeUnsignedInt(size + 11);
       this.lastTimestamp = ts;
+
+      createFLVTag(ts);
     }
 
     public function createAudioTag(name:String, frame:*):void {
@@ -441,6 +441,8 @@ package com.axis.rtspclient {
       /* End of tag */
       container.writeUnsignedInt(size);
       this.lastTimestamp = ts;
+
+      createFLVTag(ts);
     }
 
     public function getLastTimestamp():Number {
@@ -473,24 +475,20 @@ package com.axis.rtspclient {
         /* Return here as nothing was created, and thus nothing should be appended */
         return;
       }
-
-      pushData();
     }
 
     public function onAACFrame(aacframe:AACFrame):void {
       createAudioTag('mpeg4-generic', aacframe);
-      pushData();
     }
 
     public function onPCMAFrame(pcmaframe:PCMAFrame):void {
       createAudioTag('pcma', pcmaframe);
-      pushData();
     }
 
-    private function pushData():void {
+    private function createFLVTag(timestamp:uint):void {
+      dispatchEvent(new FLVTag(container, timestamp));
       container.position = 0;
-      this.ns.appendBytes(container);
-      container.clear();
+      container.length = 0;
     }
   }
 }

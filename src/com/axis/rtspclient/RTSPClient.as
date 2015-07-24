@@ -8,6 +8,7 @@ package com.axis.rtspclient {
   import com.axis.IClient;
   import com.axis.Logger;
   import com.axis.rtspclient.FLVMux;
+  import com.axis.rtspclient.FLVTag;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.RTPTiming;
   import com.axis.rtspclient.SDP;
@@ -49,6 +50,8 @@ package com.axis.rtspclient {
     private var rtpTiming:RTPTiming;
     private var evoStream:Boolean = false;
     private var flvmux:FLVMux;
+    private var streamBuffer:Array = new Array();
+    private var frameByFrame:Boolean = false;
 
     private var urlParsed:Object;
     private var cSeq:uint = 1;
@@ -79,19 +82,21 @@ package com.axis.rtspclient {
       this.state = STATE_INITIAL;
       this.handle = handle;
       this.urlParsed = urlParsed;
-      this.bcTimer = new Timer(Player.config.connectionTimeout * 1000, 1);
-      this.bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
-      this.bcTimer.stop(); // Don't start timeout immediately
 
       handle.addEventListener('data', this.onData);
     }
 
     public function start(options:Object):Boolean {
+      this.bcTimer = new Timer(Player.config.connectionTimeout * 1000, 1);
+      this.bcTimer.stop(); // Don't start timeout immediately
+      this.bcTimer.reset();
+      this.bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
 
       this.startOptions = options;
       if (!this.startOptions.offset) {
         this.startOptions.offset = 0;
       }
+      this.frameByFrame = Player.config.frameByFrame;
 
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
@@ -99,6 +104,7 @@ package com.axis.rtspclient {
           ErrorManager.dispatchError(805);
           return;
         }
+        self.bcTimer.start();
 
         /* If the handle closes, take care of it */
         handle.addEventListener('closed', self.onClose);
@@ -173,6 +179,8 @@ package com.axis.rtspclient {
     }
 
     public function stop():Boolean {
+      bcTimer.stop();
+      this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
       sendTeardownReq();
       nc.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       nc.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
@@ -194,12 +202,40 @@ package com.axis.rtspclient {
     }
 
     override public function hasStreamEnded():Boolean {
-      if (!this.rtpTiming || !this.flvmux || this.rtpTiming.live || this.rtpTiming.range.to == -1) {
+      if (this.streamBuffer.length === 0 && connectionBroken) {
+        return true;
+      }
+      if (!this.rtpTiming || !this.flvmux || this.rtpTiming.live ||
+        this.rtpTiming.range.to == -1 || this.streamBuffer.length > 0) {
         return false;
       }
       var streamLastFrame:Number = this.rtpTiming.range.to - Math.ceil(2000 / (this.ns.currentFPS > 1 ? this.ns.currentFPS : 1));
-      var streamCurrentBuffer:Number = (this.ns.time + this.ns.bufferLength) * 1000 + this.startOptions.offset;
+      var streamCurrentBuffer:Number = this.flvmux.getLastTimestamp() + this.startOptions.offset;
       return streamLastFrame <= streamCurrentBuffer;
+    }
+
+    public function setFrameByFrame(frameByFrame:Boolean):Boolean {
+      this.frameByFrame = frameByFrame;
+      return true;
+    }
+
+    public function playFrames(timestamp:Number):void {
+      while (this.streamBuffer.length > 0 && this.streamBuffer[0].timestamp <= timestamp) {
+        var tag:FLVTag = this.streamBuffer.shift();
+        this.ns.appendBytes(tag.data);
+        tag.data.clear();
+      }
+      streamEnded = this.hasStreamEnded();
+    }
+
+    private function onFlvTag(tag:FLVTag):void {
+      if (this.frameByFrame) {
+        this.streamBuffer.push(tag.copy());
+        dispatchEvent(new ClientEvent(ClientEvent.FRAME, tag.timestamp));
+      } else {
+        this.ns.appendBytes(tag.data);
+        streamEnded = this.hasStreamEnded();
+      }
     }
 
     public function setBuffer(seconds:Number):Boolean {
@@ -210,6 +246,7 @@ package com.axis.rtspclient {
     }
 
     private function onClose(event:Event):void {
+      Logger.log("RTSP stream closed", { state: state });
       if (state === STATE_TEARDOWN) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
         this.ns.dispose();
@@ -409,7 +446,7 @@ package com.axis.rtspclient {
         /* Set actual offset from the stream */
         this.startOptions.offset = rtpTiming.range.from;
 
-        this.flvmux = new FLVMux(this.ns, this.sdp, this.startOptions.offset);
+        this.flvmux = new FLVMux(this.sdp, this.startOptions.offset);
         var analu:ANALU = new ANALU();
         var aaac:AAAC = new AAAC(sdp);
         var apcma:APCMA = new APCMA();
@@ -420,6 +457,7 @@ package com.axis.rtspclient {
         analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
         aaac.addEventListener(AACFrame.NEW_FRAME, flvmux.onAACFrame);
         apcma.addEventListener(PCMAFrame.NEW_FRAME, flvmux.onPCMAFrame);
+        flvmux.addEventListener(FLVTag.NEW_FLV_TAG, this.onFlvTag);
         break;
 
       case STATE_PLAYING:
@@ -625,7 +663,7 @@ package com.axis.rtspclient {
       Logger.log('RTSP OUT:', req);
       try {
         handle.writeUTFBytes(req);
-      } catch (error) {
+      } catch (error:*) {
         // If we got an IO error trying to tear down the stream, dispatch
         // STOPPED to let listeners know the stream is stopped.
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
@@ -656,21 +694,33 @@ package com.axis.rtspclient {
     }
 
     private function bcTimerHandler(e:TimerEvent):void {
+      Logger.log("RTSP stream timed out", { bufferEmpty: bufferEmpty, frameBuffer: this.streamBuffer.length, state: currentState });
       bcTimer.stop();
       bcTimer = null;
       connectionBroken = true;
-      this.handle.disconnect();
-      this.handle = null;
 
       nc.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       nc.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
       nc.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
       nc.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
-      if (!streamEnded) {
+      /* If the stream has ended don't dispatch error, evo stream doesn't give
+       * us any information about when the stream ends so assume this is the
+       * proper end of the stream */
+      if (!streamEnded && !evoStream) {
         ErrorManager.dispatchError(827);
       }
-      dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
+
+      if (bufferEmpty && this.streamBuffer.length === 0) {
+        if (currentState !== 'ended') {
+          dispatchEvent(new ClientEvent(ClientEvent.ENDED, { currentTime: this.getCurrentTime() }));
+        }
+
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
+      }
+
+      this.handle.disconnect();
+      this.handle = null;
     }
   }
 }

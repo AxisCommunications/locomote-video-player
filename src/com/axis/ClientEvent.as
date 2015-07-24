@@ -4,6 +4,7 @@ package com.axis {
   public class ClientEvent extends Event {
     public static const STOPPED:String = "stopped";
     public static const START_PLAY:String = "playing";
+    public static const FRAME:String = "frame";
     public static const PAUSED:String = "paused";
     public static const ENDED:String = "ended";
     public static const META:String = "meta";

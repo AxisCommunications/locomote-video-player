@@ -64,6 +64,12 @@ package com.axis.httpclient {
       return true;
     }
 
+    public function setFrameByFrame(frameByFrame:Boolean):Boolean {
+      return false;
+    }
+
+    public function playFrames(timestamp:Number):void {}
+
     public function setBuffer(seconds:Number):Boolean {
       this.ns.bufferTime = seconds;
       this.ns.pause();

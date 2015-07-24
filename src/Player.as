@@ -46,14 +46,17 @@ package {
     private static const EVENT_STREAM_ENDED:String  = "streamEnded";
     private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
+    private static const EVENT_FRAME_READY:String  = "frameReady";
 
     public static var config:Object = {
       'buffer': 3,
       'connectionTimeout': 10,
       'scaleUp': false,
       'allowFullscreen': true,
-      'debugLogger': false
+      'debugLogger': false,
+      'frameByFrame': false
     };
+
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
     private var client:IClient;
@@ -115,6 +118,7 @@ package {
       ExternalInterface.addCallback("resume", resume);
       ExternalInterface.addCallback("stop", stop);
       ExternalInterface.addCallback("seek", seek);
+      ExternalInterface.addCallback("playFrames", playFrames);
       ExternalInterface.addCallback("streamStatus", streamStatus);
       ExternalInterface.addCallback("playerStatus", playerStatus);
       ExternalInterface.addCallback("speakerVolume", speakerVolume);
@@ -170,6 +174,18 @@ package {
           }
         } else {
             config.buffer = iconfig.buffer;
+        }
+      }
+
+      if (iconfig.frameByFrame !== undefined) {
+        if (this.client) {
+          if (false === this.client.setFrameByFrame(iconfig.frameByFrame)) {
+            ErrorManager.dispatchError(832);
+          } else {
+            config.frameByFrame = iconfig.frameByFrame;
+          }
+        } else {
+          config.frameByFrame = iconfig.frameByFrame;
         }
       }
 
@@ -262,14 +278,19 @@ package {
       client.addEventListener(ClientEvent.PAUSED, onPaused);
       client.addEventListener(ClientEvent.ENDED, onEnded);
       client.addEventListener(ClientEvent.META, onMeta);
+      client.addEventListener(ClientEvent.FRAME, onFrame);
       client.start(this.startOptions);
       this.newPlaylistItem = false;
     }
 
-    public function seek(position:String):void{
+    public function seek(position:String):void {
       if (!client || !client.seek(Number(position))) {
         ErrorManager.dispatchError(828);
       }
+    }
+
+    public function playFrames(timestamp:Number):void {
+      client && client.playFrames(timestamp);
     }
 
     public function pause():void {
@@ -318,7 +339,8 @@ package {
         'state': this.currentState,
         'streamURL': (this.urlParsed) ? this.urlParsed.full : null,
         'duration': meta.duration ? meta.duration : null,
-        'currentTime': (this.client) ? this.client.getCurrentTime() : null
+        'currentTime': (this.client) ? this.client.getCurrentTime() : -1,
+        'bufferedTime': (this.client) ? this.client.bufferedTime() : -1
       };
 
       return status;
@@ -419,6 +441,10 @@ package {
       if (this.newPlaylistItem) {
         start();
       }
+    }
+
+    private function onFrame(event:ClientEvent):void {
+      this.callAPI(EVENT_FRAME_READY, { timestamp: event.data });
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

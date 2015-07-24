@@ -35,6 +35,10 @@ package com.axis.mjpegclient {
       return this.mjpeg.getCurrentTime();
     }
 
+    public function bufferedTime():Number {
+      return -1;
+    }
+
     public function start(options:Object):Boolean {
       this.handle.connect();
       state = "connecting";
@@ -71,6 +75,12 @@ package com.axis.mjpegclient {
       handle.addEventListener("image", onImage);
       return true;
     }
+
+    public function setFrameByFrame(frameByFrame:Boolean):Boolean {
+      return false;
+    }
+
+    public function playFrames(timestamp:Number):void {}
 
     public function setBuffer(seconds:Number):Boolean {
       return false;
