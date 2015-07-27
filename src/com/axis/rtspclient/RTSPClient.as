@@ -247,6 +247,7 @@ package com.axis.rtspclient {
 
     private function onClose(event:Event):void {
       Logger.log("RTSP stream closed", { state: state });
+      streamEnded = true;
       if (state === STATE_TEARDOWN) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
         this.ns.dispose();

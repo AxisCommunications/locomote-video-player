@@ -142,6 +142,7 @@ package com.axis {
         if (streamEnded) {
           this.currentState = 'ended';
           dispatchEvent(new ClientEvent(ClientEvent.ENDED, { currentTime: this.getCurrentTime() }));
+          dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
         } else {
           this.currentState = 'paused';
           dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
