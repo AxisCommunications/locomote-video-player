@@ -388,7 +388,7 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(size + 11);
       this.lastTimestamp = ts;
 
-      createFLVTag(ts);
+      createFLVTag(nalu.timestamp);
     }
 
     public function createAudioTag(name:String, frame:*):void {
@@ -439,7 +439,7 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(size);
       this.lastTimestamp = ts;
 
-      createFLVTag(ts);
+      createFLVTag(frame.timestamp);
     }
 
     public function getLastTimestamp():Number {
