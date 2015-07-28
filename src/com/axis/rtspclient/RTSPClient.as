@@ -138,12 +138,10 @@ package com.axis.rtspclient {
 
       state = STATE_PAUSE;
 
-      /* If in live mode, close NetSteam to discard buffer and restart display timing */
-      if (this.rtpTiming.live) {
-        this.ns.close();
-      } else {
-        this.ns.pause();
-      }
+      /* Stop timer, don't close the connection when paused. */
+      bcTimer.stop();
+
+      this.ns.pause();
 
       if (!this.evoStream || this.rtpTiming.live) {
         sendPauseReq();
@@ -163,7 +161,9 @@ package com.axis.rtspclient {
       bcTimer.reset();
       bcTimer.start();
 
+      /* If in live mode, close NetSteam to discard buffer and restart display timing */
       if (this.rtpTiming.live) {
+        this.ns.close();
         this.ns.play(null);
       } else {
         this.ns.resume();
@@ -397,7 +397,7 @@ package com.axis.rtspclient {
         Logger.log(parsed.headers['transport']);
 
         if (parsed.headers['session']) {
-          session = parsed.headers['session'];
+          session = parsed.headers['session'].match(/^[^;]+/)[0];
         }
 
         if (state === STATE_SETUP) {
