@@ -447,7 +447,7 @@ package com.axis.rtspclient {
         /* Set actual offset from the stream */
         this.startOptions.offset = rtpTiming.range.from;
 
-        this.flvmux = new FLVMux(this.sdp, this.startOptions.offset);
+        this.flvmux = new FLVMux(this.sdp);
         var analu:ANALU = new ANALU();
         var aaac:AAAC = new AAAC(sdp);
         var apcma:APCMA = new APCMA();

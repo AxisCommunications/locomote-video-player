@@ -19,13 +19,9 @@ package com.axis.rtspclient {
     private var container:ByteArray = new ByteArray();
     private var loggedBytes:ByteArray = new ByteArray();
     private var lastTimestamp:Number = -1;
-    private var initialOffset:Number;
-    private var firstVideoTS:Number;
-    private var hasFirstVideoTS:Boolean;
-    private var firstAudioTS:Number;
-    private var hasFirstAudioTS:Boolean;
+    private var firstTimestamp:Number = -1;
 
-    public function FLVMux(sdp:SDP, initialOffset:int) {
+    public function FLVMux(sdp:SDP) {
       container.writeByte(0x46); // 'F'
       container.writeByte(0x4C); // 'L'
       container.writeByte(0x56); // 'V'
@@ -38,7 +34,6 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(0x0) // Previous tag size: shall be 0
 
       this.sdp = sdp;
-      this.initialOffset = initialOffset;
 
       createMetaDataTag();
 
@@ -357,12 +352,13 @@ package com.axis.rtspclient {
 
     private function createVideoTag(nalu:NALU):void {
       var start:uint = container.position;
-      var ts:uint = nalu.timestamp - this.initialOffset;
-      if (!this.hasFirstVideoTS) {
-        this.hasFirstVideoTS = true;
-        this.firstVideoTS = ts;
+      var ts:uint = nalu.timestamp;
+      // Video and audio packets may arrive out of order. In that case set new
+      // first timestamp.
+      if (this.firstTimestamp === -1 || ts < this.firstTimestamp) {
+        this.firstTimestamp = ts;
       }
-      ts -= firstVideoTS;
+      ts -= firstTimestamp;
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
@@ -397,12 +393,13 @@ package com.axis.rtspclient {
 
     public function createAudioTag(name:String, frame:*):void {
       var start:uint = container.position;
-      var ts:uint = frame.timestamp - this.initialOffset;
-      if (!this.hasFirstAudioTS) {
-        this.hasFirstAudioTS = true;
-        this.firstAudioTS = ts;
+      var ts:uint = frame.timestamp;
+      // Video and audio packets may arrive out of order. In that case set new
+      // first timestamp.
+      if (this.firstTimestamp === -1 || ts < this.firstTimestamp) {
+        this.firstTimestamp = ts;
       }
-      ts -= firstAudioTS;
+      ts -= firstTimestamp;
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint

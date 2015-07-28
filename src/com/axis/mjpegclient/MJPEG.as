@@ -138,7 +138,7 @@ package com.axis.mjpegclient {
       setTimeout(this.doLoad, timeout, image);
     }
 
-    private function doLoad(image:Image) {
+    private function doLoad(image:Image):void {
       this.timestamps.push(image.timestamp);
       addLoaderEventListeners(backbuffer);
       backbuffer.loadBytes(image.data)
