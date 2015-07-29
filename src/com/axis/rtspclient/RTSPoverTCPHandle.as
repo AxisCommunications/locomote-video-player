@@ -1,6 +1,7 @@
 package com.axis.rtspclient {
   import com.axis.ClientEvent;
   import com.axis.ErrorManager;
+  import com.axis.Logger;
 
   import flash.events.Event;
   import flash.events.EventDispatcher;
@@ -30,6 +31,18 @@ package com.axis.rtspclient {
     public function writeUTFBytes(value:String):void {
       channel.writeUTFBytes(value);
       channel.flush();
+    }
+
+    public function sendRTCPPacket(data:ByteArray):void {
+        // Add frame for RTCP over TCP
+        var pkt:ByteArray = new ByteArray();
+        pkt.writeByte(0x24);
+        pkt.writeByte(0x01);
+        var dataLength:uint = data.length;
+        pkt.writeShort(dataLength);
+        pkt.writeBytes(data);
+        channel.writeBytes(pkt);
+        channel.flush();
     }
 
     public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void {

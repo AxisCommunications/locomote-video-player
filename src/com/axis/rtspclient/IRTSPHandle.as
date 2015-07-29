@@ -5,6 +5,7 @@ package com.axis.rtspclient {
 
   public interface IRTSPHandle extends IEventDispatcher {
     function writeUTFBytes(value:String):void;
+    function sendRTCPPacket(data:ByteArray):void;
     function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void;
     function connect():void;
     function reconnect():void;

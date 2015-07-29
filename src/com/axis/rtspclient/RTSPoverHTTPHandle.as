@@ -72,6 +72,10 @@ package com.axis.rtspclient {
       postChannel.flush();
     }
 
+    public function sendRTCPPacket(data:ByteArray):void {
+        // TODO: Fill this in for HTTP connection
+    }
+
     public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void {
       getChannel.readBytes(bytes, offset, length);
     }
