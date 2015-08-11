@@ -80,6 +80,7 @@ package com.axis.mjpegclient {
     }
 
     private function onConnect(event:Event):void {
+      Logger.log('MJPEGClient: requesting URL', urlParsed.urlpath);
       this.bcTimer.start();
       buffer = new ByteArray();
       dataBuffer = new ByteArray();

@@ -6,6 +6,7 @@ package com.axis.mjpegclient {
   import com.axis.mjpegclient.Image;
   import com.axis.mjpegclient.Handle;
   import com.axis.mjpegclient.MJPEG;
+  import com.axis.ErrorManager;
   import flash.display.DisplayObject;
   import flash.display.Sprite;
   import flash.display.LoaderInfo;
@@ -131,6 +132,9 @@ package com.axis.mjpegclient {
     }
 
     private function onCLosed(e:Event):void {
+      if (this.state === "connecting") {
+        ErrorManager.dispatchError(704);
+      }
       this.connectionBroken = true;
       this.mjpeg.setBuffer(0);
       this.stopIfDone();
