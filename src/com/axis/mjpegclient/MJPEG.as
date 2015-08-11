@@ -23,6 +23,7 @@ package com.axis.mjpegclient {
     private const FLOATING_AVG_LENGTH:Number = 10;
 
     private var bufferSize:Number;
+    private var paused:Boolean = false;
 
     private var busy:Boolean = false;
     private var buffering:Boolean = true;
@@ -83,6 +84,16 @@ package com.axis.mjpegclient {
       return time <= 0 ? 0 : time;
     }
 
+    public function pause():void {
+      this.paused = true;
+      this.loadNext();
+    }
+
+    public function resume():void {
+      this.paused = false;
+      this.loadNext();
+    }
+
     public function getFps():Number {
       if (timestamps.length < 2) { return 0; }
       var loadTimesSum:Number = 0;
@@ -125,7 +136,7 @@ package com.axis.mjpegclient {
     }
 
     private function loadNext():void {
-      if (busy || this.imageBuffer.length === 0) {
+      if (busy || this.imageBuffer.length === 0 || this.paused) {
         /* Already in the process of decoding an image, ignore this new image data */
         return;
       }

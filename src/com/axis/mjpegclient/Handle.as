@@ -63,11 +63,6 @@ package com.axis.mjpegclient {
 
       socket.close();
       buffer = null;
-      dispatchEvent(new Event("disconnect"));
-    }
-
-    public function stop():void {
-      disconnect();
     }
 
     public function connect():void {

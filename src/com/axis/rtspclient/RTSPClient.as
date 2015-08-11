@@ -180,7 +180,6 @@ package com.axis.rtspclient {
 
     public function stop():Boolean {
       bcTimer.stop();
-      this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
       sendTeardownReq();
       nc.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       nc.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
@@ -246,12 +245,22 @@ package com.axis.rtspclient {
     }
 
     private function onClose(event:Event):void {
-      Logger.log("RTSP stream closed", { state: state });
+      Logger.log("RTSP stream closed", { state: state, streamBuffer: this.streamBuffer.length });
       streamEnded = true;
+
+      bcTimer.stop();
+      this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+
       if (state === STATE_TEARDOWN) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
         this.ns.dispose();
       } else {
+        if (this.streamBuffer.length > 0 && this.streamBuffer[this.streamBuffer.length - 1].timestamp - this.ns.time * 1000 < this.ns.bufferTime * 1000) {
+          this.ns.bufferTime = 0;
+          this.ns.pause();
+          this.ns.resume();
+        }
+
         if (!connectionBroken)
           ErrorManager.dispatchError(803);
       }
@@ -696,19 +705,23 @@ package com.axis.rtspclient {
 
     private function bcTimerHandler(e:TimerEvent):void {
       Logger.log("RTSP stream timed out", { bufferEmpty: bufferEmpty, frameBuffer: this.streamBuffer.length, state: currentState });
-      bcTimer.stop();
-      bcTimer = null;
       connectionBroken = true;
+
+      this.handle.disconnect();
 
       nc.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       nc.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
       nc.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
       nc.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
+      if (evoStream) {
+        streamEnded = true;
+      }
+
       /* If the stream has ended don't dispatch error, evo stream doesn't give
        * us any information about when the stream ends so assume this is the
        * proper end of the stream */
-      if (!streamEnded && !evoStream) {
+      if (!streamEnded) {
         ErrorManager.dispatchError(827);
       }
 
@@ -719,9 +732,6 @@ package com.axis.rtspclient {
 
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
       }
-
-      this.handle.disconnect();
-      this.handle = null;
     }
   }
 }

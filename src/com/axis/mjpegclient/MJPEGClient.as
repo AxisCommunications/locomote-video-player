@@ -54,14 +54,14 @@ package com.axis.mjpegclient {
     }
 
     public function stop():Boolean {
-      this.handle.stop();
-      if (state !== "playing") {
-        /* If we're not playing, we're never gonna get the 'disconnect' event. Fire stopped now in that case */
-        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+      state = "stopped";
+      if (connectionBroken) {
+        this.stopIfDone();
+      } else {
+        this.handle.disconnect();
       }
 
-      state = "stopped";
-      return false;
+      return true;
     }
 
     public function seek(position:Number):Boolean {
@@ -69,18 +69,14 @@ package com.axis.mjpegclient {
     }
 
     public function pause():Boolean {
-      handle.removeEventListener("image", onImage);
+      this.mjpeg.pause();
       dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
       return true;
     }
 
     public function resume():Boolean {
-      if (handle.hasEventListener("image")) {
-        return false;
-      }
-
+      this.mjpeg.resume();
       dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
-      handle.addEventListener("image", onImage);
       return true;
     }
 
@@ -90,7 +86,8 @@ package com.axis.mjpegclient {
     }
 
     public function setBuffer(seconds:Number):Boolean {
-      return false;
+      this.mjpeg.setBuffer(seconds * 1000);
+      return true;
     }
 
     public function hasVideo():Boolean {
@@ -123,7 +120,7 @@ package com.axis.mjpegclient {
     }
 
     private function stopIfDone():void {
-      if (this.streamBuffer.length === 0 && this.connectionBroken && mjpeg.bufferedTime() === 0) {
+      if (this.state === "stopped" || this.streamBuffer.length === 0 && this.connectionBroken && mjpeg.bufferedTime() === 0) {
         mjpeg.clear();
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       }
