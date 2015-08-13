@@ -70,12 +70,14 @@ package com.axis.mjpegclient {
     }
 
     public function pause():Boolean {
+      state = "paused";
       this.mjpeg.pause();
       dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
       return true;
     }
 
     public function resume():Boolean {
+      state = "playing";
       this.mjpeg.resume();
       dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       return true;
@@ -158,7 +160,9 @@ package com.axis.mjpegclient {
 
     private function onBufferFull(e:Event):void {
       Logger.log('MJPEG status buffer full');
-      dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+      if (state === "playing") {
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+      }
     }
 
   }

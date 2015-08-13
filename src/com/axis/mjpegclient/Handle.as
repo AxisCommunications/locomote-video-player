@@ -45,6 +45,8 @@ package com.axis.mjpegclient {
       this.socket = new Socket();
       this.socket.timeout = 5000;
       this.socket.addEventListener(Event.CONNECT, onConnect);
+      // If the close event is called we need to call socket.close() to prevent
+      // security error
       this.socket.addEventListener(Event.CLOSE, onClose);
       this.socket.addEventListener(ProgressEvent.SOCKET_DATA, onHttpHeaders);
       this.socket.addEventListener(IOErrorEvent.IO_ERROR, onError);
@@ -57,12 +59,17 @@ package com.axis.mjpegclient {
     }
 
     public function disconnect():void {
-      if (!socket.connected) {
-        return;
-      }
-
-      socket.close();
+      // The close event on the socket is often not called so du all cleanup
+      // immediately.
+      this.bcTimer.stop();
+      this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+      this.bcTimer = null;
       buffer = null;
+      try {
+        // Security error is thrown if this line is excluded
+        socket.close();
+      } catch (error:*) {}
+      dispatchEvent(new Event(Handle.CLOSED));
     }
 
     public function connect():void {
@@ -98,15 +105,10 @@ package com.axis.mjpegclient {
     }
 
     private function onClose(e:Event):void {
-      Logger.log('MJPEGClient: Connection closed');
-      this.bcTimer.stop();
-      this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
-      this.bcTimer = null;
       try {
         // Security error is thrown if this line is excluded
         socket.close();
       } catch (error:*) {}
-      dispatchEvent(new Event(Handle.CLOSED));
     }
 
     private function onHttpHeaders(event:ProgressEvent):void {
