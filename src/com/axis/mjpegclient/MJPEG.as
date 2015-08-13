@@ -167,7 +167,7 @@ package com.axis.mjpegclient {
 
       busy = false;
 
-      if (this.imageBuffer.length === 0) {
+      if (this.imageBuffer.length === 0 && this.bufferSize > 0) {
         this.buffering = true;
         dispatchEvent(new Event(MJPEG.BUFFER_EMPTY));
       } else {
