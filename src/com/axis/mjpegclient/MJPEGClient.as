@@ -135,6 +135,7 @@ package com.axis.mjpegclient {
 
     private function onCLosed(e:Event):void {
       if (this.state === "connecting") {
+        this.state = "stopped";
         ErrorManager.dispatchError(704);
       }
       this.connectionBroken = true;
@@ -143,11 +144,14 @@ package com.axis.mjpegclient {
     }
 
     private function onFrame(e:FrameEvent):void {
-      state = "playing";
-      dispatchEvent(new ClientEvent(ClientEvent.META, {
+      var resolution:Object = {
         width: e.getFrame().width,
         height: e.getFrame().height
-      }));
+      };
+      Logger.log('MJPEG frame ready', resolution);
+
+      state = "playing";
+      dispatchEvent(new ClientEvent(ClientEvent.META, resolution));
       dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       mjpeg.removeEventListener("frame", onFrame);
     }

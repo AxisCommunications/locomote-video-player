@@ -37,6 +37,7 @@ package com.axis.mjpegclient {
     private var clen:int;
     private var parseSubheaders:Boolean = true;
     private var firstTimestamp:Number = -1;
+    private var closeTiggered:Boolean = false;
 
     public function Handle(urlParsed:Object) {
       this.urlParsed = urlParsed;
@@ -59,17 +60,27 @@ package com.axis.mjpegclient {
     }
 
     public function disconnect():void {
-      // The close event on the socket is often not called so du all cleanup
+      Logger.log('MJPEGClient: disconnecting from', urlParsed.host + ':' + urlParsed.port);
+
+      // The close event on the socket is often not called so do all cleanup
       // immediately.
-      this.bcTimer.stop();
-      this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
-      this.bcTimer = null;
-      buffer = null;
+      if (this.bcTimer) {
+        this.bcTimer.stop();
+        this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+        this.bcTimer = null;
+      }
+
+      this.buffer = null;
+
       try {
         // Security error is thrown if this line is excluded
         socket.close();
       } catch (error:*) {}
-      dispatchEvent(new Event(Handle.CLOSED));
+
+      if (!this.closeTiggered) {
+        dispatchEvent(new Event(Handle.CLOSED));
+        this.closeTiggered = true;
+      }
     }
 
     public function connect():void {
@@ -105,13 +116,30 @@ package com.axis.mjpegclient {
     }
 
     private function onClose(e:Event):void {
+      Logger.log('MJPEGClient: socket closed', urlParsed.host + ':' + urlParsed.port);
+
+      if (this.bcTimer) {
+        this.bcTimer.stop();
+        this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+        this.bcTimer = null;
+      }
+
+      this.buffer = null
+
       try {
         // Security error is thrown if this line is excluded
         socket.close();
       } catch (error:*) {}
+
+      if (!this.closeTiggered) {
+        dispatchEvent(new Event(Handle.CLOSED));
+        this.closeTiggered = true;
+      }
     }
 
     private function onHttpHeaders(event:ProgressEvent):void {
+      Logger.log('MJPEGClient: recieved HTTP headers for', urlParsed.urlpath);
+
       this.bcTimer.reset();
       var parsed:* = request.readHeaders(socket, dataBuffer);
       if (false === parsed) {
@@ -181,6 +209,7 @@ package com.axis.mjpegclient {
     }
 
     private function bcTimerHandler(e:TimerEvent):void {
+      Logger.log('MJPEGClient: connection timedout', urlParsed.host + ':' + urlParsed.port);
       this.disconnect();
     }
   }
