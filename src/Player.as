@@ -142,6 +142,10 @@ package {
     }
 
     public function videoResize():void {
+      if (!this.client) {
+        return;
+      }
+
       var stagewidth:uint = (StageDisplayState.NORMAL === stage.displayState) ?
         stage.stageWidth : stage.fullScreenWidth;
       var stageheight:uint = (StageDisplayState.NORMAL === stage.displayState) ?

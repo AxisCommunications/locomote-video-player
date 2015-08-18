@@ -25,6 +25,7 @@ package com.axis.mjpegclient {
     private var bufferSize:Number;
     private var paused:Boolean = false;
 
+    private var loadTimer:uint;
     private var busy:Boolean = false;
     private var buffering:Boolean = true;
     private var timestamps:Vector.<Number> = new Vector.<Number>();
@@ -146,7 +147,7 @@ package com.axis.mjpegclient {
 
       var timeout:Number = this.timeUntilLoad(image);
       this.loadTimes.push(new Date().getTime() + timeout);
-      setTimeout(this.doLoad, timeout, image);
+      this.loadTimer = setTimeout(this.doLoad, timeout, image);
     }
 
     private function doLoad(image:Image):void {
@@ -194,6 +195,7 @@ package com.axis.mjpegclient {
     }
 
     public function clear():void {
+      clearTimeout(this.loadTimer);
       // Remove graphics components, abort play
       destroyLoaders();
       busy = false;
