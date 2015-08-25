@@ -438,6 +438,12 @@ package {
 
     private function onStopped(event:ClientEvent):void {
       this.removeChild(this.client.getDisplayObject());
+      this.client.removeEventListener(ClientEvent.STOPPED, onStopped);
+      this.client.removeEventListener(ClientEvent.START_PLAY, onStartPlay);
+      this.client.removeEventListener(ClientEvent.PAUSED, onPaused);
+      this.client.removeEventListener(ClientEvent.ENDED, onEnded);
+      this.client.removeEventListener(ClientEvent.META, onMeta);
+      this.client.removeEventListener(ClientEvent.FRAME, onFrame);
       this.client = null;
       this.callAPI(EVENT_STREAM_STOPPED, event.data);
 
