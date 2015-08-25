@@ -9,7 +9,7 @@ package com.axis.http {
     public static function readHeaders(dataInput:*, buffer:ByteArray):* {
       dataInput.readBytes(buffer, buffer.length);
 
-      var index:int = ByteArrayUtils.indexOf(buffer, "\r\n\r\n");
+      var index:int = ByteArrayUtils.indexOf(buffer, "\r\n\r\n", buffer.position);
       if (index === -1) {
         /* Not a full request yet */
         return false;

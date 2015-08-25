@@ -2,6 +2,7 @@ package com.axis.mjpegclient {
 
   import com.axis.mjpegclient.Image;
 
+  import com.axis.rtspclient.ByteArrayUtils;
   import flash.events.ErrorEvent;
   import flash.events.Event;
   import flash.events.EventDispatcher;
@@ -138,13 +139,20 @@ package com.axis.mjpegclient {
     }
 
     private function onHttpHeaders(event:ProgressEvent):void {
-      Logger.log('MJPEGClient: recieved HTTP headers for', urlParsed.urlpath);
-
       this.bcTimer.reset();
+
+      socket.readBytes(dataBuffer, dataBuffer.length);
+
       var parsed:* = request.readHeaders(socket, dataBuffer);
       if (false === parsed) {
         return;
       }
+
+      Logger.log('MJPEGClient: recieved HTTP headers.', {
+        httpCode: parsed.code,
+        contentType: parsed.headers['content-type'],
+        url: urlParsed.urlpath
+      });
 
       if (200 !== parsed.code) {
         ErrorManager.dispatchError(parsed.code);
@@ -160,6 +168,12 @@ package com.axis.mjpegclient {
 
       this.socket.removeEventListener(ProgressEvent.SOCKET_DATA, onHttpHeaders);
       this.socket.addEventListener(ProgressEvent.SOCKET_DATA, onImageData);
+
+      // Remove HTTP header data from buffer as it is already parsed.
+      var tmp:ByteArray = new ByteArray();
+      dataBuffer.readBytes(tmp);
+      dataBuffer.clear();
+      dataBuffer = tmp;
 
       if (0 < this.dataBuffer.bytesAvailable) {
         this.onImageData(event);
@@ -177,6 +191,7 @@ package com.axis.mjpegclient {
         }
 
         this.clen = parsed.headers['content-length'];
+
         parseSubheaders = false;
       }
 
@@ -203,6 +218,7 @@ package com.axis.mjpegclient {
       if (this.firstTimestamp === -1) {
         this.firstTimestamp = timestamp;
       }
+
       dispatchEvent(new Image(image, timestamp - this.firstTimestamp));
       clen = 0;
       parseSubheaders = true;

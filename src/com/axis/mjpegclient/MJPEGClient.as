@@ -32,6 +32,7 @@ package com.axis.mjpegclient {
       mjpeg.addEventListener("frame", onFrame);
       mjpeg.addEventListener(MJPEG.BUFFER_EMPTY, onBufferEmpty);
       mjpeg.addEventListener(MJPEG.BUFFER_FULL, onBufferFull);
+      mjpeg.addEventListener(MJPEG.IMAGE_ERROR, onMJPEGImageError);
       handle.addEventListener(Image.NEW_IMAGE_EVENT, onImage);
       handle.addEventListener(Handle.CONNECTED, onConnected);
     }
@@ -130,10 +131,10 @@ package com.axis.mjpegclient {
     }
 
     private function onConnected(e:Event):void {
-      handle.addEventListener(Handle.CLOSED, onCLosed);
+      handle.addEventListener(Handle.CLOSED, onClosed);
     }
 
-    private function onCLosed(e:Event):void {
+    private function onClosed(e:Event):void {
       if (this.state === "connecting") {
         this.state = "stopped";
         ErrorManager.dispatchError(704);
@@ -158,8 +159,12 @@ package com.axis.mjpegclient {
 
     private function onBufferEmpty(e:Event):void {
       Logger.log('MJPEG status buffer empty');
-      dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
-      this.stopIfDone();
+      if (this.connectionBroken && this.streamBuffer.length === 0) {
+        dispatchEvent(new ClientEvent(ClientEvent.ENDED));
+        this.stopIfDone();
+      } else if (this.mjpeg.getBuffer() > 0) {
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+      }
     }
 
     private function onBufferFull(e:Event):void {
@@ -167,6 +172,10 @@ package com.axis.mjpegclient {
       if (state === "playing") {
         dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
       }
+    }
+
+    private function onMJPEGImageError(e:Event):void {
+      ErrorManager.dispatchError(833);
     }
 
   }

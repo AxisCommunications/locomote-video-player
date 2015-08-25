@@ -2,6 +2,7 @@ package com.axis.mjpegclient {
 
   import com.axis.mjpegclient.Image;
 
+  import com.axis.Logger;
   import flash.display.Loader;
   import flash.display.Bitmap;
   import flash.display.LoaderInfo;
@@ -19,6 +20,7 @@ package com.axis.mjpegclient {
 
     public static const BUFFER_EMPTY:String = "bufferEmpty";
     public static const BUFFER_FULL:String = "bufferFull";
+    public static const IMAGE_ERROR:String = "imageError";
 
     private const FLOATING_AVG_LENGTH:Number = 10;
 
@@ -114,6 +116,10 @@ package com.axis.mjpegclient {
       this.addImage();
     }
 
+    public function getBuffer():Number {
+      return this.bufferSize;
+    }
+
     public function bufferedTime():Number {
       if (this.imageBuffer.length === 0) {
         return 0;
@@ -145,7 +151,9 @@ package com.axis.mjpegclient {
 
       var image:Image = this.imageBuffer.shift()
 
+
       var timeout:Number = this.timeUntilLoad(image);
+
       this.loadTimes.push(new Date().getTime() + timeout);
       this.loadTimer = setTimeout(this.doLoad, timeout, image);
     }
@@ -168,7 +176,7 @@ package com.axis.mjpegclient {
 
       busy = false;
 
-      if (this.imageBuffer.length === 0 && this.bufferSize > 0) {
+      if (this.imageBuffer.length === 0) {
         this.buffering = true;
         dispatchEvent(new Event(MJPEG.BUFFER_EMPTY));
       } else {
@@ -182,6 +190,8 @@ package com.axis.mjpegclient {
       busy = false;
       var loader:Loader = event.currentTarget.loader;
       removeLoaderEventListeners(loader);
+      Logger.log('MJPEG failed to load image.', event.toString());
+      dispatchEvent(new Event(MJPEG.IMAGE_ERROR));
     }
 
     private function addLoaderEventListeners(loader:Loader):void {
