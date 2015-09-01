@@ -134,6 +134,7 @@ package com.axis {
 
       if ('NetStream.Play.Stop' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+        this.ns.dispose();
         return;
       }
 
@@ -143,6 +144,7 @@ package com.axis {
           this.currentState = 'ended';
           dispatchEvent(new ClientEvent(ClientEvent.ENDED, { currentTime: this.getCurrentTime() }));
           dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+          this.ns.dispose();
         } else {
           this.currentState = 'paused';
           dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));

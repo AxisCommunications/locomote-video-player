@@ -417,6 +417,7 @@ package com.axis.rtspclient {
             dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
             connectionBroken = true;
             handle.disconnect();
+            this.ns.dispose();
             ErrorManager.dispatchError(461);
             return;
           }
@@ -677,6 +678,7 @@ package com.axis.rtspclient {
         // If we got an IO error trying to tear down the stream, dispatch
         // STOPPED to let listeners know the stream is stopped.
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
+        this.ns.dispose();
       }
 
       prevMethod = sendTeardownReq;
@@ -731,6 +733,7 @@ package com.axis.rtspclient {
         }
 
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
+        this.ns.dispose();
       }
     }
   }

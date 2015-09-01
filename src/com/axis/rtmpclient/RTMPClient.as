@@ -106,6 +106,7 @@ package com.axis.rtmpclient {
       if ('NetConnection.Connect.Closed' === event.info.code) {
         this.currentState = 'stopped';
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+        this.ns.dispose();
       }
     }
 
