@@ -248,6 +248,7 @@
         __playerEvent: function () {},
         __swfReady: function () {}
       };
+      this.e.stop();
       this.e.parentNode.removeChild(this.e);
       delete window.LocomoteMap[this.tag];
       this.e = null;
