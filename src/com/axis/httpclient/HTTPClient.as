@@ -79,6 +79,7 @@ package com.axis.httpclient {
     }
 
     private function onConnectionStatus(event:NetStatusEvent):void {
+      Logger.log('HTTPClient: connection status:', event.info.code);
       if ('NetConnection.Connect.Closed' === event.info.code && this.currentState !== 'stopped') {
         this.currentState = 'stopped';
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
