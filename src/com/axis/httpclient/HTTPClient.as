@@ -38,6 +38,7 @@ package com.axis.httpclient {
       this.ns.dispose();
       this.nc.close();
       this.currentState = 'stopped';
+      dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       return true;
     }
 
@@ -78,7 +79,7 @@ package com.axis.httpclient {
     }
 
     private function onConnectionStatus(event:NetStatusEvent):void {
-      if ('NetConnection.Connect.Closed' === event.info.code) {
+      if ('NetConnection.Connect.Closed' === event.info.code && this.currentState !== 'stopped') {
         this.currentState = 'stopped';
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
         this.ns.dispose();
