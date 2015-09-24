@@ -448,13 +448,11 @@ package com.axis.rtspclient {
         break;
 
       case 7: /* Sequence parameter set */
-        /* What to do about these? Inserting new decoder configurations doesn't seem to work. */
-        /* createDecoderConfigRecordTag(nalu.getPayload(), new ByteArray()); */
+          createVideoTag(nalu);
         break;
 
       case 8: /* Picture parameter set */
-        /* What to do about these? Inserting new decoder configurations doesn't seem to work. */
-        /* createDecoderConfigRecordTag(new ByteArray(), nalu.getPayload()); */
+          createVideoTag(nalu)
         break;
 
       default:
