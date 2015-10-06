@@ -244,7 +244,12 @@ package {
       switch (urlParsed.protocol) {
       case 'rtsph':
         /* RTSP over HTTP */
-        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed));
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed, false));
+        break;
+
+      case 'rtsphs':
+        /* RTSP over HTTPS */
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed, true));
         break;
 
       case 'rtsp':

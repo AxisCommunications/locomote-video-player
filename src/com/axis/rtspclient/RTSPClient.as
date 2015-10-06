@@ -600,8 +600,8 @@ package com.axis.rtspclient {
         "Accept: application/sdp\r\n" +
         auth.authorizationHeader("DESCRIBE", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
-      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
+      Logger.log('RTSP OUT:', req);
 
       prevMethod = sendDescribeReq;
     }
@@ -621,8 +621,8 @@ package com.axis.rtspclient {
         auth.authorizationHeader("SETUP", authState, authOpts, urlParsed, digestNC++) +
         "Date: " + new Date().toUTCString() + "\r\n" +
         "\r\n";
-      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
+      Logger.log('RTSP OUT:', req);
 
       prevMethod = sendSetupReq;
     }
@@ -638,8 +638,8 @@ package com.axis.rtspclient {
       }
       req += auth.authorizationHeader("PLAY", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
-      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
+      Logger.log('RTSP OUT:', req);
 
       prevMethod = sendPlayReq;
     }
@@ -656,8 +656,8 @@ package com.axis.rtspclient {
         "Session: " + session + "\r\n" +
         auth.authorizationHeader("PAUSE", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
-      Logger.log('RTSP OUT:', req);
       handle.writeUTFBytes(req);
+      Logger.log('RTSP OUT:', req);
 
       prevMethod = sendPauseReq;
     }
@@ -671,9 +671,9 @@ package com.axis.rtspclient {
         "Session: " + session + "\r\n" +
         auth.authorizationHeader("TEARDOWN", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
-      Logger.log('RTSP OUT:', req);
       try {
         handle.writeUTFBytes(req);
+        Logger.log('RTSP OUT:', req);
       } catch (error:*) {
         // If we got an IO error trying to tear down the stream, dispatch
         // STOPPED to let listeners know the stream is stopped.
