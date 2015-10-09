@@ -235,9 +235,10 @@ package com.axis.rtspclient {
 
         Logger.log('RTSPClient: switching authorization from ' + authState + ' to ' + newAuthState);
         authState = newAuthState;
-        state = STATE_INITIAL;
-        data = new ByteArray();
-        handle.reconnect();
+        
+        requestReset();
+        prevMethod();
+
         return false;
       }
 
@@ -351,6 +352,7 @@ package com.axis.rtspclient {
         this.addEventListener("VIDEO_H264_PACKET", analu.onRTPPacket);
         this.addEventListener("AUDIO_MPEG4-GENERIC_PACKET", aaac.onRTPPacket);
         this.addEventListener("AUDIO_PCMA_PACKET", apcma.onRTPPacket);
+        this.addEventListener("AUDIO_PCMU_PACKET", apcma.onRTPPacket);
         analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
         aaac.addEventListener(AACFrame.NEW_FRAME, flvmux.onAACFrame);
         apcma.addEventListener(PCMAFrame.NEW_FRAME, flvmux.onPCMAFrame);
@@ -464,8 +466,9 @@ package com.axis.rtspclient {
 
     private function sendOptionsReq():void {
       state = STATE_OPTIONS;
+      var u:String = 'rtsp://' + urlParsed.host + urlParsed.urlpath;      
       var req:String =
-        "OPTIONS * RTSP/1.0\r\n" +
+        "OPTIONS " + u + " RTSP/1.0\r\n" +
         "CSeq: " + (++cSeq) + "\r\n" +
         "User-Agent: " + userAgent + "\r\n" +
         "\r\n";

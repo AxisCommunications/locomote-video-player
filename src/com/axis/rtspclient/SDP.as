@@ -88,6 +88,8 @@ package com.axis.rtspclient {
 
       media[currentMediaBlock.type] = currentMediaBlock;
 
+      setWellKnownPayloadTypes();
+
       return success;
     }
 
@@ -226,6 +228,27 @@ package com.axis.rtspclient {
       }
 
       return true;
+    }
+
+    /**
+    Look for media blocks that do not have an rtpmap entry, and have a pt that corresponds to
+    a well known media type from http://www.iana.org/assignments/rtp-parameters/rtp-parameters.xhtml
+    Some servers/cameras will not specify "a=rtpmap" for well known types, and this code will fill in the rtpmap in 
+    those cases.
+    */
+    private function setWellKnownPayloadTypes():void {
+      for each (var mediaBlock:Object in media) {
+        if(null == mediaBlock.rtpmap[mediaBlock.fmt]) {
+          if(0 == mediaBlock.fmt && "audio" == mediaBlock.type) {
+          
+            var payloadType:Object = new Object();
+            payloadType.name  = "PCMU";
+            payloadType.clock = 8000;
+
+            mediaBlock.rtpmap[mediaBlock.fmt] = payloadType;
+          }
+        }
+      }
     }
 
     public function getSessionBlock():Object {

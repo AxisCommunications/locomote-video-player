@@ -305,6 +305,15 @@ package com.axis.rtspclient {
           depth: 0x1, /* 16 bits per sample, but why? */
           type: 0x0 /* Mono */
         };
+        
+      case 'pcmu':
+        return {
+          format: 0x8, /* Logarithmic G.711 mu-law  */
+          sampling: 0, /* Doesn't matter. Rate is fixed at 8 kHz when format = 0x8 */
+          depth: 1, /* 16 bits per sample */
+          type: 0 /* Mono */
+        };        
+
       default:
         return false;
       }
