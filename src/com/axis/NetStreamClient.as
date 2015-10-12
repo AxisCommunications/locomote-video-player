@@ -138,6 +138,10 @@ package com.axis {
         return;
       }
 
+      if ('NetStream.Buffer.Flush' === event.info.code) {
+        streamEnded = true;
+      }
+
       if (currentState !== 'ended' && 'NetStream.Buffer.Empty' === event.info.code) {
         bufferEmpty = true;
         if (streamEnded) {
@@ -146,7 +150,7 @@ package com.axis {
           dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
           this.ns.dispose();
         } else {
-          this.currentState = 'paused';
+          this.currentState = 'buffering';
           dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
         }
         return;
@@ -159,7 +163,7 @@ package com.axis {
         return;
       }
 
-      if ('NetStream.Pause.Notify' === event.info.code) {
+      if (this.currentState != 'paused' && 'NetStream.Pause.Notify' === event.info.code) {
         this.currentState = 'paused';
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         return;

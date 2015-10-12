@@ -52,7 +52,6 @@ package com.axis.rtmpclient {
     public function stop():Boolean {
       this.ns.dispose();
       this.nc.close();
-      this.currentState = 'stopped';
       return true;
     }
 
@@ -67,7 +66,6 @@ package com.axis.rtmpclient {
         return false;
       }
       this.ns.pause();
-      this.currentState = 'paused';
       return true;
     }
 
