@@ -179,12 +179,21 @@ package com.axis.rtspclient {
     }
 
     public function stop():Boolean {
+      dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
+      this.ns.dispose();
       bcTimer.stop();
-      sendTeardownReq();
+
+      try {
+        sendTeardownReq();
+      } catch (e:*) {}
+
+      this.handle.disconnect();
+
       nc.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
       nc.removeEventListener(IOErrorEvent.IO_ERROR, onIOError);
       nc.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatusError);
       nc.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
+
       return true;
     }
 
@@ -251,18 +260,18 @@ package com.axis.rtspclient {
       bcTimer.stop();
       this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
 
-      if (state === STATE_TEARDOWN) {
-        dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
-        this.ns.dispose();
-      } else {
+      if (state !== STATE_TEARDOWN) {
         if (this.streamBuffer.length > 0 && this.streamBuffer[this.streamBuffer.length - 1].timestamp - this.ns.time * 1000 < this.ns.bufferTime * 1000) {
           this.ns.bufferTime = 0;
           this.ns.pause();
           this.ns.resume();
         }
 
-        if (!connectionBroken)
+        if (!connectionBroken) {
           ErrorManager.dispatchError(803);
+          dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
+          this.ns.dispose();
+        }
       }
     }
 
@@ -486,8 +495,6 @@ package com.axis.rtspclient {
 
       case STATE_TEARDOWN:
         Logger.log('RTSPClient: STATE_TEARDOWN');
-        this.bcTimer.stop();
-        this.handle.disconnect();
         break;
       }
 
@@ -671,15 +678,9 @@ package com.axis.rtspclient {
         "Session: " + session + "\r\n" +
         auth.authorizationHeader("TEARDOWN", authState, authOpts, urlParsed, digestNC++) +
         "\r\n";
-      try {
-        handle.writeUTFBytes(req);
-        Logger.log('RTSP OUT:', req);
-      } catch (error:*) {
-        // If we got an IO error trying to tear down the stream, dispatch
-        // STOPPED to let listeners know the stream is stopped.
-        dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
-        this.ns.dispose();
-      }
+
+      handle.writeUTFBytes(req);
+      Logger.log('RTSP OUT:', req);
 
       prevMethod = sendTeardownReq;
     }
