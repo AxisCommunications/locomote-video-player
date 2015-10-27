@@ -256,6 +256,7 @@ package com.axis.rtspclient {
     private function onClose(event:Event):void {
       Logger.log("RTSP stream closed", { state: state, streamBuffer: this.streamBuffer.length });
       streamEnded = true;
+      this.connectionBroken = true;
 
       bcTimer.stop();
       this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
@@ -265,10 +266,12 @@ package com.axis.rtspclient {
           this.ns.bufferTime = 0;
           this.ns.pause();
           this.ns.resume();
-        }
+        } else if (bufferEmpty && this.streamBuffer.length === 0) {
+          if (currentState !== 'ended') {
+            currentState = 'ended';
+            dispatchEvent(new ClientEvent(ClientEvent.ENDED, { currentTime: this.getCurrentTime() }));
+          }
 
-        if (!connectionBroken) {
-          ErrorManager.dispatchError(803);
           dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
           this.ns.dispose();
         }

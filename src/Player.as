@@ -11,6 +11,7 @@ package {
   import com.axis.rtspclient.IRTSPHandle;
   import com.axis.rtspclient.RTSPClient;
   import com.axis.rtspclient.RTSPoverHTTPHandle;
+  import com.axis.rtspclient.RTSPoverHTTPAPHandle;
   import com.axis.rtspclient.RTSPoverTCPHandle;
 
   import flash.display.LoaderInfo;
@@ -250,6 +251,11 @@ package {
       case 'rtsphs':
         /* RTSP over HTTPS */
         client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed, true));
+        break;
+
+      case 'rtsphap':
+        /* RTSP over HTTP via Axis Proxy */
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPAPHandle(urlParsed, true));
         break;
 
       case 'rtsp':
