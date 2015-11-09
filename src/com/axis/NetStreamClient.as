@@ -27,14 +27,6 @@ package com.axis {
       return false;
     }
 
-    public function hasVideo():Boolean {
-      return (0 < this.ns.info.videoBufferByteLength);
-    }
-
-    public function hasAudio():Boolean {
-      return (0 < this.ns.info.audioBufferByteLength);
-    }
-
     public function currentFPS():Number {
       return Math.floor(this.ns.currentFPS + 0.5);
     }

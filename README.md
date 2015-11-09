@@ -169,8 +169,6 @@ locomote.destroy();
 > - playbackSpeed - current playback speed. 1.0 is normal stream speed.
 > - current time - ms from start of stream.
 > - protocol - which high-level transport protocol is in use.
-> - audio (bool) - if the stream contains audio.
-> - video (bool) - if the stream contains video.
 > - state - current playback state (playing, paused, stopped).
 > - streamURL - the source of the current media.
 > - duration - the duration of the currently playing media, or -1 if not available

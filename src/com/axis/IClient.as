@@ -88,16 +88,6 @@ package com.axis {
     function setBuffer(seconds:Number):Boolean;
 
     /**
-     * If the stream the client currently is playing has video.
-     */
-    function hasVideo():Boolean;
-
-    /**
-     * If the stream the client currently is playing has audio.
-     */
-    function hasAudio():Boolean;
-
-    /**
      * Returns the current achieved frames per second for the client.
      */
     function currentFPS():Number;

@@ -337,18 +337,11 @@ package {
     }
 
     public function streamStatus():Object {
-      //if (this.currentState === 'playing') {
-        /* This causes a crash in some situations */
-        //this.streamHasAudio = (this.streamHasAudio || this.client.hasAudio());
-        //this.streamHasVideo = (this.streamHasVideo || this.client.hasVideo());
-      //}
       var status:Object = {
         'fps': (this.client) ? this.client.currentFPS() : null,
         'resolution': (this.client) ? { width: meta.width, height: meta.height } : null,
         'playbackSpeed': (this.client) ? 1.0 : null,
         'protocol': (this.urlParsed) ? this.urlParsed.protocol : null,
-        //'audio': (this.client) ? this.streamHasAudio : null,
-        //'video': (this.client) ? this.streamHasVideo : null,
         'state': this.currentState,
         'streamURL': (this.urlParsed) ? this.urlParsed.full : null,
         'duration': meta.duration ? meta.duration : null,

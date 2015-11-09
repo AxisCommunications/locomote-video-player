@@ -94,14 +94,6 @@ package com.axis.mjpegclient {
       return true;
     }
 
-    public function hasVideo():Boolean {
-      return true;
-    }
-
-    public function hasAudio():Boolean {
-      return false;
-    }
-
     public function currentFPS():Number {
       return mjpeg.getFps();
     }
