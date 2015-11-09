@@ -160,7 +160,6 @@ package com.axis.mjpegclient {
     private function onBufferEmpty(e:Event):void {
       Logger.log('MJPEG status buffer empty');
       if (this.connectionBroken && this.streamBuffer.length === 0) {
-        dispatchEvent(new ClientEvent(ClientEvent.ENDED));
         this.stopIfDone();
       } else if (this.mjpeg.getBuffer() > 0) {
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));

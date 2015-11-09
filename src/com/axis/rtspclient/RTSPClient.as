@@ -179,7 +179,7 @@ package com.axis.rtspclient {
     }
 
     public function stop():Boolean {
-      dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
+      dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       this.ns.dispose();
       bcTimer.stop();
 
@@ -267,11 +267,6 @@ package com.axis.rtspclient {
           this.ns.pause();
           this.ns.resume();
         } else if (bufferEmpty && this.streamBuffer.length === 0) {
-          if (currentState !== 'ended') {
-            currentState = 'ended';
-            dispatchEvent(new ClientEvent(ClientEvent.ENDED, { currentTime: this.getCurrentTime() }));
-          }
-
           dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
           this.ns.dispose();
         }
@@ -732,11 +727,7 @@ package com.axis.rtspclient {
       }
 
       if (bufferEmpty && this.streamBuffer.length === 0) {
-        if (currentState !== 'ended') {
-          dispatchEvent(new ClientEvent(ClientEvent.ENDED, { currentTime: this.getCurrentTime() }));
-        }
-
-        dispatchEvent(new ClientEvent(ClientEvent.STOPPED, { currentTime: this.getCurrentTime() }));
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
         this.ns.dispose();
       }
     }

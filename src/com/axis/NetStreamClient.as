@@ -112,8 +112,6 @@ package com.axis {
       Logger.log('onPlayStatus:', event.code);
       if (event.code === 'NetStream.Play.Complete') {
         streamEnded = true;
-        this.currentState = 'ended';
-        dispatchEvent(new ClientEvent(ClientEvent.ENDED, { currentTime: this.getCurrentTime() }));
       }
     }
 
@@ -142,11 +140,9 @@ package com.axis {
         streamEnded = true;
       }
 
-      if (currentState !== 'ended' && 'NetStream.Buffer.Empty' === event.info.code) {
+      if ('NetStream.Buffer.Empty' === event.info.code) {
         bufferEmpty = true;
         if (streamEnded) {
-          this.currentState = 'ended';
-          dispatchEvent(new ClientEvent(ClientEvent.ENDED, { currentTime: this.getCurrentTime() }));
           dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
           this.ns.dispose();
         } else {

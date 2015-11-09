@@ -112,7 +112,7 @@ package com.axis.httpclient {
     }
 
     private function updateVirtualBuffer():void {
-      if (this.currentState == 'stopped' || this.currentState == 'ended') {
+      if (this.currentState == 'stopped') {
         return;
       }
 

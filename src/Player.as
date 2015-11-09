@@ -44,7 +44,6 @@ package {
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
     private static const EVENT_STREAM_STOPPED:String  = "streamStopped";
-    private static const EVENT_STREAM_ENDED:String  = "streamEnded";
     private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
     private static const EVENT_FRAME_READY:String  = "frameReady";
@@ -291,7 +290,6 @@ package {
       client.addEventListener(ClientEvent.STOPPED, onStopped);
       client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.addEventListener(ClientEvent.PAUSED, onPaused);
-      client.addEventListener(ClientEvent.ENDED, onEnded);
       client.addEventListener(ClientEvent.META, onMeta);
       client.addEventListener(ClientEvent.FRAME, onFrame);
       client.start(this.startOptions);
@@ -437,11 +435,6 @@ package {
       this.callAPI(EVENT_STREAM_STARTED);
     }
 
-    private function onEnded(event:ClientEvent):void {
-      this.currentState = "ended";
-      this.callAPI(EVENT_STREAM_ENDED, event.data);
-    }
-
     private function onPaused(event:ClientEvent):void {
       this.currentState = "paused";
       this.callAPI(EVENT_STREAM_PAUSED, event.data);
@@ -452,7 +445,6 @@ package {
       this.client.removeEventListener(ClientEvent.STOPPED, onStopped);
       this.client.removeEventListener(ClientEvent.START_PLAY, onStartPlay);
       this.client.removeEventListener(ClientEvent.PAUSED, onPaused);
-      this.client.removeEventListener(ClientEvent.ENDED, onEnded);
       this.client.removeEventListener(ClientEvent.META, onMeta);
       this.client.removeEventListener(ClientEvent.FRAME, onFrame);
       this.client = null;

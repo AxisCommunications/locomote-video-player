@@ -263,10 +263,6 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 
 > Dispatched when stream stops.
 
-#### streamEnded
-
-> Dispatched when fixed length video stream reaches end of stream. The streamStopped event is also dispatched just before this event.
-
 #### error(error)
 
 > Dispatched when video stream fails. `error` can be either
