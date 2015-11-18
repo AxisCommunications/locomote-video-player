@@ -218,6 +218,10 @@ The optional `type` parameter can be used for future implementations of other pr
 currently only the Axis audio transmit api is supported.
 For Axis cameras the `url` parameter should be in the format - `http://server:port/axis-cgi/audio/transmit.cgi`.
 
+> If the user must grant permission to use the microphone an
+  `audioTransmitRequestPermission` event will be dispatched and
+  `startAudioTransmit` must be called again once permission has been granted.
+
 #### stopAudioTransmit()
 
 > Stops transmitting microphone input to the camera speaker.
@@ -282,6 +286,24 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 #### audioTransmitStopped
 
 > Dispatched when audio transmission stops.
+
+#### audioTransmitRequestPermission
+
+> Dispatched when flash is prompting the user to grant or deny access to the
+  microphone. When this event is dispatched the setup is aborted and
+  `startAudioTransmit` must be called again after the event
+  `audioTransmitAllowed` has been dispatched.
+
+#### audioTransmitAllowed
+
+> Dispatched when user has granted permission to use the microphone. A new call
+  to `startAudioTransmit` must be made to initiate audio transmission.
+
+#### audioTransmitDenied
+
+> Dispatched when user has denied permission to use the microphone. If this
+  event is fired, any future calls to `startAudioTransmit` will generate an
+  error (816).
 
 #### fullscreenEntered
 
