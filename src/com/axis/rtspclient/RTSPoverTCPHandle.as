@@ -46,7 +46,10 @@ package com.axis.rtspclient {
     }
 
     public function disconnect():void {
-      channel.close();
+      try {
+        channel.close();
+      } catch (error:*) {
+      }
       channel = null;
 
       /* should probably wait for close, but it doesn't seem to fire properly */

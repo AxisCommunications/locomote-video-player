@@ -142,6 +142,11 @@
       return this;
     },
 
+    playFrames: function(timestamp) {
+      this.e.playFrames(timestamp);
+      return this;
+    },
+
     streamStatus: function() {
       return this.e.streamStatus();
     },
@@ -239,7 +244,11 @@
     },
 
     destroy: function() {
-      window.LocomoteMap[this.tag] = undefined;
+      window.LocomoteMap[this.tag] = {
+        __playerEvent: function () {},
+        __swfReady: function () {}
+      };
+      typeof this.e.stop === 'function' && this.e.stop();
       this.e.parentNode.removeChild(this.e);
       this.e = null;
     }

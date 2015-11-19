@@ -46,14 +46,17 @@ package {
     private static const EVENT_STREAM_ENDED:String  = "streamEnded";
     private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
+    private static const EVENT_FRAME_READY:String  = "frameReady";
 
     public static var config:Object = {
       'buffer': 3,
       'connectionTimeout': 10,
       'scaleUp': false,
       'allowFullscreen': true,
-      'debugLogger': false
+      'debugLogger': false,
+      'frameByFrame': false
     };
+
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
     private var client:IClient;
@@ -115,6 +118,7 @@ package {
       ExternalInterface.addCallback("resume", resume);
       ExternalInterface.addCallback("stop", stop);
       ExternalInterface.addCallback("seek", seek);
+      ExternalInterface.addCallback("playFrames", playFrames);
       ExternalInterface.addCallback("streamStatus", streamStatus);
       ExternalInterface.addCallback("playerStatus", playerStatus);
       ExternalInterface.addCallback("speakerVolume", speakerVolume);
@@ -138,6 +142,10 @@ package {
     }
 
     public function videoResize():void {
+      if (!this.client) {
+        return;
+      }
+
       var stagewidth:uint = (StageDisplayState.NORMAL === stage.displayState) ?
         stage.stageWidth : stage.fullScreenWidth;
       var stageheight:uint = (StageDisplayState.NORMAL === stage.displayState) ?
@@ -170,6 +178,18 @@ package {
           }
         } else {
             config.buffer = iconfig.buffer;
+        }
+      }
+
+      if (iconfig.frameByFrame !== undefined) {
+        if (this.client) {
+          if (false === this.client.setFrameByFrame(iconfig.frameByFrame)) {
+            ErrorManager.dispatchError(832);
+          } else {
+            config.frameByFrame = iconfig.frameByFrame;
+          }
+        } else {
+          config.frameByFrame = iconfig.frameByFrame;
         }
       }
 
@@ -224,7 +244,12 @@ package {
       switch (urlParsed.protocol) {
       case 'rtsph':
         /* RTSP over HTTP */
-        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed));
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed, false));
+        break;
+
+      case 'rtsphs':
+        /* RTSP over HTTPS */
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed, true));
         break;
 
       case 'rtsp':
@@ -262,14 +287,19 @@ package {
       client.addEventListener(ClientEvent.PAUSED, onPaused);
       client.addEventListener(ClientEvent.ENDED, onEnded);
       client.addEventListener(ClientEvent.META, onMeta);
+      client.addEventListener(ClientEvent.FRAME, onFrame);
       client.start(this.startOptions);
       this.newPlaylistItem = false;
     }
 
-    public function seek(position:String):void{
+    public function seek(position:String):void {
       if (!client || !client.seek(Number(position))) {
         ErrorManager.dispatchError(828);
       }
+    }
+
+    public function playFrames(timestamp:Number):void {
+      client && client.playFrames(timestamp);
     }
 
     public function pause():void {
@@ -303,22 +333,23 @@ package {
     }
 
     public function streamStatus():Object {
-      if (this.currentState === 'playing') {
+      //if (this.currentState === 'playing') {
         /* This causes a crash in some situations */
         //this.streamHasAudio = (this.streamHasAudio || this.client.hasAudio());
-        this.streamHasVideo = (this.streamHasVideo || this.client.hasVideo());
-      }
+        //this.streamHasVideo = (this.streamHasVideo || this.client.hasVideo());
+      //}
       var status:Object = {
         'fps': (this.client) ? this.client.currentFPS() : null,
         'resolution': (this.client) ? { width: meta.width, height: meta.height } : null,
         'playbackSpeed': (this.client) ? 1.0 : null,
         'protocol': (this.urlParsed) ? this.urlParsed.protocol : null,
-        'audio': (this.client) ? this.streamHasAudio : null,
-        'video': (this.client) ? this.streamHasVideo : null,
+        //'audio': (this.client) ? this.streamHasAudio : null,
+        //'video': (this.client) ? this.streamHasVideo : null,
         'state': this.currentState,
         'streamURL': (this.urlParsed) ? this.urlParsed.full : null,
         'duration': meta.duration ? meta.duration : null,
-        'currentTime': (this.client) ? this.client.getCurrentTime() : null
+        'currentTime': (this.client) ? this.client.getCurrentTime() : -1,
+        'bufferedTime': (this.client) ? this.client.bufferedTime() : -1
       };
 
       return status;
@@ -412,6 +443,12 @@ package {
 
     private function onStopped(event:ClientEvent):void {
       this.removeChild(this.client.getDisplayObject());
+      this.client.removeEventListener(ClientEvent.STOPPED, onStopped);
+      this.client.removeEventListener(ClientEvent.START_PLAY, onStartPlay);
+      this.client.removeEventListener(ClientEvent.PAUSED, onPaused);
+      this.client.removeEventListener(ClientEvent.ENDED, onEnded);
+      this.client.removeEventListener(ClientEvent.META, onMeta);
+      this.client.removeEventListener(ClientEvent.FRAME, onFrame);
       this.client = null;
       this.callAPI(EVENT_STREAM_STOPPED, event.data);
 
@@ -419,6 +456,10 @@ package {
       if (this.newPlaylistItem) {
         start();
       }
+    }
+
+    private function onFrame(event:ClientEvent):void {
+      this.callAPI(EVENT_FRAME_READY, { timestamp: event.data });
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

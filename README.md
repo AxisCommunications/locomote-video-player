@@ -129,6 +129,7 @@ locomote.destroy();
 >
 > - `rtsp` - [RTSP over TCP][RTSP/TCP]
 > - `rtsph` - [RTSP over HTTP][RTSP/HTTP]
+> - `rtsphs` - [RTSP over HTTPS][RTSP/HTTP]
 > - `rtmp` - [RTMP][RTMP]
 > - `rtmpt` - RTMP over HTTP
 > - `rtmps` - RTMP over SSL

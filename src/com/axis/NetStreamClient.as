@@ -29,19 +29,23 @@ package com.axis {
 
     public function hasVideo():Boolean {
       return (0 < this.ns.info.videoBufferByteLength);
-    };
+    }
 
     public function hasAudio():Boolean {
       return (0 < this.ns.info.audioBufferByteLength);
-    };
+    }
 
     public function currentFPS():Number {
       return Math.floor(this.ns.currentFPS + 0.5);
-    };
+    }
 
     public function getCurrentTime():Number {
       return (this.ns) ? this.ns.time * 1000 : -1;
-    };
+    }
+
+    public function bufferedTime():Number {
+      return (this.ns) ? this.ns.bufferLength * 1000 : -1;
+    }
 
     protected function setupNetStream():void {
       this.ns.bufferTime = Player.config.buffer;
@@ -114,7 +118,13 @@ package com.axis {
     }
 
     private function onNetStatus(event:NetStatusEvent):void {
-      Logger.log('NetStream status:', { event: event.info.code, ended: this.hasStreamEnded(), bufferEmpty: bufferEmpty });
+      Logger.log('NetStream status:', {
+        event: event.info.code,
+        ended: streamEnded,
+        bufferEmpty: bufferEmpty,
+        buffer: this.bufferedTime(),
+        currentTime: this.getCurrentTime()
+      });
 
       if (!streamEnded && !bufferEmpty && ('NetStream.Play.Start' === event.info.code || 'NetStream.Unpause.Notify' === event.info.code)) {
         this.currentState = 'playing';
@@ -124,17 +134,23 @@ package com.axis {
 
       if ('NetStream.Play.Stop' === event.info.code) {
         dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+        this.ns.dispose();
         return;
       }
 
-      if (!streamEnded && 'NetStream.Buffer.Empty' === event.info.code) {
+      if ('NetStream.Buffer.Flush' === event.info.code) {
+        streamEnded = true;
+      }
+
+      if (currentState !== 'ended' && 'NetStream.Buffer.Empty' === event.info.code) {
         bufferEmpty = true;
-        if (this.hasStreamEnded()) {
-          streamEnded = true;
+        if (streamEnded) {
           this.currentState = 'ended';
           dispatchEvent(new ClientEvent(ClientEvent.ENDED, { currentTime: this.getCurrentTime() }));
+          dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+          this.ns.dispose();
         } else {
-          this.currentState = 'paused';
+          this.currentState = 'buffering';
           dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
         }
         return;
@@ -147,7 +163,7 @@ package com.axis {
         return;
       }
 
-      if ('NetStream.Pause.Notify' === event.info.code) {
+      if (this.currentState != 'paused' && 'NetStream.Pause.Notify' === event.info.code) {
         this.currentState = 'paused';
         dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
         return;

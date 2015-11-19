@@ -24,6 +24,12 @@ package com.axis {
     function getCurrentTime():Number;
 
     /**
+     * Should return the size of the playback buffer in milliseconds.
+     * Returns -1 if unavailable
+     */
+    function bufferedTime():Number;
+
+    /**
      * Called when the client should start the stream.
      * Any connections should be made at this point
      * options include optional offset, the time in the stream to start playing
@@ -59,6 +65,21 @@ package com.axis {
      * stream by returning `true` from a call to `stop`.
      */
     function resume():Boolean;
+
+    /**
+     * Called when the client should emit an event for each frame and wait for
+     * a call to playFrames to play the frames.
+     * Returns false if the action is not possible.
+     */
+    function setFrameByFrame(frameByFrame:Boolean):Boolean;
+
+    /**
+     * Call to play all frames with timestamp equal to or lower than the given
+     * timestamp.
+     * A call to this function does nothing if a previous call to
+     * setFrameByFrame(true) has not been made.
+     */
+    function playFrames(timestamp:Number):void;
 
     /**
      * Called when the client should buffer a certain amount seconds

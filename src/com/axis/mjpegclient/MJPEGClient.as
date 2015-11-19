@@ -3,8 +3,10 @@ package com.axis.mjpegclient {
   import com.axis.Logger;
   import com.axis.IClient;
   import com.axis.ClientEvent;
+  import com.axis.mjpegclient.Image;
   import com.axis.mjpegclient.Handle;
   import com.axis.mjpegclient.MJPEG;
+  import com.axis.ErrorManager;
   import flash.display.DisplayObject;
   import flash.display.Sprite;
   import flash.display.LoaderInfo;
@@ -18,13 +20,21 @@ package com.axis.mjpegclient {
     private var handle:Handle;
     private var mjpeg:MJPEG;
     private var state:String = "initial";
+    private var streamBuffer:Array = new Array();
+    private var frameByFrame:Boolean = false;
+    private var connectionBroken:Boolean = false;
 
     public function MJPEGClient(urlParsed:Object) {
       this.handle = new Handle(urlParsed);
-      this.mjpeg = new MJPEG();
+      this.mjpeg = new MJPEG(Player.config.buffer * 1000);
+      this.frameByFrame = Player.config.frameByFrame;
 
       mjpeg.addEventListener("frame", onFrame);
-      handle.addEventListener("image", onImage);
+      mjpeg.addEventListener(MJPEG.BUFFER_EMPTY, onBufferEmpty);
+      mjpeg.addEventListener(MJPEG.BUFFER_FULL, onBufferFull);
+      mjpeg.addEventListener(MJPEG.IMAGE_ERROR, onMJPEGImageError);
+      handle.addEventListener(Image.NEW_IMAGE_EVENT, onImage);
+      handle.addEventListener(Handle.CONNECTED, onConnected);
     }
 
     public function getDisplayObject():DisplayObject {
@@ -35,6 +45,10 @@ package com.axis.mjpegclient {
       return this.mjpeg.getCurrentTime();
     }
 
+    public function bufferedTime():Number {
+      return this.mjpeg.bufferedTime();
+    }
+
     public function start(options:Object):Boolean {
       this.handle.connect();
       state = "connecting";
@@ -42,14 +56,14 @@ package com.axis.mjpegclient {
     }
 
     public function stop():Boolean {
-      this.handle.stop();
-      if (state !== "playing") {
-        /* If we're not playing, we're never gonna get the 'disconnect' event. Fire stopped now in that case */
-        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+      state = "stopped";
+      if (connectionBroken) {
+        this.stopIfDone();
+      } else {
+        this.handle.disconnect();
       }
 
-      state = "stopped";
-      return false;
+      return true;
     }
 
     public function seek(position:Number):Boolean {
@@ -57,55 +71,112 @@ package com.axis.mjpegclient {
     }
 
     public function pause():Boolean {
-      handle.removeEventListener("image", onImage);
+      state = "paused";
+      this.mjpeg.pause();
       dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
       return true;
     }
 
     public function resume():Boolean {
-      if (handle.hasEventListener("image")) {
-        return false;
-      }
-
+      state = "playing";
+      this.mjpeg.resume();
       dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
-      handle.addEventListener("image", onImage);
+      return true;
+    }
+
+    public function setFrameByFrame(frameByFrame:Boolean):Boolean {
+      this.frameByFrame = frameByFrame;
       return true;
     }
 
     public function setBuffer(seconds:Number):Boolean {
-      return false;
+      this.mjpeg.setBuffer(seconds * 1000);
+      return true;
     }
 
     public function hasVideo():Boolean {
       return true;
-    };
+    }
 
     public function hasAudio():Boolean {
       return false;
-    };
+    }
 
     public function currentFPS():Number {
       return mjpeg.getFps();
-    };
-
-    private function onDisconnect(e:Event):void {
-      mjpeg.clear();
-      dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
     }
 
-    private function onImage(e:Event):void {
-      mjpeg.load(handle.image);
+    public function playFrames(timestamp:Number):void {
+      while (this.streamBuffer.length > 0 && this.streamBuffer[0].timestamp <= timestamp) {
+        mjpeg.addImage(this.streamBuffer.shift());
+      }
+      this.stopIfDone();
+    }
+
+    private function onImage(image:Image):void {
+      if (this.frameByFrame) {
+        this.streamBuffer.push(image);
+        dispatchEvent(new ClientEvent(ClientEvent.FRAME, image.timestamp));
+      } else {
+        mjpeg.addImage(image);
+        this.stopIfDone();
+      }
+    }
+
+    private function stopIfDone():void {
+      if (this.state === "stopped" || this.streamBuffer.length === 0 && this.connectionBroken && mjpeg.bufferedTime() === 0) {
+        mjpeg.clear();
+        dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
+      }
+    }
+
+    private function onConnected(e:Event):void {
+      handle.addEventListener(Handle.CLOSED, onClosed);
+    }
+
+    private function onClosed(e:Event):void {
+      if (this.state === "connecting") {
+        this.state = "stopped";
+        ErrorManager.dispatchError(704);
+      }
+      this.connectionBroken = true;
+      this.mjpeg.setBuffer(0);
+      this.stopIfDone();
     }
 
     private function onFrame(e:FrameEvent):void {
-      state = "playing";
-      dispatchEvent(new ClientEvent(ClientEvent.META, {
+      var resolution:Object = {
         width: e.getFrame().width,
         height: e.getFrame().height
-      }));
+      };
+      Logger.log('MJPEG frame ready', resolution);
+
+      state = "playing";
+      dispatchEvent(new ClientEvent(ClientEvent.META, resolution));
       dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
-      handle.addEventListener("disconnect", onDisconnect);
       mjpeg.removeEventListener("frame", onFrame);
     }
+
+    private function onBufferEmpty(e:Event):void {
+      Logger.log('MJPEG status buffer empty');
+      if (this.connectionBroken && this.streamBuffer.length === 0) {
+        dispatchEvent(new ClientEvent(ClientEvent.ENDED));
+        this.stopIfDone();
+      } else if (this.mjpeg.getBuffer() > 0) {
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'buffering' }));
+      }
+    }
+
+    private function onBufferFull(e:Event):void {
+      Logger.log('MJPEG status buffer full');
+      if (state === "playing") {
+        dispatchEvent(new ClientEvent(ClientEvent.START_PLAY));
+      }
+    }
+
+    private function onMJPEGImageError(e:Event):void {
+      ErrorManager.dispatchError(833);
+    }
+
   }
 }
