@@ -120,7 +120,7 @@ locomote.destroy();
 
 ### Actions
 
-#### play(url:String)
+#### play(url:String, [options:Object])
 
 > Starts playing video from url. Protocol is determined by url.
 > Example: `rtsp://server:port/stream`.
@@ -137,6 +137,11 @@ locomote.destroy();
 > - `http` - Progressive download via HTTP
 > - `https` - Progressive download via HTTP over SSL
 > - `httpm` - [MJPEG over HTTP][MJPEG/HTTP] (via multipart/x-mixed-replace)
+
+> `options` is an optional object with the following attributes:
+> - `offset` - The offset to start the stream at. This is only supported by the
+    `rtsp[h|hs|hap]` protocol and requires the RTSP server to respect the range
+    header in the play request.
 
 #### stop()
 
@@ -159,6 +164,11 @@ locomote.destroy();
 #### resume()
 
 > Resumes video from paused state.
+
+#### playFrames(timestamp)
+
+> Appends all received frames up to and including the given timestamp to the
+  play buffer. Only applicable if player is configured with `frameByFrame`.
 
 #### streamStatus()
 
@@ -192,7 +202,7 @@ locomote.destroy();
 #### muteSpeaker()
 
 > Mutes the speaker volume. Remembers the current volume and resets to it if the
-> speakers are unmuted.
+  speakers are unmuted.
 
 #### unmuteSpeaker()
 
@@ -205,7 +215,7 @@ locomote.destroy();
 #### muteMicrophone()
 
 > Mutes the microphone. Remembers the current volume and resets to it if the
-> microphone is unmuted.
+  microphone is unmuted.
 
 #### unmuteMicrophone()
 
@@ -214,9 +224,9 @@ locomote.destroy();
 #### startAudioTransmit(url, type)
 
 > Starts transmitting microphone input to the camera speaker.
-The optional `type` parameter can be used for future implementations of other protocols,
-currently only the Axis audio transmit api is supported.
-For Axis cameras the `url` parameter should be in the format - `http://server:port/axis-cgi/audio/transmit.cgi`.
+  The optional `type` parameter can be used for future implementations of other protocols,
+  currently only the Axis audio transmit api is supported.
+  For Axis cameras the `url` parameter should be in the format - `http://server:port/axis-cgi/audio/transmit.cgi`.
 
 > If the user must grant permission to use the microphone an
   `audioTransmitRequestPermission` event will be dispatched and
@@ -235,6 +245,17 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 > - `scaleUp` - Specifies if the video can be scaled up or not. The default value is `false`.
 > - `allowFullscreen` - Specifices if fullscreen mode is allowed or not. The default value is `true`.
 > - `debugLogger` - Specifices if debug messages should be shown in the Flash console or not. The default value is `false`.
+> - `frameByFrame` - Specifices if media should be played immediately or wait
+                     for calls to `playFrames`. Not supported by the `rtmp` protocol. The
+                     default value is `false`. The http and https protocol
+                     implements this by creating virtual frames, a timestamp
+                     given in the `frameReady` event may not correspond to a
+                     real video frame, and the player may play up to 50 ms more
+                     than the last `playFrames` call specified. The
+                     `rtsp[h|hs|hap]` protocol dispatches the `frameReady` event
+                     for each assembled FLV tag, if audio and video is received
+                     out of order this will cause `frameReady` events to be
+                     dispatched out of order.
 
 #### on(eventName:String, callback:Function)
 
@@ -264,6 +285,15 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 #### streamStopped
 
 > Dispatched when stream stops.
+
+#### frameReady(timestamp)
+
+> Dispatched when a new frame, or pseudo-frame, is available to be appended to
+  the play buffer. The timestamp of the frame is given by the argument. Append
+  it using the `playFrames` method. This event will only be dispatched if the
+  player is configured with the `frameByFrame` option. Otherwise, all frames
+  will be appended to the play buffer immediately when received and this event
+  will not be dispatched.
 
 #### error(error)
 
