@@ -35,9 +35,7 @@ package com.axis.rtspclient {
       this.sdp = sdp;
       this.ns = ns;
 
-      createMetaDataTag();
-
-      if (sdp.getMediaBlock('video')) {
+      if (sdp.getMediaBlock('video') && sdp.getMediaBlock('video').hasOwnProperty('fmtp')) {
         /* Initial parameters must be taken from SDP file. Additional may be received as NAL */
         var sets:Array = sdp.getMediaBlock('video').fmtp['sprop-parameter-sets'].split(',');
         var sps:Base64Decoder = new Base64Decoder();
