@@ -40,7 +40,7 @@ package com.axis.rtspclient {
     private static const STATE_PAUSE:uint    = 1 << 6;
     private static const STATE_PAUSED:uint   = 1 << 7;
     private static const STATE_TEARDOWN:uint = 1 << 8;
-
+    private static const KEEPALIVE:uint      = 30000;
     private var state:int = STATE_INITIAL;
     private var handle:IRTSPHandle;
 
@@ -66,6 +66,7 @@ package com.axis.rtspclient {
     private var digestNC:uint = 1;
 
     private var bcTimer:Timer;
+    private var kaTimer:Timer = new Timer(KEEPALIVE);
     private var connectionBroken:Boolean = false;
 
     private var nc:NetConnection = null;
@@ -354,6 +355,11 @@ package com.axis.rtspclient {
         analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
         aaac.addEventListener(AACFrame.NEW_FRAME, flvmux.onAACFrame);
         apcma.addEventListener(PCMAFrame.NEW_FRAME, flvmux.onPCMAFrame);
+
+        /* Start Keep-alive routine */
+
+        kaTimer.addEventListener(TimerEvent.TIMER, keepAlive);
+        kaTimer.start();
         break;
 
       case STATE_PLAYING:
@@ -531,6 +537,20 @@ package com.axis.rtspclient {
       prevMethod = sendPlayReq;
     }
 
+    private function sendGetParamReq():void {
+      var req:String =
+        "GET_PARAMETER " + getControlURL() + " RTSP/1.0\r\n" +
+        "CSeq: " + (++cSeq) + "\r\n" +
+        "User-Agent: " + userAgent + "\r\n" +
+        "Session: " + session + "\r\n" +
+        auth.authorizationHeader("GET_PARAMETER", authState, authOpts, urlParsed, digestNC++) +
+        "\r\n";
+      Logger.log('RTSP OUT:', req);
+      handle.writeUTFBytes(req);
+
+      prevMethod = sendGetParamReq;
+    }
+
     private function sendPauseReq():void {
       if (!this.supportCommand("PAUSE")) {
         ErrorManager.dispatchError(825, null, true);
@@ -569,6 +589,10 @@ package com.axis.rtspclient {
       handle.writeUTFBytes(req);
 
       prevMethod = sendTeardownReq;
+    }
+
+    private function keepAlive(event:TimerEvent):void {
+      sendGetParamReq();
     }
 
     private function onAsyncError(event:AsyncErrorEvent):void {
