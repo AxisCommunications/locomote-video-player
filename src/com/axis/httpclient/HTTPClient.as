@@ -17,7 +17,7 @@ package com.axis.httpclient {
     private var urlParsed:Object;
     private var nc:NetConnection;
 
-    private static const FORCED_FPS:Number = 20;
+    private static const FORCED_FPS:Number = 30;
     private static const UPDATE_VIRT_BUFFER_INTERVAL:Number = 1000 / FORCED_FPS;
     private var updateLoop:uint = 0;
     private var virtPause:Boolean = false;
