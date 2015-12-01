@@ -66,8 +66,14 @@ package com.axis.httpclient {
         ErrorManager.dispatchError(800);
         return false;
       }
+
       this.userPause = true;
       this.ns.pause();
+
+      if (this.virtPause) {
+        dispatchEvent(new ClientEvent(ClientEvent.PAUSED, { 'reason': 'user' }));
+      }
+
       return true;
     }
 
