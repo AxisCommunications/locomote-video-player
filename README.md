@@ -142,6 +142,8 @@ locomote.destroy();
 > - `offset` - The offset to start the stream at. This is only supported by the
     `rtsp[h|hs|hap]` protocol and requires the RTSP server to respect the range
     header in the play request.
+> - `httpUrl` - The URL to use in HTTP requests if it differs from the RTSP
+    URL. This is only supported by the `rtsp[h|hs]` (Note: not supported by `rtsphap`) protocol
 
 #### stop()
 
