@@ -8,14 +8,18 @@ package com.axis.rtspclient {
 
 
     public var data:ByteArray;
+    public var audio:Boolean;
     public var timestamp:uint;
+    public var duration:uint;
 
-    public function FLVTag(data:ByteArray, timestamp:uint) {
+    public function FLVTag(data:ByteArray, timestamp:uint, duration:uint, audio:Boolean) {
       super(NEW_FLV_TAG);
 
       data.position  = 0;
       this.data      = data;
       this.timestamp = timestamp;
+      this.audio = audio;
+      this.duration = duration;
     }
 
     public function copy():FLVTag {
@@ -25,7 +29,7 @@ package com.axis.rtspclient {
       data.readBytes(newData);
       newData.position = 0;
       data.position = tmpPos;
-      return new FLVTag(newData, timestamp);
+      return new FLVTag(newData, this.timestamp, this.duration, this.audio);
     }
   }
 }

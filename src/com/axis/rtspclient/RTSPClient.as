@@ -9,6 +9,7 @@ package com.axis.rtspclient {
   import com.axis.Logger;
   import com.axis.rtspclient.FLVMux;
   import com.axis.rtspclient.FLVTag;
+  import com.axis.rtspclient.FLVSync;
   import com.axis.rtspclient.RTP;
   import com.axis.rtspclient.RTPTiming;
   import com.axis.rtspclient.SDP;
@@ -50,6 +51,7 @@ package com.axis.rtspclient {
     private var rtpTiming:RTPTiming;
     private var evoStream:Boolean = false;
     private var flvmux:FLVMux;
+    private var flvSync:FLVSync;
     private var streamBuffer:Array = new Array();
     private var frameByFrame:Boolean = false;
 
@@ -238,7 +240,7 @@ package com.axis.rtspclient {
 
     private function onFlvTag(tag:FLVTag):void {
       if (this.frameByFrame) {
-        this.streamBuffer.push(tag.copy());
+        this.streamBuffer.push(tag);
         dispatchEvent(new ClientEvent(ClientEvent.FRAME, tag.timestamp));
       } else {
         this.ns.appendBytes(tag.data);
@@ -475,7 +477,16 @@ package com.axis.rtspclient {
         analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
         aaac.addEventListener(AACFrame.NEW_FRAME, flvmux.onAACFrame);
         apcma.addEventListener(PCMAFrame.NEW_FRAME, flvmux.onPCMAFrame);
-        flvmux.addEventListener(FLVTag.NEW_FLV_TAG, this.onFlvTag);
+
+        if (this.sdp.getMediaBlockList().length == 2) {
+          var flvSync:FLVSync = new FLVSync();
+
+          flvmux.addEventListener(FLVTag.NEW_FLV_TAG, flvSync.onFlvTag);
+          flvSync.addEventListener(FLVTag.NEW_FLV_TAG, this.onFlvTag);
+        } else {
+          flvmux.addEventListener(FLVTag.NEW_FLV_TAG, this.onFlvTag);
+        }
+
         break;
 
       case STATE_PLAYING:
