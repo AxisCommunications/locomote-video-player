@@ -61,7 +61,7 @@ package com.axis.http {
           /* No authorization attempt yet, try with the best method supported by server */
           if (authOpts.digestRealm)
             return 'digest';
-          else if (authOpts.basicRealm)
+          else if (authOpts.hasOwnProperty('basicRealm'))
             return 'basic';
           break;
 
