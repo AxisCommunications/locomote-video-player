@@ -16,12 +16,12 @@
   'use strict';
 
   function getTagId(tag){
-    if (('string' === typeof tag)) {
+    if ('string' === typeof tag) {
       return tag;
     } else if (tag instanceof HTMLElement) {
       return tag.getAttribute('id');
     }
-    return 'unknown';
+    throw new Exception("failed to initialize player: invaid container tag specified");
   }
 
   function Locomote(tag, swf) {
@@ -35,14 +35,14 @@
 
     this.tagId = getTagId(tag);
     // Instance already initialized. Return it.
-    if (window.LocomoteMap[ this.tagId ]) {
-      return window.LocomoteMap[ this.tagId ];
+    if (window.LocomoteMap[this.tagId]) {
+      return window.LocomoteMap[this.tagId];
     }
 
     // return a new Locomote object if we're in the global scope
     if (this === undefined) {
-      window.LocomoteMap[ this.tagId ] = new Locomote(tag, swf);
-      return window.LocomoteMap[ this.tagId ];
+      window.LocomoteMap[this.tagId] = new Locomote(tag, swf);
+      return window.LocomoteMap[this.tagId];
     }
 
     // Init our element object and return the object
@@ -113,8 +113,8 @@
         var players = tag.getElementsByClassName('locomote-player');
 
         for (var i = 0; i < players.length; i++) {
-          if (players[ i ].getAttribute('id') === tempTag) {
-            this.e = players[ i ];
+          if (players[i].getAttribute('id') === tempTag) {
+            this.e = players[i];
             break;
           }
         }
@@ -245,7 +245,7 @@
     },
 
     destroy: function() {
-      window.LocomoteMap[ this.tagId ] = undefined;
+      window.LocomoteMap[this.tagId] = undefined;
       this.e.parentNode.removeChild(this.e);
       this.e = null;
     }
