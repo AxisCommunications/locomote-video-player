@@ -240,7 +240,7 @@ package com.axis.rtspclient {
 
     private function onFlvTag(tag:FLVTag):void {
       if (this.frameByFrame) {
-        this.streamBuffer.push(tag);
+        this.streamBuffer.push(tag.copy());
         dispatchEvent(new ClientEvent(ClientEvent.FRAME, tag.timestamp));
       } else {
         this.ns.appendBytes(tag.data);
