@@ -24,7 +24,7 @@ package com.axis {
     protected var bufferEmpty:Boolean = true;
 
     public function hasStreamEnded():Boolean {
-      return false;
+      return this.streamEnded;
     }
 
     public function currentFPS():Number {

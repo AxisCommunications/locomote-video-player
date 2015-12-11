@@ -212,13 +212,19 @@ package com.axis.rtspclient {
     }
 
     override public function hasStreamEnded():Boolean {
+      if (this.streamEnded) {
+        return true;
+      }
+
       if (this.streamBuffer.length === 0 && connectionBroken) {
         return true;
       }
+
       if (!this.rtpTiming || !this.flvmux || this.rtpTiming.live ||
         this.rtpTiming.range.to == -1 || this.streamBuffer.length > 0) {
         return false;
       }
+
       var streamLastFrame:Number = this.rtpTiming.range.to - Math.ceil(2000 / (this.ns.currentFPS > 1 ? this.ns.currentFPS : 1));
       var streamCurrentBuffer:Number = this.flvmux.getLastTimestamp() + this.startOptions.offset;
       return streamLastFrame <= streamCurrentBuffer;
