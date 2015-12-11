@@ -74,7 +74,7 @@ package com.axis.rtspclient {
       socket.addEventListener(Event.CONNECT, function ():void {
         socket.writeUTFBytes("POST " + urlParsed.urlpath + " HTTP/1.0\r\n");
         socket.writeUTFBytes("X-Sessioncookie: " + sessioncookie + "\r\n");
-        socket.writeUTFBytes("Content-Length: 32767" + "\r\n");
+        socket.writeUTFBytes("Content-Length: " + data.length + "\r\n");
         socket.writeUTFBytes("Content-Type: application/x-rtsp-tunnelled" + "\r\n");
         socket.writeUTFBytes(authHeader);
         socket.writeUTFBytes("\r\n");
