@@ -1,5 +1,8 @@
 package com.axis.mjpegclient {
 
+  import com.axis.mjpegclient.Image;
+
+  import com.axis.rtspclient.ByteArrayUtils;
   import flash.events.ErrorEvent;
   import flash.events.Event;
   import flash.events.EventDispatcher;
@@ -8,20 +11,25 @@ package com.axis.mjpegclient {
   import flash.events.SecurityErrorEvent;
   import flash.net.Socket;
   import flash.utils.ByteArray;
+  import flash.events.TimerEvent;
+  import flash.utils.Timer;
 
   import com.axis.Logger;
   import com.axis.ErrorManager;
   import com.axis.http.request;
   import com.axis.http.auth;
 
-  [Event(name="image",type="flash.events.Event")]
   [Event(name="connect",type="flash.events.Event")]
   [Event(name="error",type="flash.events.Event")]
 
   public class Handle extends EventDispatcher {
 
+    public static const CONNECTED:String = "connected";
+    public static const CLOSED:String = "closed";
+
     private var urlParsed:Object;
     private var socket:Socket = null;
+    private var bcTimer:Timer;
     private var buffer:ByteArray = null;
     private var dataBuffer:ByteArray = null;
     private var url:String = "";
@@ -30,6 +38,9 @@ package com.axis.mjpegclient {
     private var headers:Vector.<String> = new Vector.<String>();
     private var clen:int;
     private var parseSubheaders:Boolean = true;
+
+    private var firstTimestamp:Number = -1;
+    private var closeTiggered:Boolean = false;
 
     private var authState:String = "none";
     private var authOpts:Object = {};
@@ -45,6 +56,8 @@ package com.axis.mjpegclient {
       this.socket = new Socket();
       this.socket.timeout = 5000;
       this.socket.addEventListener(Event.CONNECT, onConnect);
+      // If the close event is called we need to call socket.close() to prevent
+      // security error
       this.socket.addEventListener(Event.CLOSE, onClose);
       this.socket.addEventListener(ProgressEvent.SOCKET_DATA, onHttpHeaders);
       this.socket.addEventListener(IOErrorEvent.IO_ERROR, onError);
@@ -57,18 +70,27 @@ package com.axis.mjpegclient {
     }
 
     public function disconnect():void {
-      if (!socket.connected) {
-        return;
+      Logger.log('MJPEGClient: disconnecting from', urlParsed.host + ':' + urlParsed.port);
+
+      // The close event on the socket is often not called so do all cleanup
+      // immediately.
+      if (this.bcTimer) {
+        this.bcTimer.stop();
+        this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+        this.bcTimer = null;
       }
 
-      socket.close();
-      image = null;
-      buffer = null;
-      dispatchEvent(new Event("disconnect"));
-    }
+      this.buffer = null;
 
-    public function stop():void {
-      disconnect();
+      try {
+        // Security error is thrown if this line is excluded
+        socket.close();
+      } catch (error:*) {}
+
+      if (!this.closeTiggered) {
+        dispatchEvent(new Event(Handle.CLOSED));
+        this.closeTiggered = true;
+      }
     }
 
     public function connect():void {
@@ -76,13 +98,22 @@ package com.axis.mjpegclient {
         disconnect();
       }
 
+      this.bcTimer = new Timer(Player.config.connectionTimeout * 1000, 1);
+      this.bcTimer.stop(); // Don't start timeout immediately
+      this.bcTimer.reset();
+      this.bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+
       Logger.log('MJPEGClient: connecting to', urlParsed.host + ':' + urlParsed.port);
       socket.connect(urlParsed.host, urlParsed.port);
     }
 
     private function onConnect(event:Event):void {
+      Logger.log('MJPEGClient: requesting URL', urlParsed.urlpath);
+      this.bcTimer.start();
       buffer = new ByteArray();
       dataBuffer = new ByteArray();
+
+      dispatchEvent(new Event(Handle.CONNECTED));
 
       headers.length = 0;
       parseHeaders = true;
@@ -100,15 +131,42 @@ package com.axis.mjpegclient {
     }
 
     private function onClose(e:Event):void {
-      // Security error is thrown if this line is excluded
-      socket.close();
+      Logger.log('MJPEGClient: socket closed', urlParsed.host + ':' + urlParsed.port);
+
+      if (this.bcTimer) {
+        this.bcTimer.stop();
+        this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+        this.bcTimer = null;
+      }
+
+      this.buffer = null
+
+      try {
+        // Security error is thrown if this line is excluded
+        socket.close();
+      } catch (error:*) {}
+
+      if (!this.closeTiggered) {
+        dispatchEvent(new Event(Handle.CLOSED));
+        this.closeTiggered = true;
+      }
     }
 
     private function onHttpHeaders(event:ProgressEvent):void {
+      this.bcTimer.reset();
+
+      socket.readBytes(dataBuffer, dataBuffer.length);
+
       var parsed:* = request.readHeaders(socket, dataBuffer);
       if (false === parsed) {
         return;
       }
+
+      Logger.log('MJPEGClient: recieved HTTP headers.', {
+        httpCode: parsed.code,
+        contentType: parsed.headers['content-type'],
+        url: urlParsed.urlpath
+      });
 
       if (401 === parsed.code) {
         Logger.log('Unauthorized using auth method: ' + authState);
@@ -141,12 +199,19 @@ package com.axis.mjpegclient {
       this.socket.removeEventListener(ProgressEvent.SOCKET_DATA, onHttpHeaders);
       this.socket.addEventListener(ProgressEvent.SOCKET_DATA, onImageData);
 
+      // Remove HTTP header data from buffer as it is already parsed.
+      var tmp:ByteArray = new ByteArray();
+      dataBuffer.readBytes(tmp);
+      dataBuffer.clear();
+      dataBuffer = tmp;
+
       if (0 < this.dataBuffer.bytesAvailable) {
         this.onImageData(event);
       }
     }
 
     private function onImageData(event:ProgressEvent):void {
+      this.bcTimer.reset();
       socket.readBytes(dataBuffer, dataBuffer.length);
 
       if (parseSubheaders) {
@@ -156,6 +221,7 @@ package com.axis.mjpegclient {
         }
 
         this.clen = parsed.headers['content-length'];
+
         parseSubheaders = false;
       }
 
@@ -171,16 +237,26 @@ package com.axis.mjpegclient {
         return;
       }
 
-      image = new ByteArray()
+      var image:ByteArray = new ByteArray()
       dataBuffer.readBytes(image, 0, clen + 2);
 
       var copy:ByteArray = new ByteArray();
       dataBuffer.readBytes(copy, 0);
       dataBuffer = copy;
 
-      dispatchEvent(new Event("image"));
+      var timestamp:Number = new Date().getTime();
+      if (this.firstTimestamp === -1) {
+        this.firstTimestamp = timestamp;
+      }
+
+      dispatchEvent(new Image(image, timestamp - this.firstTimestamp));
       clen = 0;
       parseSubheaders = true;
+    }
+
+    private function bcTimerHandler(e:TimerEvent):void {
+      Logger.log('MJPEGClient: connection timedout', urlParsed.host + ':' + urlParsed.port);
+      this.disconnect();
     }
   }
 }

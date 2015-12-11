@@ -11,6 +11,7 @@ package {
   import com.axis.rtspclient.IRTSPHandle;
   import com.axis.rtspclient.RTSPClient;
   import com.axis.rtspclient.RTSPoverHTTPHandle;
+  import com.axis.rtspclient.RTSPoverHTTPAPHandle;
   import com.axis.rtspclient.RTSPoverTCPHandle;
 
   import flash.display.LoaderInfo;
@@ -43,17 +44,19 @@ package {
     private static const EVENT_STREAM_STARTED:String  = "streamStarted";
     private static const EVENT_STREAM_PAUSED:String  = "streamPaused";
     private static const EVENT_STREAM_STOPPED:String  = "streamStopped";
-    private static const EVENT_STREAM_ENDED:String  = "streamEnded";
     private static const EVENT_FULLSCREEN_ENTERED:String  = "fullscreenEntered";
     private static const EVENT_FULLSCREEN_EXITED:String  = "fullscreenExited";
+    private static const EVENT_FRAME_READY:String  = "frameReady";
 
     public static var config:Object = {
       'buffer': 3,
       'connectionTimeout': 10,
       'scaleUp': false,
       'allowFullscreen': true,
-      'debugLogger': false
+      'debugLogger': false,
+      'frameByFrame': false
     };
+
     private var audioTransmit:AxisTransmit = new AxisTransmit();
     private var meta:Object = {};
     private var client:IClient;
@@ -64,6 +67,7 @@ package {
     private var streamHasAudio:Boolean = false;
     private var streamHasVideo:Boolean = false;
     private var newPlaylistItem:Boolean = false;
+    private var startOptions:Object = null;
 
     public function Player() {
       var self:Player = this;
@@ -114,6 +118,7 @@ package {
       ExternalInterface.addCallback("resume", resume);
       ExternalInterface.addCallback("stop", stop);
       ExternalInterface.addCallback("seek", seek);
+      ExternalInterface.addCallback("playFrames", playFrames);
       ExternalInterface.addCallback("streamStatus", streamStatus);
       ExternalInterface.addCallback("playerStatus", playerStatus);
       ExternalInterface.addCallback("speakerVolume", speakerVolume);
@@ -138,6 +143,10 @@ package {
     }
 
     public function videoResize():void {
+      if (!this.client) {
+        return;
+      }
+
       var stagewidth:uint = (StageDisplayState.NORMAL === stage.displayState) ?
         stage.stageWidth : stage.fullScreenWidth;
       var stageheight:uint = (StageDisplayState.NORMAL === stage.displayState) ?
@@ -173,6 +182,18 @@ package {
         }
       }
 
+      if (iconfig.frameByFrame !== undefined) {
+        if (this.client) {
+          if (false === this.client.setFrameByFrame(iconfig.frameByFrame)) {
+            ErrorManager.dispatchError(832);
+          } else {
+            config.frameByFrame = iconfig.frameByFrame;
+          }
+        } else {
+          config.frameByFrame = iconfig.frameByFrame;
+        }
+      }
+
       if (iconfig.scaleUp !== undefined) {
         var scaleUpChanged:Boolean = (config.scaleUp !== iconfig.scaleUp);
         config.scaleUp = iconfig.scaleUp;
@@ -201,7 +222,7 @@ package {
       return "ok";
     }
 
-    public function play(param:* = null):void {
+    public function play(param:* = null, options:Object = null):void {
       this.streamHasAudio = false;
       this.streamHasVideo = false;
 
@@ -214,6 +235,7 @@ package {
       }
 
       this.newPlaylistItem = true;
+      this.startOptions = options;
 
       if (client) {
         /* Stop the client, and 'onStopped' will start the new stream. */
@@ -228,7 +250,17 @@ package {
       switch (urlParsed.protocol) {
       case 'rtsph':
         /* RTSP over HTTP */
-        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(urlParsed));
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(this.startOptions && this.startOptions.httpUrl ? url.parse(this.startOptions.httpUrl) : urlParsed, false));
+        break;
+
+      case 'rtsphs':
+        /* RTSP over HTTPS */
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(this.startOptions && this.startOptions.httpUrl ? url.parse(this.startOptions.httpUrl) : urlParsed, true));
+        break;
+
+      case 'rtsphap':
+        /* RTSP over HTTP via Axis Proxy */
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPAPHandle(urlParsed, true));
         break;
 
       case 'rtsp':
@@ -265,14 +297,19 @@ package {
       client.addEventListener(ClientEvent.START_PLAY, onStartPlay);
       client.addEventListener(ClientEvent.PAUSED, onPaused);
       client.addEventListener(ClientEvent.META, onMeta);
-      client.start();
+      client.addEventListener(ClientEvent.FRAME, onFrame);
+      client.start(this.startOptions);
       this.newPlaylistItem = false;
     }
 
-    public function seek(position:String):void{
+    public function seek(position:String):void {
       if (!client || !client.seek(Number(position))) {
         ErrorManager.dispatchError(828);
       }
+    }
+
+    public function playFrames(timestamp:Number):void {
+      client && client.playFrames(timestamp);
     }
 
     public function pause():void {
@@ -306,21 +343,16 @@ package {
     }
 
     public function streamStatus():Object {
-      if (this.currentState === 'playing') {
-        this.streamHasAudio = (this.streamHasAudio || this.client.hasAudio());
-        this.streamHasVideo = (this.streamHasVideo || this.client.hasVideo());
-      }
       var status:Object = {
         'fps': (this.client) ? this.client.currentFPS() : null,
         'resolution': (this.client) ? { width: meta.width, height: meta.height } : null,
         'playbackSpeed': (this.client) ? 1.0 : null,
         'protocol': (this.urlParsed) ? this.urlParsed.protocol : null,
-        'audio': (this.client) ? this.streamHasAudio : null,
-        'video': (this.client) ? this.streamHasVideo : null,
         'state': this.currentState,
         'streamURL': (this.urlParsed) ? this.urlParsed.full : null,
         'duration': meta.duration ? meta.duration : null,
-        'currentTime': (this.client) ? this.client.getCurrentTime() : null
+        'currentTime': (this.client) ? this.client.getCurrentTime() : -1,
+        'bufferedTime': (this.client) ? this.client.bufferedTime() : -1
       };
 
       return status;
@@ -409,6 +441,11 @@ package {
 
     private function onStopped(event:ClientEvent):void {
       this.removeChild(this.client.getDisplayObject());
+      this.client.removeEventListener(ClientEvent.STOPPED, onStopped);
+      this.client.removeEventListener(ClientEvent.START_PLAY, onStartPlay);
+      this.client.removeEventListener(ClientEvent.PAUSED, onPaused);
+      this.client.removeEventListener(ClientEvent.META, onMeta);
+      this.client.removeEventListener(ClientEvent.FRAME, onFrame);
       this.client = null;
       this.callAPI(EVENT_STREAM_STOPPED);
 
@@ -416,6 +453,10 @@ package {
       if (this.newPlaylistItem) {
         start();
       }
+    }
+
+    private function onFrame(event:ClientEvent):void {
+      this.callAPI(EVENT_FRAME_READY, { timestamp: event.data });
     }
 
     private function callAPI(eventName:String, data:Object = null):void {

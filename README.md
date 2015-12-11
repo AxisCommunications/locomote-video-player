@@ -120,7 +120,7 @@ locomote.destroy();
 
 ### Actions
 
-#### play(url:String)
+#### play(url:String, [options:Object])
 
 > Starts playing video from url. Protocol is determined by url.
 > Example: `rtsp://server:port/stream`.
@@ -129,12 +129,21 @@ locomote.destroy();
 >
 > - `rtsp` - [RTSP over TCP][RTSP/TCP]
 > - `rtsph` - [RTSP over HTTP][RTSP/HTTP]
+> - `rtsphs` - [RTSP over HTTPS][RTSP/HTTP]
+> - `rtsphap` - RTSP over HTTPS via Axis Proxy
 > - `rtmp` - [RTMP][RTMP]
 > - `rtmpt` - RTMP over HTTP
 > - `rtmps` - RTMP over SSL
 > - `http` - Progressive download via HTTP
 > - `https` - Progressive download via HTTP over SSL
 > - `httpm` - [MJPEG over HTTP][MJPEG/HTTP] (via multipart/x-mixed-replace)
+
+> `options` is an optional object with the following attributes:
+> - `offset` - The offset to start the stream at. This is only supported by the
+    `rtsp[h|hs|hap]` protocol and requires the RTSP server to respect the range
+    header in the play request.
+> - `httpUrl` - The URL to use in HTTP requests if it differs from the RTSP
+    URL. This is only supported by the `rtsp[h|hs]` (Note: not supported by `rtsphap`) protocol
 
 #### stop()
 
@@ -158,6 +167,11 @@ locomote.destroy();
 
 > Resumes video from paused state.
 
+#### playFrames(timestamp)
+
+> Appends all received frames up to and including the given timestamp to the
+  play buffer. Only applicable if player is configured with `frameByFrame`.
+
 #### streamStatus()
 
 > Returns a status object with the following data (if an entry is unknown, that value will be null):
@@ -167,8 +181,6 @@ locomote.destroy();
 > - playbackSpeed - current playback speed. 1.0 is normal stream speed.
 > - current time - ms from start of stream.
 > - protocol - which high-level transport protocol is in use.
-> - audio (bool) - if the stream contains audio.
-> - video (bool) - if the stream contains video.
 > - state - current playback state (playing, paused, stopped).
 > - streamURL - the source of the current media.
 > - duration - the duration of the currently playing media, or -1 if not available
@@ -192,7 +204,7 @@ locomote.destroy();
 #### muteSpeaker()
 
 > Mutes the speaker volume. Remembers the current volume and resets to it if the
-> speakers are unmuted.
+  speakers are unmuted.
 
 #### unmuteSpeaker()
 
@@ -205,7 +217,7 @@ locomote.destroy();
 #### muteMicrophone()
 
 > Mutes the microphone. Remembers the current volume and resets to it if the
-> microphone is unmuted.
+  microphone is unmuted.
 
 #### unmuteMicrophone()
 
@@ -214,9 +226,13 @@ locomote.destroy();
 #### startAudioTransmit(url, type)
 
 > Starts transmitting microphone input to the camera speaker.
-The optional `type` parameter can be used for future implementations of other protocols,
-currently only the Axis audio transmit api is supported.
-For Axis cameras the `url` parameter should be in the format - `http://server:port/axis-cgi/audio/transmit.cgi`.
+  The optional `type` parameter can be used for future implementations of other protocols,
+  currently only the Axis audio transmit api is supported.
+  For Axis cameras the `url` parameter should be in the format - `http://server:port/axis-cgi/audio/transmit.cgi`.
+
+> If the user must grant permission to use the microphone an
+  `audioTransmitRequestPermission` event will be dispatched and
+  `startAudioTransmit` must be called again once permission has been granted.
 
 #### stopAudioTransmit()
 
@@ -231,6 +247,17 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 > - `scaleUp` - Specifies if the video can be scaled up or not. The default value is `false`.
 > - `allowFullscreen` - Specifices if fullscreen mode is allowed or not. The default value is `true`.
 > - `debugLogger` - Specifices if debug messages should be shown in the Flash console or not. The default value is `false`.
+> - `frameByFrame` - Specifices if media should be played immediately or wait
+                     for calls to `playFrames`. Not supported by the `rtmp` protocol. The
+                     default value is `false`. The http and https protocol
+                     implements this by creating virtual frames, a timestamp
+                     given in the `frameReady` event may not correspond to a
+                     real video frame, and the player may play up to 50 ms more
+                     than the last `playFrames` call specified. The
+                     `rtsp[h|hs|hap]` protocol dispatches the `frameReady` event
+                     for each assembled FLV tag, if audio and video is received
+                     out of order this will cause `frameReady` events to be
+                     dispatched out of order.
 
 #### on(eventName:String, callback:Function)
 
@@ -261,9 +288,14 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 
 > Dispatched when stream stops.
 
-#### streamEnded
+#### frameReady(timestamp)
 
-> Dispatched when fixed length video stream reaches end of stream. The streamStopped event is also dispatched just before this event.
+> Dispatched when a new frame, or pseudo-frame, is available to be appended to
+  the play buffer. The timestamp of the frame is given by the argument. Append
+  it using the `playFrames` method. This event will only be dispatched if the
+  player is configured with the `frameByFrame` option. Otherwise, all frames
+  will be appended to the play buffer immediately when received and this event
+  will not be dispatched.
 
 #### error(error)
 
@@ -286,6 +318,24 @@ For Axis cameras the `url` parameter should be in the format - `http://server:po
 #### audioTransmitStopped
 
 > Dispatched when audio transmission stops.
+
+#### audioTransmitRequestPermission
+
+> Dispatched when flash is prompting the user to grant or deny access to the
+  microphone. When this event is dispatched the setup is aborted and
+  `startAudioTransmit` must be called again after the event
+  `audioTransmitAllowed` has been dispatched.
+
+#### audioTransmitAllowed
+
+> Dispatched when user has granted permission to use the microphone. A new call
+  to `startAudioTransmit` must be made to initiate audio transmission.
+
+#### audioTransmitDenied
+
+> Dispatched when user has denied permission to use the microphone. If this
+  event is fired, any future calls to `startAudioTransmit` will generate an
+  error (816).
 
 #### fullscreenEntered
 

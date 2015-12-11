@@ -51,6 +51,9 @@ package com.axis.http {
       switch (protocol) {
         case 'rtmp': return 1935;
         case 'rtsp': return 554;
+        case 'rtsph': return 80;
+        case 'rtsphs': return 443;
+        case 'rtsphap': return 443;
         case 'http': return 80;
         case 'https': return 443;
         case 'httpm': return 80;

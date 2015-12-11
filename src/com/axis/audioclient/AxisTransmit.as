@@ -18,22 +18,27 @@ package com.axis.audioclient {
   import flash.media.Microphone;
   import flash.media.SoundCodec;
   import flash.net.Socket;
+  import flash.net.SecureSocket;
   import flash.utils.ByteArray;
 
   public class AxisTransmit implements IAudioClient {
     private static const EVENT_AUDIO_TRANSMIT_STARTED:String = 'audioTransmitStarted';
     private static const EVENT_AUDIO_TRANSMIT_STOPPED:String = 'audioTransmitStopped';
+    private static const EVENT_AUDIO_TRANSMIT_REQUEST_PERMISSION:String = 'audioTransmitRequestPermission';
+    private static const EVENT_AUDIO_TRANSMIT_ALLOWED:String = 'audioTransmitAllowed';
+    private static const EVENT_AUDIO_TRANSMIT_DENIED:String = 'audioTransmitDenied';
 
     private var urlParsed:Object = {};
-    private var conn:Socket = new Socket();
+    private var conn:Socket;
 
     private var authState:String = 'none';
     private var authOpts:Object = {};
 
     private var savedUrl:String = null;
 
-    private var mic:Microphone = Microphone.getMicrophone();
+    private var mic:Microphone;
     private var _microphoneVolume:Number;
+    private var permissionResovled:Boolean = false;
 
     private var currentState:String = 'stopped';
 
@@ -42,27 +47,32 @@ package com.axis.audioclient {
       this.microphoneVolume = 50;
     }
 
+    private function onMicSampleDummy(event:SampleDataEvent):void {}
+
     private function onMicStatus(event:StatusEvent):void {
-      if (conn.connected) {
-        authState = 'none';
-        conn.close();
-      }
+      Logger.log("AxisTransmit: MicStatus", { event: event.code });
 
-      if ('Microphone.Muted' === event.code) {
-        ErrorManager.dispatchError(816);
-        return;
-      }
+      this.permissionResovled = true;
+      this.mic.removeEventListener(StatusEvent.STATUS, onMicStatus);
+      this.mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleDummy);
 
-      if (urlParsed.host && urlParsed.port) {
-        conn.connect(urlParsed.host, urlParsed.port);
+      switch (event.code) {
+      case 'Microphone.Muted':
+        this.callAPI(EVENT_AUDIO_TRANSMIT_DENIED);
+        break;
+      case 'Microphone.Unmuted':
+        this.callAPI(EVENT_AUDIO_TRANSMIT_ALLOWED);
+        break;
       }
     }
 
     public function start(iurl:String = null):void {
-      if (conn.connected) {
+      if (conn && conn.connected) {
         ErrorManager.dispatchError(817);
         return;
       }
+
+      this.currentState = 'initial';
 
       var currentUrl:String = (iurl) ? iurl : savedUrl;
 
@@ -71,50 +81,122 @@ package com.axis.audioclient {
         return;
       }
 
+      this.urlParsed = url.parse(currentUrl);
       this.savedUrl = currentUrl;
 
-      var mic:Microphone = Microphone.getMicrophone();
+      this.mic = Microphone.getMicrophone();
 
-      if (null === mic) {
+      if (null === this.mic) {
         ErrorManager.dispatchError(819);
         return;
       }
 
-      mic.rate = 16;
-      mic.setSilenceLevel(0, -1);
-      mic.addEventListener(StatusEvent.STATUS, onMicStatus);
-      mic.addEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
+      this.mic.rate = 16;
+      this.mic.setSilenceLevel(0, -1);
 
-      this.urlParsed = url.parse(currentUrl);
-
-      conn = new Socket();
+      conn = this.urlParsed.protocol == 'https' ? new SecureSocket() : new Socket();
       conn.addEventListener(Event.CONNECT, onConnected);
       conn.addEventListener(Event.CLOSE, onClosed);
       conn.addEventListener(ProgressEvent.SOCKET_DATA, onRequestData);
       conn.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
       conn.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
-      if (true === mic.muted) {
-        ErrorManager.dispatchError(816);
-        return;
+      if (this.mic.muted) {
+        if (this.permissionResovled) {
+          ErrorManager.dispatchError(816);
+        } else {
+          this.mic.addEventListener(StatusEvent.STATUS, onMicStatus);
+          this.mic.addEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleDummy);
+          this.callAPI(EVENT_AUDIO_TRANSMIT_REQUEST_PERMISSION);
+        }
+      } else {
+        this.connect();
       }
-
-      conn.connect(urlParsed.host, urlParsed.port);
     }
 
     public function stop():void {
+      this.close();
+    }
+
+    private function connect():void {
       if (!conn.connected) {
-        ErrorManager.dispatchError(813);
+        Logger.log("AxisTransmit: Connecting to ", this.urlParsed.host + ":" + this.urlParsed.port);
+        conn.connect(this.urlParsed.host, this.urlParsed.port);
+      }
+    }
+
+    private function onConnected(event:Event):void {
+      Logger.log("AxisTransmit: Connected to ", this.urlParsed.host + ":" + this.urlParsed.port);
+
+      this.mic.addEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
+
+      conn.writeUTFBytes("POST " + this.urlParsed.urlpath + " HTTP/1.0\r\n");
+      conn.writeUTFBytes("Content-Type: audio/axis-mulaw-128\r\n");
+      conn.writeUTFBytes("Content-Length: 9999999\r\n");
+      conn.writeUTFBytes("Connection: Keep-Alive\r\n");
+      conn.writeUTFBytes("Cache-Control: no-cache\r\n");
+      writeAuthorizationHeader();
+      conn.writeUTFBytes("\r\n");
+    }
+
+    private function close():void {
+      if (conn.connected) {
+        Logger.log("AxisTransmit: Disconnecting from ", this.urlParsed.host + ":" + this.urlParsed.port);
+        conn.close();
+        this.onClosed();
+      }
+    }
+
+    private function onClosed(event:Event = null):void {
+      Logger.log("AxisTransmit: Disconnected from ", this.urlParsed.host + ":" + this.urlParsed.port);
+
+      this.mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
+
+      if ('playing' === this.currentState) {
+        this.currentState = 'stopped';
+        this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
+      }
+    }
+
+    private function onMicSampleData(event:SampleDataEvent):void {
+      if ('playing' !== this.currentState) {
+        this.currentState = 'playing';
+        this.callAPI(EVENT_AUDIO_TRANSMIT_STARTED);
+      }
+
+      while (event.data.bytesAvailable) {
+        var encoded:uint = g711.linearToMulaw(event.data.readFloat());
+        conn.writeByte(encoded);
+      }
+
+      conn.flush();
+    }
+
+    private function onRequestData(event:ProgressEvent):void {
+      var data:ByteArray = new ByteArray();
+      var parsed:* = request.readHeaders(conn, data);
+
+      if (false === parsed) {
         return;
       }
 
-      if (mic) {
-        mic.removeEventListener(StatusEvent.STATUS, onMicStatus);
-        mic.removeEventListener(SampleDataEvent.SAMPLE_DATA, onMicSampleData);
+      if (401 === parsed.code) {
+        /* Unauthorized, change authState and (possibly) try again */
+        authOpts = parsed.headers['www-authenticate'];
+        var newAuthState:String = auth.nextMethod(authState, authOpts);
+
+        if (authState === newAuthState) {
+          ErrorManager.dispatchError(parsed.code);
+          authState = 'none';
+          return;
+        }
+
+        Logger.log('AxisTransmit: switching http-authorization from ' + authState + ' to ' + newAuthState);
+        authState = newAuthState;
+        this.close();
+        this.connect();
+        return;
       }
-      this.currentState = 'stopped';
-      this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
-      conn.close();
     }
 
     private function writeAuthorizationHeader():void {
@@ -143,66 +225,6 @@ package com.axis.audioclient {
       }
 
       conn.writeUTFBytes('Authorization: ' + a + "\r\n");
-    }
-
-    private function onConnected(event:Event):void {
-      conn.writeUTFBytes("POST " + this.urlParsed.urlpath + " HTTP/1.0\r\n");
-      conn.writeUTFBytes("Content-Type: audio/axis-mulaw-128\r\n");
-      conn.writeUTFBytes("Content-Length: 9999999\r\n");
-      conn.writeUTFBytes("Connection: Keep-Alive\r\n");
-      conn.writeUTFBytes("Cache-Control: no-cache\r\n");
-      writeAuthorizationHeader();
-      conn.writeUTFBytes("\r\n");
-    }
-
-    public function onClosed(event:Event):void {
-      if ('playing' === this.currentState) {
-        this.currentState = 'stopped';
-        this.callAPI(EVENT_AUDIO_TRANSMIT_STOPPED);
-      }
-    }
-
-    private function onMicSampleData(event:SampleDataEvent):void {
-      if (!conn.connected) {
-        return;
-      }
-
-      if ('stopped' === this.currentState) {
-        this.currentState = 'playing';
-        this.callAPI(EVENT_AUDIO_TRANSMIT_STARTED);
-      }
-
-      while (event.data.bytesAvailable) {
-        var encoded:uint = g711.linearToMulaw(event.data.readFloat());
-        conn.writeByte(encoded);
-      }
-
-      conn.flush();
-    }
-
-    private function onRequestData(event:ProgressEvent):void {
-      var data:ByteArray = new ByteArray();
-      var parsed:* = request.readHeaders(conn, data);
-
-      if (false === parsed) {
-        return;
-      }
-
-      if (401 === parsed.code) {
-        /* Unauthorized, change authState and (possibly) try again */
-        authOpts = parsed.headers['www-authenticate'];
-        var newAuthState:String = auth.nextMethod(authState, authOpts);
-        if (authState === newAuthState) {
-          ErrorManager.dispatchError(parsed.code);
-          return;
-        }
-
-        Logger.log('AxisTransmit: switching http-authorization from ' + authState + ' to ' + newAuthState);
-        authState = newAuthState;
-        conn.close();
-        conn.connect(this.urlParsed.host, this.urlParsed.port);
-        return;
-      }
     }
 
     private function onIOError(event:IOErrorEvent):void {

@@ -116,8 +116,9 @@
       this.__playerEvent('apiReady');
     },
 
-    play: function(url) {
-      this.e.play(url);
+    play: function(url, options) {
+      options = options || {};
+      this.e.play(url, options);
       return this;
     },
 
@@ -138,6 +139,11 @@
 
     resume: function() {
       this.e.resume();
+      return this;
+    },
+
+    playFrames: function(timestamp) {
+      this.e.playFrames(timestamp);
       return this;
     },
 
@@ -243,7 +249,11 @@
     },
 
     destroy: function() {
-      window.LocomoteMap[this.tag] = undefined;
+      window.LocomoteMap[this.tag] = {
+        __playerEvent: function () {},
+        __swfReady: function () {}
+      };
+      typeof this.e.stop === 'function' && this.e.stop();
       this.e.parentNode.removeChild(this.e);
       this.e = null;
     }
