@@ -441,7 +441,7 @@ package {
       this.client.removeEventListener(ClientEvent.META, onMeta);
       this.client.removeEventListener(ClientEvent.FRAME, onFrame);
       this.client = null;
-      this.callAPI(EVENT_STREAM_STOPPED, event.data);
+      this.callAPI(EVENT_STREAM_STOPPED);
 
       /* If a new `play` has been queued, fire it */
       if (this.newPlaylistItem) {
