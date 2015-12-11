@@ -64,7 +64,7 @@ package com.axis.http {
             hdr['www-authenticate'] = {};
 
           if (/^basic/i.test(val)) {
-            var basicRealm:RegExp = /realm=\"([^\"]+)\"/i;
+            var basicRealm:RegExp = /realm="([^"]*)"/i;
             hdr['www-authenticate'].basicRealm = basicRealm.exec(val)[1];
           }
 

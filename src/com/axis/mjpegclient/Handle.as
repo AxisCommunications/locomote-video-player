@@ -17,6 +17,7 @@ package com.axis.mjpegclient {
   import com.axis.Logger;
   import com.axis.ErrorManager;
   import com.axis.http.request;
+  import com.axis.http.auth;
 
   [Event(name="connect",type="flash.events.Event")]
   [Event(name="error",type="flash.events.Event")]
@@ -37,8 +38,16 @@ package com.axis.mjpegclient {
     private var headers:Vector.<String> = new Vector.<String>();
     private var clen:int;
     private var parseSubheaders:Boolean = true;
+
     private var firstTimestamp:Number = -1;
     private var closeTiggered:Boolean = false;
+
+    private var authState:String = "none";
+    private var authOpts:Object = {};
+    private var digestNC:uint = 1;
+    private var method:String = "";
+
+    public var image:ByteArray = null;
 
     public function Handle(urlParsed:Object) {
       this.urlParsed = urlParsed;
@@ -109,8 +118,13 @@ package com.axis.mjpegclient {
       headers.length = 0;
       parseHeaders = true;
       parseSubheaders = true;
+
+      var authHeader:String =
+                    auth.authorizationHeader(method, authState, authOpts, urlParsed, digestNC++);
+
       socket.writeUTFBytes("GET " + urlParsed.urlpath + " HTTP/1.0\r\n");
       socket.writeUTFBytes("Host: " + urlParsed.host + ':' + urlParsed.port + "\r\n");
+      socket.writeUTFBytes(authHeader);
       socket.writeUTFBytes("Accept: multipart/x-mixed-replace\r\n");
       socket.writeUTFBytes("User-Agent: Locomote\r\n");
       socket.writeUTFBytes("\r\n");
@@ -153,6 +167,22 @@ package com.axis.mjpegclient {
         contentType: parsed.headers['content-type'],
         url: urlParsed.urlpath
       });
+
+      if (401 === parsed.code) {
+        Logger.log('Unauthorized using auth method: ' + authState);
+        /* Unauthorized, change authState and (possibly) try again */
+        authOpts = parsed.headers['www-authenticate'];
+        var newAuthState:String = auth.nextMethod(authState, authOpts);
+        if (authState === newAuthState) {
+          ErrorManager.dispatchError(parsed.code);
+          return;
+        }
+
+        Logger.log('switching http-authorization from ' + authState + ' to ' + newAuthState);
+        authState = newAuthState;
+        connect();
+        return;
+      }
 
       if (200 !== parsed.code) {
         ErrorManager.dispatchError(parsed.code);

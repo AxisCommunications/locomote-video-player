@@ -128,6 +128,7 @@ package {
       ExternalInterface.addCallback("muteMicrophone", muteMicrophone);
       ExternalInterface.addCallback("unmuteMicrophone", unmuteMicrophone);
       ExternalInterface.addCallback("setConfig", setConfig);
+      ExternalInterface.addCallback("loadPolicyFile", loadPolicyFile);
 
       /* Audio Transmission API */
       ExternalInterface.addCallback("startAudioTransmit", startAudioTransmit);
@@ -216,6 +217,11 @@ package {
       }
     }
 
+    public function loadPolicyFile(url:String):String {
+      Security.loadPolicyFile(url);
+      return "ok";
+    }
+
     public function play(param:* = null, options:Object = null):void {
       this.streamHasAudio = false;
       this.streamHasVideo = false;
@@ -284,7 +290,7 @@ package {
         ErrorManager.dispatchError(811, [urlParsed.protocol])
         return;
       }
-        
+
       addChild(this.client.getDisplayObject());
 
       client.addEventListener(ClientEvent.STOPPED, onStopped);

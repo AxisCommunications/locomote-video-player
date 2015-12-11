@@ -200,6 +200,11 @@
       return this;
     },
 
+    loadPolicyFile: function(url) {
+      this.e.loadPolicyFile(url);
+      return this;
+    },
+
     on: function(eventName, callback) {
       this.callbacks.push({ eventName: eventName, callback: callback });
 
