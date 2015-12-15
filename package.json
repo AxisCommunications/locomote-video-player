@@ -1,6 +1,6 @@
 {
   "name": "locomote-video-player",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "description": "Media player for Adobe Flash with support for RTSP, RTMP and HTTP.",
   "scripts": {
     "test": "./node_modules/.bin/gulp test",
