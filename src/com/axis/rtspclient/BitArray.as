@@ -9,7 +9,7 @@ package com.axis.rtspclient {
     private var bitpos:uint;
 
     public function BitArray(src:ByteArray) {
-      this.src    = src;
+      this.src = clone(src);
       this.bitpos = 0;
       this.byte   = 0; /* This should really be undefined, uint wont allow it though */
     }
@@ -48,7 +48,7 @@ package com.axis.rtspclient {
 
       return n - 1; /* Because result in exp golomb is one larger */
     }
-    
+
     public function readSignedExpGolomb():uint {
         var r:uint = this.readUnsignedExpGolomb();
         if (r & 0x01) {
@@ -57,6 +57,13 @@ package com.axis.rtspclient {
             r = -(r >> 1);
         }
         return r;
+    }
+
+    public function clone(source:ByteArray):* {
+        var temp:ByteArray = new ByteArray();
+        temp.writeObject(source);
+        temp.position = 0;
+        return(temp.readObject());
     }
   }
 }

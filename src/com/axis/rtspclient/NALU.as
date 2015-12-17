@@ -40,5 +40,12 @@ package com.axis.rtspclient {
       output.writeByte((0x0 & 0x80) | (nri & 0x60) | (ntype & 0x1F)); // NAL header
       output.writeBytes(data, data.position);
     }
+
+    public function getPayload():ByteArray {
+      var payload:ByteArray = new ByteArray();
+      data.position -= 1;
+      data.readBytes(payload, 0, data.bytesAvailable);
+      return payload;
+    }
   }
 }
