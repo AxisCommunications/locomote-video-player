@@ -91,6 +91,10 @@ package com.axis.rtmpclient {
       return true;
     }
 
+    public function setKeepAlive(seconds:Number):Boolean {
+      return false;
+    }
+
     private function onConnectionStatus(event:NetStatusEvent):void {
       if ('NetConnection.Connect.Success' === event.info.code) {
         Logger.log('RTMPClient: connected');

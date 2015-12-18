@@ -15,7 +15,8 @@ package com.axis.rtspclient {
   import mx.utils.Base64Decoder;
 
   public class FLVMux extends EventDispatcher {
-    private const EMPTY_BUF = new ByteArray();
+    private const EMPTY_BUF:ByteArray = new ByteArray();
+
     private var sdp:SDP;
     private var container:ByteArray = new ByteArray();
     private var loggedBytes:ByteArray = new ByteArray();
@@ -196,7 +197,7 @@ package com.axis.rtspclient {
       };
     }
 
-    public function createMetaDataTag(params):void {
+    public function createMetaDataTag(params:Object):void {
       var size:uint = 0;
 
       /* FLV Tag */

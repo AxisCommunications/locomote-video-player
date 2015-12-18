@@ -50,6 +50,7 @@ package {
 
     public static var config:Object = {
       'buffer': 3,
+      'keepAlive': 0,
       'connectionTimeout': 10,
       'scaleUp': false,
       'allowFullscreen': true,
@@ -179,6 +180,18 @@ package {
           }
         } else {
             config.buffer = iconfig.buffer;
+        }
+      }
+
+      if (iconfig.keepAlive !== undefined) {
+        if (this.client) {
+          if (false === this.client.setKeepAlive(config.keepAlive)) {
+            ErrorManager.dispatchError(834);
+          } else {
+            config.keepAlive = iconfig.keepAlive;
+          }
+        } else {
+            config.keepAlive = iconfig.keepAlive;
         }
       }
 
