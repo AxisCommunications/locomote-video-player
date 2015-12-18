@@ -244,6 +244,7 @@ locomote.destroy();
 
 > - `buffer` - The number of seconds that should be buffered. The default value is `3`.
 > - `connectionTimeout` - The number of seconds before a broken connection times out and is closed. The default value is `10`.
+> - `keepAlive` - The number of seconds between keep alive requests (only RTSP at the moment). The default value is `0` (disabled).
 > - `scaleUp` - Specifies if the video can be scaled up or not. The default value is `false`.
 > - `allowFullscreen` - Specifices if fullscreen mode is allowed or not. The default value is `true`.
 > - `debugLogger` - Specifices if debug messages should be shown in the Flash console or not. The default value is `false`.
