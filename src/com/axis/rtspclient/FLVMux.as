@@ -15,11 +15,16 @@ package com.axis.rtspclient {
   import mx.utils.Base64Decoder;
 
   public class FLVMux extends EventDispatcher {
+    private const EMPTY_BUF:ByteArray = new ByteArray();
+
     private var sdp:SDP;
     private var container:ByteArray = new ByteArray();
     private var loggedBytes:ByteArray = new ByteArray();
     private var lastTimestamp:Number = -1;
     private var firstTimestamp:Number = -1;
+
+    private var sps:ByteArray = EMPTY_BUF;
+    private var pps:ByteArray = EMPTY_BUF;
 
     public function FLVMux(sdp:SDP) {
       container.writeByte(0x46); // 'F'
@@ -35,20 +40,29 @@ package com.axis.rtspclient {
 
       this.sdp = sdp;
 
-      createMetaDataTag();
-
-      if (sdp.getMediaBlock('video')) {
+      if (sdp.getMediaBlock('video') && sdp.getMediaBlock('video').hasOwnProperty('fmtp')) {
         /* Initial parameters must be taken from SDP file. Additional may be received as NAL */
         var sets:Array = sdp.getMediaBlock('video').fmtp['sprop-parameter-sets'].split(',');
         var sps:Base64Decoder = new Base64Decoder();
         var pps:Base64Decoder = new Base64Decoder();
         sps.decode(sets[0]);
         pps.decode(sets[1]);
-        createDecoderConfigRecordTag(sps.toByteArray(), pps.toByteArray());
+        this.sps = sps.toByteArray();
+        this.pps = pps.toByteArray();
+        createVideoSpecificConfigTag();
       }
 
       if (sdp.getMediaBlock('audio')) {
         createAudioSpecificConfigTag(sdp.getMediaBlock('audio'));
+      }
+    }
+
+    private function createVideoSpecificConfigTag():void {
+      if (this.sps.bytesAvailable != 0 && this.pps.bytesAvailable != 0) {
+        var spsbit:BitArray = new BitArray(sps);
+        var params:Object = parseSPS(spsbit);
+        createDecoderConfigRecordTag(sps, pps, params);
+        createMetaDataTag(params);
       }
     }
 
@@ -183,7 +197,7 @@ package com.axis.rtspclient {
       };
     }
 
-    public function createMetaDataTag():void {
+    public function createMetaDataTag(params:Object):void {
       var size:uint = 0;
 
       /* FLV Tag */
@@ -197,14 +211,6 @@ package com.axis.rtspclient {
 
       /* Method call */
       size += writeString("onMetaData");
-
-      /* Decode the base64 encoded parameter sets to pass to parseSPS */
-      var sets:Array = sdp.getMediaBlock('video').fmtp['sprop-parameter-sets'].split(',');
-      var spsdec:Base64Decoder = new Base64Decoder();
-      spsdec.decode(sets[0]);
-      var sps:BitArray = new BitArray(spsdec.toByteArray());
-      var params:Object = parseSPS(sps);
-      Logger.log('FLVMux: stream params = ', params);
 
       /* Arguments */
       size += writeECMAArray({
@@ -224,9 +230,10 @@ package com.axis.rtspclient {
       container[sizePosition + 0] = dataSize & 0x00FF0000;
       container[sizePosition + 1] = dataSize & 0x0000FF00;
       container[sizePosition + 2] = dataSize & 0x000000FF;
+
     }
 
-    public function createDecoderConfigRecordTag(sps:ByteArray, pps:ByteArray):void {
+    public function createDecoderConfigRecordTag(sps:ByteArray, pps:ByteArray, params:Object):void {
       var start:uint = container.position;
 
       /* FLV Tag */
@@ -241,8 +248,11 @@ package com.axis.rtspclient {
       container.writeByte(0x01 << 4 | 0x07); // Keyframe << 4 | CodecID
       container.writeUnsignedInt(0x00 << 24 | 0x00000000); // AVC NALU << 24 | CompositionTime
 
-      writeDecoderConfigurationRecord();
+      var profilelevelid:uint = parseInt(params.profile, 16);
+      writeDecoderConfigurationRecord(profilelevelid);
       writeParameterSets(sps, pps);
+      this.sps = EMPTY_BUF;
+      this.pps = EMPTY_BUF;
 
       var size:uint = container.position - start;
 
@@ -256,9 +266,7 @@ package com.axis.rtspclient {
       container.writeUnsignedInt(size);
     }
 
-    public function writeDecoderConfigurationRecord():void {
-      /* Always take this from SDP file. Is this correct? */
-      var profilelevelid:uint = parseInt(sdp.getMediaBlock('video').fmtp['profile-level-id'], 16);
+    public function writeDecoderConfigurationRecord(profilelevelid:uint):void {
       container.writeByte(0x01); // Version
       container.writeByte((profilelevelid & 0x00FF0000) >> 16); // AVC Profile, Baseline
       container.writeByte((profilelevelid & 0x0000FF00) >> 8); // Profile compatibility
@@ -461,13 +469,13 @@ package com.axis.rtspclient {
         break;
 
       case 7: /* Sequence parameter set */
-        /* What to do about these? Inserting new decoder configurations doesn't seem to work. */
-        /* createDecoderConfigRecordTag(nalu.getPayload(), new ByteArray()); */
+        this.sps = nalu.getPayload();
+        createVideoSpecificConfigTag();
         break;
 
       case 8: /* Picture parameter set */
-        /* What to do about these? Inserting new decoder configurations doesn't seem to work. */
-        /* createDecoderConfigRecordTag(new ByteArray(), nalu.getPayload()); */
+        this.pps = nalu.getPayload();
+        createVideoSpecificConfigTag();
         break;
 
       default:

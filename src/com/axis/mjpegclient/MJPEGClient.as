@@ -94,6 +94,10 @@ package com.axis.mjpegclient {
       return true;
     }
 
+    public function setKeepAlive(seconds:Number):Boolean {
+      return false;
+    }
+
     public function currentFPS():Number {
       return mjpeg.getFps();
     }

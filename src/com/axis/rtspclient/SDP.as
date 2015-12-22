@@ -223,6 +223,9 @@ package com.axis.rtspclient {
         }
 
         break;
+      case 'a=range':
+        media.range = line.substr('a=range:'.length);
+        break
       }
 
       return true;
