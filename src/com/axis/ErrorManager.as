@@ -115,7 +115,8 @@ package com.axis {
       '830': "Unable to set buffer. This might not work for this stream-type, or this particular stream.",
       '831': "Unsupported Audio or Video format: %p",
       '832': "Unable to set frame by frame. This might not work for this stream-type, or this particular stream.",
-      '833': "Failed to load mjpeg image."
+      '833': "Failed to load mjpeg image.",
+      '834': "Unable to set keep alive interval"
     };
 
     public static function dispatchError(errorCode:Number, errorData:Array = null, throwError:Boolean = false):void {

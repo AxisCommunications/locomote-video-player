@@ -87,6 +87,11 @@ package com.axis {
      */
     function setBuffer(seconds:Number):Boolean;
 
+   /**
+     * Called when the client should start keep alive routine
+     */
+    function setKeepAlive(seconds:Number):Boolean;
+
     /**
      * Returns the current achieved frames per second for the client.
      */

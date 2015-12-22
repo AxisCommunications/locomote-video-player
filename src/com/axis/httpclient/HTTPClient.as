@@ -117,6 +117,10 @@ package com.axis.httpclient {
       return true;
     }
 
+    public function setKeepAlive(seconds:Number):Boolean {
+      return false;
+    }
+
     private function updateVirtualBuffer():void {
       if (this.currentState == 'stopped') {
         return;

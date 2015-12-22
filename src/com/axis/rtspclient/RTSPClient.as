@@ -43,7 +43,6 @@ package com.axis.rtspclient {
     private static const STATE_PAUSE:uint    = 1 << 6;
     private static const STATE_PAUSED:uint   = 1 << 7;
     private static const STATE_TEARDOWN:uint = 1 << 8;
-
     private var state:int = STATE_INITIAL;
     private var handle:IRTSPHandle;
 
@@ -75,6 +74,7 @@ package com.axis.rtspclient {
     private var digestNC:uint = 1;
 
     private var bcTimer:Timer;
+    private var kaTimer:Timer;
     private var connectionBroken:Boolean = false;
 
     private var nc:NetConnection = null;
@@ -93,6 +93,8 @@ package com.axis.rtspclient {
       this.bcTimer.stop(); // Don't start timeout immediately
       this.bcTimer.reset();
       this.bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+
+      this.setKeepAlive(Player.config.keepAlive);
 
       this.startOptions = options;
       if (!this.startOptions.offset) {
@@ -142,6 +144,7 @@ package com.axis.rtspclient {
 
       /* Stop timer, don't close the connection when paused. */
       bcTimer.stop();
+      kaTimer.stop();
 
       this.ns.pause();
 
@@ -258,6 +261,15 @@ package com.axis.rtspclient {
       this.ns.bufferTime = seconds;
       this.ns.pause();
       this.ns.resume();
+      return true;
+    }
+
+    public function setKeepAlive(seconds:Number):Boolean {
+      if (seconds !== 0) {
+        this.kaTimer = new Timer(seconds * 1000);
+      } else if (this.kaTimer) {
+        this.kaTimer.stop();
+      }
       return true;
     }
 
@@ -460,8 +472,9 @@ package com.axis.rtspclient {
       case STATE_PLAY:
         Logger.log("RTSPClient: STATE_PLAY");
         state = STATE_PLAYING;
-
-        rtpTiming = RTPTiming.parse(parsed.headers['rtp-info'], parsed.headers['range']);
+        /* Get range from RTSP header or SDP session block */
+        var RTPrange = parsed.headers['range'] || this.sdp.getSessionBlock().range;
+        rtpTiming = RTPTiming.parse(parsed.headers['rtp-info'], RTPrange);
 
         if (this.flvmux) {
           /* If the flvmux have been initialized don't do it again.
@@ -493,6 +506,10 @@ package com.axis.rtspclient {
           flvmux.addEventListener(FLVTag.NEW_FLV_TAG, this.onFlvTag);
         }
 
+        /* Start Keep-alive routine */
+        kaTimer.reset();
+        kaTimer.addEventListener(TimerEvent.TIMER, keepAlive);
+        kaTimer.start();
         break;
 
       case STATE_PLAYING:
@@ -666,6 +683,20 @@ package com.axis.rtspclient {
       prevMethod = sendPlayReq;
     }
 
+    private function sendGetParamReq():void {
+      var req:String =
+        "GET_PARAMETER " + getControlURL() + " RTSP/1.0\r\n" +
+        "CSeq: " + (++cSeq) + "\r\n" +
+        "User-Agent: " + userAgent + "\r\n" +
+        "Session: " + session + "\r\n" +
+        auth.authorizationHeader("GET_PARAMETER", authState, authOpts, urlParsed, digestNC++) +
+        "\r\n";
+      Logger.log('RTSP OUT:', req);
+      handle.writeUTFBytes(req);
+
+      prevMethod = sendGetParamReq;
+    }
+
     private function sendPauseReq():void {
       if (!this.supportCommand("PAUSE")) {
         ErrorManager.dispatchError(825, null, true);
@@ -698,6 +729,10 @@ package com.axis.rtspclient {
       Logger.log('RTSP OUT:', req);
 
       prevMethod = sendTeardownReq;
+    }
+
+    private function keepAlive(event:TimerEvent):void {
+      sendGetParamReq();
     }
 
     private function onAsyncError(event:AsyncErrorEvent):void {
