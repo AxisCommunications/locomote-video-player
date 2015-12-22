@@ -25,7 +25,8 @@
     }
 
     // Instance already initialized. Return it.
-    if (window.LocomoteMap[tag]) {
+    if (window.LocomoteMap[tag] &&
+        window.LocomoteMap[tag].swfready) {
       return window.LocomoteMap[tag];
     }
 
