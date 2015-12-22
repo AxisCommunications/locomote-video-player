@@ -183,16 +183,12 @@ package {
         }
       }
 
-      if (iconfig.keepAlive !== undefined) {
-        if (this.client) {
-          if (false === this.client.setKeepAlive(config.keepAlive)) {
-            ErrorManager.dispatchError(834);
-          } else {
-            config.keepAlive = iconfig.keepAlive;
-          }
-        } else {
-            config.keepAlive = iconfig.keepAlive;
-        }
+       if (iconfig.keepAlive !== undefined) {
+         if (this.client && !this.client.setKeepAlive(config.keepAlive)) {
+           ErrorManager.dispatchError(834);
+         } else {
+           config.keepAlive = iconfig.keepAlive;
+         }
       }
 
       if (iconfig.frameByFrame !== undefined) {
