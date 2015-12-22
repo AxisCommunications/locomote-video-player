@@ -70,27 +70,7 @@ package com.axis.mjpegclient {
     }
 
     public function disconnect():void {
-      Logger.log('MJPEGClient: disconnecting from', urlParsed.host + ':' + urlParsed.port);
-
-      // The close event on the socket is often not called so do all cleanup
-      // immediately.
-      if (this.bcTimer) {
-        this.bcTimer.stop();
-        this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
-        this.bcTimer = null;
-      }
-
-      this.buffer = null;
-
-      try {
-        // Security error is thrown if this line is excluded
-        socket.close();
-      } catch (error:*) {}
-
-      if (!this.closeTiggered) {
-        dispatchEvent(new Event(Handle.CLOSED));
-        this.closeTiggered = true;
-      }
+      dispatchEvent(new Event(Event.CLOSE));
     }
 
     public function connect():void {
