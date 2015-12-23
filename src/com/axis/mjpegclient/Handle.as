@@ -70,6 +70,7 @@ package com.axis.mjpegclient {
     }
 
     public function disconnect():void {
+      Logger.log('MJPEGClient: disconnecting from', urlParsed.host + ':' + urlParsed.port);
       dispatchEvent(new Event(Event.CLOSE));
     }
 
