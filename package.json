@@ -4,7 +4,6 @@
   "description": "Media player for Adobe Flash with support for RTSP, RTMP and HTTP.",
   "scripts": {
     "test": "./node_modules/.bin/gulp test",
-    "postinstall": "./node_modules/.bin/gulp --color"
   },
   "repository": {
     "type": "git",

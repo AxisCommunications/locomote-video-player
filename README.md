@@ -9,6 +9,11 @@ Install Locomote using [Bower](http://bower.io) with the following command:
 bower install locomote
 ```
 
+Install Locomote using [npm](http://npmjs.com) with the following command:
+```
+npm install locomote-video-player
+```
+
 ### Running Locomote
 
 To run Locomote in a web page, you need to host both the SWF (`Player.swf` in example below),
@@ -357,11 +362,9 @@ locomote.destroy();
 To compile the project, [nodejs](http://www.nodejs.org) and [npm](http://www.npmjs.org) is required.
 Since `npm` is bundled with `nodejs`, you only need to download and install `nodejs`.
 
-To build `Locomote`, simply run `npm install` in the root directory.
+To build `Locomote`, simply run `npm install` followed by `gulp` in the root directory.
 This will download [Adobe Flex SDK](http://www.adobe.com/devnet/flex/flex-sdk-download.html),
 and other required modules and build the `SWF` file and the `JavaScript` library to `dist/`.
-
-After `npm` has been installed, `gulp` can also be used to build `Locomote`.
 
 ### Building with Flash Builder
 
