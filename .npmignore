@@ -1,0 +1,25 @@
+target
+.swp
+.swo
+tags
+
+# Build and Release Folders
+bin/
+bin-debug/
+bin-release/
+
+# Other files and folders
+.settings/
+html-assets/
+html-template/
+libs/
+.actionScriptProperties
+.flexProperties
+.project
+.DS_Store
+
+locomote.sublime-workspace
+locomote.sublime-project
+.atom-build.json
+node_modules
+nbproject
