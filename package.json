@@ -3,14 +3,15 @@
   "version": "1.1.2",
   "description": "Media player for Adobe Flash with support for RTSP, RTMP and HTTP.",
   "scripts": {
-    "test": "./node_modules/.bin/gulp test"
+    "test": "./node_modules/.bin/gulp test",
+    "postinstall": "./node_modules/.bin/gulp --color"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/AxisCommunications/locomote-video-player.git"
   },
   "main": "dist/locomote.min.js",
-  "devDependencies": {
+  "dependencies": {
     "jscs": "^1.8.0",
     "jshint": "^2.5.10",
     "flex-sdk": "^4.6.0-0",
