@@ -10,7 +10,8 @@
     "type": "git",
     "url": "https://github.com/AxisCommunications/locomote-video-player.git"
   },
-  "dependencies": {
+  "main": "dist/locomote.min.js",
+  "devDependencies": {
     "jscs": "^1.8.0",
     "jshint": "^2.5.10",
     "flex-sdk": "^4.6.0-0",
