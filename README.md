@@ -389,3 +389,8 @@ The Flash Builder project files and build folders will be ignored by git automat
 [ErrorManager]: https://github.com/AxisCommunications/locomote-video-player/blob/master/src/com/axis/ErrorManager.as
 [NetStream:seek]: http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/NetStream.html#seek()
 [MJPEG/HTTP]: http://en.wikipedia.org/wiki/Motion_JPEG#M-JPEG_over_HTTP
+
+## License
+
+This project is licensed under the [BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause).
+See [LICENSE](https://github.com/AxisCommunications/locomote-video-player/blob/master/LICENSE) file.
