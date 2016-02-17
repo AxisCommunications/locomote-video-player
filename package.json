@@ -30,5 +30,5 @@
     "node": "0.10.x"
   },
   "author": "Alexander Olsson <alexander.olsson@axis.com>",
-  "license": "BSD 3-Clause"
+  "license": "BSD-3-Clause"
 }
