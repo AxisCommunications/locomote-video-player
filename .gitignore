@@ -7,7 +7,6 @@ tags
 bin/
 bin-debug/
 bin-release/
-dist/
 
 # Other files and folders
 .settings/
