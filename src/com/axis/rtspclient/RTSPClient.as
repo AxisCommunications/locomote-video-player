@@ -93,7 +93,6 @@ package com.axis.rtspclient {
       this.bcTimer.stop(); // Don't start timeout immediately
       this.bcTimer.reset();
       this.bcTimer.addEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
-
       this.setKeepAlive(Player.config.keepAlive);
 
       this.startOptions = options;
@@ -144,7 +143,9 @@ package com.axis.rtspclient {
 
       /* Stop timer, don't close the connection when paused. */
       bcTimer.stop();
-      kaTimer.stop();
+      if (Player.config.keepAlive) {
+        kaTimer.stop();
+      }
 
       this.ns.pause();
 
@@ -507,9 +508,12 @@ package com.axis.rtspclient {
         }
 
         /* Start Keep-alive routine */
-        kaTimer.reset();
-        kaTimer.addEventListener(TimerEvent.TIMER, keepAlive);
-        kaTimer.start();
+        if (Player.config.keepAlive) {
+          kaTimer.reset();
+          kaTimer.addEventListener(TimerEvent.TIMER, keepAlive);
+          kaTimer.start();
+        }
+
         break;
 
       case STATE_PLAYING:
