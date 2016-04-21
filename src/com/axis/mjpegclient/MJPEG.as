@@ -104,7 +104,7 @@ package com.axis.mjpegclient {
       for (var i:uint = idx > 0 ? idx : 1; i < timestamps.length; i++) {
         loadTimesSum += timestamps[i] - timestamps[i - 1];
       }
-      return 1000 * (timestamps.length - 1) / loadTimesSum;
+      return 1000 * FLOATING_AVG_LENGTH / loadTimesSum;
     }
 
     public function getCurrentTime():Number {
