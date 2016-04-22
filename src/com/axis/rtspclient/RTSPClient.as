@@ -474,7 +474,7 @@ package com.axis.rtspclient {
         Logger.log("RTSPClient: STATE_PLAY");
         state = STATE_PLAYING;
         /* Get range from RTSP header or SDP session block */
-        var RTPrange = parsed.headers['range'] || this.sdp.getSessionBlock().range;
+        var RTPrange:String = parsed.headers['range'] || this.sdp.getSessionBlock().range;
         rtpTiming = RTPTiming.parse(parsed.headers['rtp-info'], RTPrange);
 
         if (this.flvmux) {
