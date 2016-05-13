@@ -7,6 +7,7 @@ package com.axis.mjpegclient {
   import flash.display.Bitmap;
   import flash.display.LoaderInfo;
   import flash.display.Sprite;
+  import flash.events.TimerEvent;
   import flash.events.Event;
   import flash.events.IOErrorEvent;
   import flash.utils.*;
@@ -33,6 +34,9 @@ package com.axis.mjpegclient {
     private var timestamps:Vector.<Number> = new Vector.<Number>();
     private var loadTimes:Vector.<Number> = new Vector.<Number>();
     private var imageBuffer:Vector.<Image> = new Vector.<Image>();
+    private var ratePeriodMs:uint = 10;
+    private var rateTimer:Timer = new Timer(ratePeriodMs, 0);
+    private var avgPeriod:uint = 10000;//some "sane" default
 
     public function MJPEG(bufferSize:Number = 1000) {
       this.bufferSize = bufferSize;
@@ -42,6 +46,8 @@ package com.axis.mjpegclient {
       /* needed for double-click (fullscreen) to work */
       this.mouseChildren = false;
       this.doubleClickEnabled = true;
+
+      this.rateTimer.addEventListener(TimerEvent.TIMER, render);
     }
 
     private function createLoaders():void {
@@ -58,19 +64,19 @@ package com.axis.mjpegclient {
     }
 
     private function get firstTimestamp():Number {
-      return this.timestamps.length > 0 ? this.timestamps[0] : 0;
+      return this.timestamps.length > 0 ? this.timestamps[0] : imageBuffer[0].timestamp;
     }
 
     private function get lastTimestamp():Number {
-      return timestamps.length > 0 ? timestamps[timestamps.length - 1] : 0;
+      return timestamps.length > 0 ? timestamps[timestamps.length - 1] : imageBuffer[0].timestamp;
     }
 
     private function get firstLoadTime():Number {
-      return this.loadTimes.length > 0 ? this.loadTimes[0] : -1;
+      return this.loadTimes.length > 0 ? this.loadTimes[0] : getTimer();
     }
 
     private function get lastLoadTime():Number {
-      return loadTimes.length > 0 ? loadTimes[loadTimes.length - 1] : -1;
+      return loadTimes.length > 0 ? loadTimes[loadTimes.length - 1] : getTimer();
     }
 
     private function destroyLoaders():void {
@@ -78,23 +84,18 @@ package com.axis.mjpegclient {
       removeChildren();
     }
 
-    private function timeUntilLoad(image:Image):Number {
-      if (this.timestamps.length === 0 || this.firstLoadTime === -1) {
-        return 0;
-      }
-      var diff:Number = image.timestamp - this.lastTimestamp;
-      var time:Number =  diff - (new Date().getTime() - this.lastLoadTime);
-      return time <= 0 ? 0 : time;
+    private function shouldLoad(image):Boolean {
+      return getTimer() - firstLoadTime >= image.timestamp - firstTimestamp;
     }
 
     public function pause():void {
       this.paused = true;
-      this.loadNext();
+      this.rateTimer.reset();
     }
 
     public function resume():void {
-      this.paused = false;
-      this.loadNext();
+      this.paused = true;
+      this.rateTimer.start();
     }
 
     public function getFps():Number {
@@ -124,7 +125,7 @@ package com.axis.mjpegclient {
       if (this.imageBuffer.length === 0) {
         return 0;
       }
-      return this.imageBuffer[this.imageBuffer.length - 1].timestamp - this.imageBuffer[0].timestamp + this.timeUntilLoad(this.imageBuffer[0]);
+      return this.imageBuffer[this.imageBuffer.length - 1].timestamp - this.imageBuffer[0].timestamp;
     }
 
     public function addImage(image:Image = null):void {
@@ -137,28 +138,32 @@ package com.axis.mjpegclient {
         this.buffering = false;
       }
 
-      if (!this.buffering) {
-        this.loadNext();
+      if (!this.buffering && !this.paused) {
+        this.rateTimer.start();
       }
     }
 
     private function loadNext():void {
-      if (busy || this.imageBuffer.length === 0 || this.paused) {
+      if (busy || imageBuffer.length === 0) {
         /* Already in the process of decoding an image, ignore this new image data */
         return;
       }
-      busy = true;
 
-      var image:Image = this.imageBuffer.shift()
-
-
-      var timeout:Number = this.timeUntilLoad(image);
-
-      this.loadTimes.push(new Date().getTime() + timeout);
-      this.loadTimer = setTimeout(this.doLoad, timeout, image);
+      /* Find last image that should have been displayed, and discard any previous ones */
+      var image:Image;
+      for (var i:uint = 0; i < imageBuffer.length && shouldLoad(imageBuffer[i]); i++) {
+        image = imageBuffer[i];
+      }
+      
+      if (image) {
+        imageBuffer.splice(0, i);//i is already incremented on last loop iteration
+        loadTimes.push(getTimer());
+        doLoad(image);
+      }
     }
 
     private function doLoad(image:Image):void {
+      busy = true;
       this.timestamps.push(image.timestamp);
       addLoaderEventListeners(backbuffer);
       backbuffer.loadBytes(image.data)
@@ -175,15 +180,17 @@ package com.axis.mjpegclient {
       this.swapChildren(frontBuffer, backbuffer);
 
       busy = false;
-
       if (this.imageBuffer.length === 0) {
         this.buffering = true;
+        this.rateTimer.reset();
         dispatchEvent(new Event(MJPEG.BUFFER_EMPTY));
-      } else {
-        this.loadNext();
       }
 
       dispatchEvent(new FrameEvent(bitmap));
+    }
+
+    private function render(e:TimerEvent):void {
+      this.loadNext();
     }
 
     private function onImageError(event:IOErrorEvent):void {
@@ -205,7 +212,6 @@ package com.axis.mjpegclient {
     }
 
     public function clear():void {
-      clearTimeout(this.loadTimer);
       // Remove graphics components, abort play
       destroyLoaders();
       busy = false;
