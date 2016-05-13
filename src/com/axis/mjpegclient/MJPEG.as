@@ -23,7 +23,7 @@ package com.axis.mjpegclient {
     public static const BUFFER_FULL:String = "bufferFull";
     public static const IMAGE_ERROR:String = "imageError";
 
-    private const FLOATING_AVG_LENGTH:Number = 10;
+    private const ALPHA:Number = 0.2;
 
     private var bufferSize:Number;
     private var paused:Boolean = false;
@@ -99,13 +99,7 @@ package com.axis.mjpegclient {
     }
 
     public function getFps():Number {
-      if (timestamps.length < 2) { return 0; }
-      var loadTimesSum:Number = 0;
-      var idx:int = timestamps.length - FLOATING_AVG_LENGTH;
-      for (var i:uint = idx > 0 ? idx : 1; i < timestamps.length; i++) {
-        loadTimesSum += timestamps[i] - timestamps[i - 1];
-      }
-      return 1000 * FLOATING_AVG_LENGTH / loadTimesSum;
+      return 1000 / avgPeriod;
     }
 
     public function getCurrentTime():Number {
@@ -164,6 +158,7 @@ package com.axis.mjpegclient {
 
     private function doLoad(image:Image):void {
       busy = true;
+      avgPeriod = (1 - ALPHA) * avgPeriod + ALPHA * (image.timestamp - lastTimestamp);
       this.timestamps.push(image.timestamp);
       addLoaderEventListeners(backbuffer);
       backbuffer.loadBytes(image.data)
