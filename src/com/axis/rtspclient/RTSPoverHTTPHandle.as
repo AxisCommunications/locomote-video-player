@@ -23,6 +23,7 @@ package com.axis.rtspclient {
   public class RTSPoverHTTPHandle extends EventDispatcher implements IRTSPHandle {
     private var getChannel:Socket = null;
     private var urlParsed:Object = {};
+    private var socket:Socket = null;
     private var sessioncookie:String = "";
 
     private var base64encoder:Base64Encoder;
@@ -54,6 +55,10 @@ package com.axis.rtspclient {
       getChannel.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
       getChannelData = new ByteArray();
+      socket = this.secure ? new SecureSocket() : new Socket();
+      socket.timeout = 5000;
+      socket.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
+      socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
     }
 
     private function base64encode(str:String):String {
@@ -65,30 +70,22 @@ package com.axis.rtspclient {
 
     public function writeUTFBytes(value:String):void {
       var data:String = base64encode(value);
-      var authHeader:String = auth.authorizationHeader("POST", authState, authOpts, urlParsed, digestNC++);
-      var socket:Socket = this.secure ? new SecureSocket() : new Socket();
-      socket.timeout = 5000;
-      socket.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
-      socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 
-      socket.addEventListener(Event.CONNECT, function ():void {
+      if (!socket.connected) {
+        var authHeader:String = auth.authorizationHeader("POST", authState, authOpts, urlParsed, digestNC++);
+
+        socket.connect(this.urlParsed.host, this.urlParsed.port);
+
         socket.writeUTFBytes("POST " + urlParsed.urlpath + " HTTP/1.0\r\n");
         socket.writeUTFBytes("x-sessioncookie: " + sessioncookie + "\r\n");
-        socket.writeUTFBytes("Content-Length: " + data.length + "\r\n");
+        socket.writeUTFBytes("Content-Length: 32767\r\n");
         socket.writeUTFBytes("Content-Type: application/x-rtsp-tunnelled" + "\r\n");
         socket.writeUTFBytes(authHeader);
         socket.writeUTFBytes("\r\n");
+      }
 
-        socket.writeUTFBytes(data);
-        socket.flush();
-
-        // Timeout required before close to let the data actually be written to
-        // the socket. Flush appears to be asynchronous...
-        setTimeout(socket.close, 5000);
-      });
-
-
-      socket.connect(this.urlParsed.host, this.urlParsed.port);
+      socket.writeUTFBytes(data);
+      socket.flush();
     }
 
     public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void {
@@ -111,7 +108,7 @@ package com.axis.rtspclient {
 
     public function connect():void {
       setupSockets();
-      Logger.log('RTSP+HTTP' + (this.secure ? 'S' : '') + 'connecting to', this.urlParsed.host + ':' + this.urlParsed.port);
+      Logger.log('RTSP+HTTP ' + (this.secure ? 'S' : '') + 'connecting to', this.urlParsed.host + ':' + this.urlParsed.port);
       getChannel.connect(this.urlParsed.host, this.urlParsed.port);
     }
 
