@@ -84,7 +84,7 @@ package com.axis.mjpegclient {
       removeChildren();
     }
 
-    private function shouldLoad(image):Boolean {
+    private function shouldLoad(image:Image):Boolean {
       return getTimer() - firstLoadTime >= image.timestamp - firstTimestamp;
     }
 
