@@ -295,8 +295,9 @@ package com.axis.rtspclient {
       }
     }
 
-    private function getAudioParameters(name:String):Object {
+    private function getAudioParameters():Object {
       var sdpMedia:Object = this.sdp.getMediaBlock('audio');
+      var name:String = sdpMedia.rtpmap[sdpMedia.fmt[0]].name;
       switch (name.toLowerCase()) {
       case 'mpeg4-generic':
         return {
@@ -315,6 +316,9 @@ package com.axis.rtspclient {
           duration: 0 /* not implemented */
         };
       default:
+        /* No audio params for this name. */
+        ErrorManager.dispatchError(831, [ name  ], true);
+        
         return false;
       }
     }
@@ -330,15 +334,7 @@ package com.axis.rtspclient {
       container.writeByte(0x00); // StreamID - always 0
       container.writeByte(0x00); // StreamID - always 0
 
-      var audioParams:Object;
-      for (var pt:Object in config.rtpmap) {
-        audioParams = getAudioParameters(config.rtpmap[pt].name);
-        if (false !== audioParams) {
-          break;
-        }
-        /* Didn't get any params on first type, and multiple types are not supported. */
-        ErrorManager.dispatchError(831, [ config.rtpmap[pt].name ], true);
-      }
+      var audioParams:Object = getAudioParameters();
 
       /* Audio Tag Header */
       container.writeByte(audioParams.format << 4 | audioParams.sampling << 2 | audioParams.depth << 1 | audioParams.type << 0);
@@ -402,7 +398,7 @@ package com.axis.rtspclient {
       createFLVTag(nalu.timestamp, 0, false);
     }
 
-    public function createAudioTag(name:String, frame:*):void {
+    public function createAudioTag(frame:*):void {
       var start:uint = container.position;
       var ts:uint = frame.timestamp;
        // Video and audio packets may arrive out of order. In that case set new
@@ -420,11 +416,8 @@ package com.axis.rtspclient {
       container.writeByte(0x00); // StreamID - always 0
       container.writeByte(0x00); // StreamID - always 0
 
-      var audioParams:Object = getAudioParameters(name);
-      if (false === audioParams) {
-        /* No audio params for this name. */
-        ErrorManager.dispatchError(831, [ name ], true);
-      }
+      
+      var audioParams:Object = getAudioParameters();
 
       /* Audio Tag Header */
       container.writeByte(audioParams.format << 4 | audioParams.sampling << 2 | audioParams.depth << 1 | audioParams.type << 0);
@@ -485,12 +478,8 @@ package com.axis.rtspclient {
       }
     }
 
-    public function onAACFrame(aacframe:AACFrame):void {
-      createAudioTag('mpeg4-generic', aacframe);
-    }
-
-    public function onPCMAFrame(pcmaframe:PCMAFrame):void {
-      createAudioTag('pcma', pcmaframe);
+    public function onAudio(frame:*):void {
+      createAudioTag(frame);
     }
 
     private function createFLVTag(timestamp:uint, duration:uint, audio:Boolean):void {
