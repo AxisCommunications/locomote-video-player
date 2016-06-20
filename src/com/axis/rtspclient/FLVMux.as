@@ -484,8 +484,7 @@ package com.axis.rtspclient {
 
     private function createFLVTag(timestamp:uint, duration:uint, audio:Boolean):void {
       dispatchEvent(new FLVTag(container, timestamp, duration, audio));
-      container.position = 0;
-      container.length = 0;
+      container.clear()
     }
   }
 }
