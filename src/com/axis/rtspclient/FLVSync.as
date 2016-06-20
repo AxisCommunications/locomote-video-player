@@ -3,7 +3,7 @@ package com.axis.rtspclient {
   import com.axis.Logger;
 
   public class FLVSync extends EventDispatcher {
-    private var videoTags:Array = [];
+    private var videoTags:Vector.<FLVTag> = new Vector.<FLVTag>;
     private var lastAudioTimestamp:uint = 0;
     /**
      * Let audio tags dictate the sync.
