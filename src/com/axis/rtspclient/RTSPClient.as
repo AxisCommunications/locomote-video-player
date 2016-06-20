@@ -494,6 +494,7 @@ package com.axis.rtspclient {
         this.addEventListener("VIDEO_H264_PACKET", analu.onRTPPacket);
         this.addEventListener("AUDIO_MPEG4-GENERIC_PACKET", aaac.onRTPPacket);
         this.addEventListener("AUDIO_PCMA_PACKET", apcma.onRTPPacket);
+        this.addEventListener("AUDIO_PCMU_PACKET", apcma.onRTPPacket);
         analu.addEventListener(NALU.NEW_NALU, flvmux.onNALU);
         aaac.addEventListener(AACFrame.NEW_FRAME, flvmux.onAudio);
         apcma.addEventListener(PCMAFrame.NEW_FRAME, flvmux.onAudio);

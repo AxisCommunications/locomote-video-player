@@ -315,6 +315,14 @@ package com.axis.rtspclient {
           type: 0x0, /* Mono */
           duration: 0 /* not implemented */
         };
+      case 'pcmu':
+        return {
+          format: 0x8, /* Logarithmic G.711 mu-law  */
+          sampling: 0x0, /* Doesn't matter. Rate is fixed at 8 kHz when format = 0x8 */
+          depth: 0x1, /* 16 bits per sample */
+          type: 0x0, /* Mono */
+          duration: 0 /* not implemented */
+        }; 
       default:
         /* No audio params for this name. */
         ErrorManager.dispatchError(831, [ name  ], true);
