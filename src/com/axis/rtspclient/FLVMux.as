@@ -430,9 +430,18 @@ package com.axis.rtspclient {
       /* Audio Tag Header */
       container.writeByte(audioParams.format << 4 | audioParams.sampling << 2 | audioParams.depth << 1 | audioParams.type << 0);
 
-      if (0xA === audioParams.format) {
-        /* A little more setup required if this is AAC */
-        container.writeByte(0x1); // AAC Raw
+      var duration:Number = audioParams.duration;
+      switch (audioParams.format) {
+        case 0xA:
+          /* A little more setup required if this is AAC */
+          container.writeByte(0x1); // AAC Raw
+          break;
+        case 0x7:
+        case 0x8:
+          duration = frame.getPayload().bytesAvailable / 8;
+          break;
+        default:
+          break;
       }
 
       /* Audio Data */
@@ -450,8 +459,8 @@ package com.axis.rtspclient {
       /* End of tag */
       container.writeUnsignedInt(size);
       this.lastTimestamp = ts;
-
-      createFLVTag(frame.timestamp, audioParams.duration, true);
+    
+      createFLVTag(frame.timestamp, duration, true);
     }
 
     public function getLastTimestamp():Number {
