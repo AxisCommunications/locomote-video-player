@@ -404,7 +404,7 @@ package com.axis.rtspclient {
       writeSize(sizePosition, dataSize);
 
       /* Previous Tag Size */
-      container.writeUnsignedInt(size + 11);
+      container.writeUnsignedInt(size);
       this.lastTimestamp = ts;
 
       createFLVTag(nalu.timestamp, 0, false);
