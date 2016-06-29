@@ -128,6 +128,11 @@ package com.axis.rtspclient {
       container.writeByte(0x00); // StreamID - always 0
       return 3;
     }
+    private function writeSize(sizePos:uint, dataSize:uint):void {
+      container[sizePos + 0] = (dataSize >> 16 & 0xFF);
+      container[sizePos + 1] = (dataSize >> 8  & 0xFF);
+      container[sizePos + 2] = (dataSize >> 0  & 0xFF);
+    }
     private function parseSPS(sps:BitArray):Object {
       var nalhdr:uint      = sps.readBits(8);
 
@@ -235,10 +240,8 @@ package com.axis.rtspclient {
 
       /* Rewind and set the data size in tag header to actual size */
       var dataSize:uint = size - 11;
-      container[sizePosition + 0] = dataSize & 0x00FF0000;
-      container[sizePosition + 1] = dataSize & 0x0000FF00;
-      container[sizePosition + 2] = dataSize & 0x000000FF;
 
+      writeSize(sizePosition, dataSize);
     }
 
     public function createDecoderConfigRecordTag(sps:ByteArray, pps:ByteArray, params:Object):void {
@@ -264,10 +267,8 @@ package com.axis.rtspclient {
 
       /* Rewind and set the data size in tag header to actual size */
       var dataSize:uint = size - 11;
-      container[sizePosition + 0] = (dataSize >> 16 & 0xFF);
-      container[sizePosition + 1] = (dataSize >> 8  & 0xFF);
-      container[sizePosition + 2] = (dataSize >> 0  & 0xFF);
 
+      writeSize(sizePosition, dataSize);
       /* End of tag */
       container.writeUnsignedInt(size);
     }
@@ -361,9 +362,8 @@ package com.axis.rtspclient {
 
       /* Rewind and set the data size in tag header to actual size */
       var dataSize:uint = size - 11;
-      container[sizePosition + 0] = (dataSize >> 16 & 0xFF);
-      container[sizePosition + 1] = (dataSize >> 8  & 0xFF);
-      container[sizePosition + 2] = (dataSize >> 0  & 0xFF);
+
+      writeSize(sizePosition, dataSize);      
 
       /* End of tag */
       container.writeUnsignedInt(size);
@@ -397,9 +397,7 @@ package com.axis.rtspclient {
       /* Rewind and set the data size in tag header to actual size */
       var dataSize:uint = size - 11;
 
-      container[sizePosition + 0] = (dataSize >> 16 & 0xFF);
-      container[sizePosition + 1] = (dataSize >> 8  & 0xFF);
-      container[sizePosition + 2] = (dataSize >> 0  & 0xFF);
+      writeSize(sizePosition, dataSize);
 
       /* Previous Tag Size */
       container.writeUnsignedInt(size + 11);
@@ -452,9 +450,7 @@ package com.axis.rtspclient {
       /* Rewind and set the data size in tag header to actual size */
       var dataSize:uint = size - 11;
 
-      container[sizePosition + 0] = (dataSize >> 16 & 0xFF);
-      container[sizePosition + 1] = (dataSize >> 8  & 0xFF);
-      container[sizePosition + 2] = (dataSize >> 0  & 0xFF);
+      writeSize(sizePosition, dataSize);      
 
       /* End of tag */
       container.writeUnsignedInt(size);
