@@ -118,6 +118,16 @@ package com.axis.rtspclient {
       return 1 + 2 + contents.length;
     }
 
+    private function writeTimestamp(ts:Number):uint {
+      container.writeUnsignedInt(((ts >>> 24) & 0xFF) | ((ts << 8) & 0xFFFFFF00));
+      return 4;
+    }
+    private function writeStreamId():uint {
+      container.writeByte(0x00); // StreamID - always 0
+      container.writeByte(0x00); // StreamID - always 0
+      container.writeByte(0x00); // StreamID - always 0
+      return 3;
+    }
     private function parseSPS(sps:BitArray):Object {
       var nalhdr:uint      = sps.readBits(8);
 
@@ -203,11 +213,9 @@ package com.axis.rtspclient {
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
       container.writeUnsignedInt(0x00000012 << 24 | (size & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
-      container.writeUnsignedInt(0x00000000); // Timestamp & TimestampExtended
-      container.writeByte(0x00); // StreamID - always 0
-      container.writeByte(0x00); // StreamID - always 0
-      container.writeByte(0x00); // StreamID - always 0
-      size += 4 + 4 + 3;
+      size += 4;
+      size += writeTimestamp(0);
+      size += writeStreamId();
 
       /* Method call */
       size += writeString("onMetaData");
@@ -239,10 +247,8 @@ package com.axis.rtspclient {
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
       container.writeUnsignedInt(0x00000009 << 24 | (0x000000 & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
-      container.writeUnsignedInt(0x00000000); // Timestamp & TimestampExtended
-      container.writeByte(0x00); // StreamID - always 0
-      container.writeByte(0x00); // StreamID - always 0
-      container.writeByte(0x00); // StreamID - always 0
+      writeTimestamp(0);
+      writeStreamId();
 
       /* Video Tag Header */
       container.writeByte(0x01 << 4 | 0x07); // Keyframe << 4 | CodecID
@@ -337,10 +343,8 @@ package com.axis.rtspclient {
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
       container.writeUnsignedInt(0x00000008 << 24 | (0x000000 & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
-      container.writeUnsignedInt(0x00000000); // Timestamp & TimestampExtended
-      container.writeByte(0x00); // StreamID - always 0
-      container.writeByte(0x00); // StreamID - always 0
-      container.writeByte(0x00); // StreamID - always 0
+      writeTimestamp(0);
+      writeStreamId();
 
       var audioParams:Object = getAudioParameters();
 
@@ -378,10 +382,8 @@ package com.axis.rtspclient {
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
       container.writeUnsignedInt(0x09 << 24 | (size & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
-      container.writeUnsignedInt(((ts >>> 24) & 0xFF) | ((ts << 8) & 0xFFFFFF00));
-      container.writeByte(0x00);
-      container.writeByte(0x00);
-      container.writeByte(0x00);
+      writeTimestamp(ts);
+      writeStreamId();      
 
       /* Video Tag Header */
       container.writeByte((nalu.isIDR() ? 1 : 2) << 4 | 0x07); // Keyframe << 4 | CodecID
@@ -419,11 +421,9 @@ package com.axis.rtspclient {
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
       container.writeUnsignedInt(0x00000008 << 24 | (0x000000 & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
-      container.writeUnsignedInt(((ts >>> 24) & 0xFF) | ((ts << 8) & 0xFFFFFF00));
-      container.writeByte(0x00); // StreamID - always 0
-      container.writeByte(0x00); // StreamID - always 0
-      container.writeByte(0x00); // StreamID - always 0
 
+      writeTimestamp(ts);
+      writeStreamId();
       
       var audioParams:Object = getAudioParameters();
 
