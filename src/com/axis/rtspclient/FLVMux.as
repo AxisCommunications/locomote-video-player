@@ -217,7 +217,7 @@ package com.axis.rtspclient {
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
-      container.writeByte(0x8); // Tag type
+      container.writeByte(0x12); // Tag type
       container.position += 3; // Leave 3bytes for UI24 dataSize
       size += 4;
       size += writeTimestamp(0);
@@ -250,7 +250,7 @@ package com.axis.rtspclient {
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
-      container.writeByte(0x8); // Tag type
+      container.writeByte(0x9); // Tag type
       container.position += 3; // Leave 3bytes for UI24 dataSize
       writeTimestamp(0);
       writeStreamId();
@@ -384,7 +384,7 @@ package com.axis.rtspclient {
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
-      container.writeByte(0x8); // Tag type
+      container.writeByte(0x9); // Tag type
       container.position += 3; // Leave 3bytes for UI24 dataSize
       writeTimestamp(ts);
       writeStreamId();      
