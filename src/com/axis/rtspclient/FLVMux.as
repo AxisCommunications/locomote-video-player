@@ -217,7 +217,8 @@ package com.axis.rtspclient {
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
-      container.writeUnsignedInt(0x00000012 << 24 | (size & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
+      container.writeByte(0x8); // Tag type
+      container.position += 3; // Leave 3bytes for UI24 dataSize
       size += 4;
       size += writeTimestamp(0);
       size += writeStreamId();
@@ -249,7 +250,8 @@ package com.axis.rtspclient {
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
-      container.writeUnsignedInt(0x00000009 << 24 | (0x000000 & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
+      container.writeByte(0x8); // Tag type
+      container.position += 3; // Leave 3bytes for UI24 dataSize
       writeTimestamp(0);
       writeStreamId();
 
@@ -343,7 +345,8 @@ package com.axis.rtspclient {
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
-      container.writeUnsignedInt(0x00000008 << 24 | (0x000000 & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
+      container.writeByte(0x8); // Tag type
+      container.position += 3; // Leave 3bytes for UI24 dataSize
       writeTimestamp(0);
       writeStreamId();
 
@@ -381,7 +384,8 @@ package com.axis.rtspclient {
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
-      container.writeUnsignedInt(0x09 << 24 | (size & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
+      container.writeByte(0x8); // Tag type
+      container.position += 3; // Leave 3bytes for UI24 dataSize
       writeTimestamp(ts);
       writeStreamId();      
 
@@ -418,8 +422,8 @@ package com.axis.rtspclient {
 
       /* FLV Tag */
       var sizePosition:uint = container.position + 1; // 'Size' is the 24 last byte of the next uint
-      container.writeUnsignedInt(0x00000008 << 24 | (0x000000 & 0x00FFFFFF)); // Type << 24 | size & 0x00FFFFFF
-
+      container.writeByte(0x8); // Tag type
+      container.position += 3; // Leave 3bytes for UI24 dataSize
       writeTimestamp(ts);
       writeStreamId();
       
