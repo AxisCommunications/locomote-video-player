@@ -262,8 +262,8 @@ package com.axis.rtspclient {
       var profilelevelid:uint = parseInt(params.profile, 16);
       writeDecoderConfigurationRecord(profilelevelid);
       writeParameterSets(sps, pps);
-      this.sps = EMPTY_BUF;
-      this.pps = EMPTY_BUF;
+      this.sps.clear();
+      this.pps.clear();
 
       var size:uint = container.position - start;
 
