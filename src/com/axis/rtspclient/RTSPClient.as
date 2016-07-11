@@ -435,6 +435,11 @@ package com.axis.rtspclient {
 
         if (parsed.headers['session']) {
           session = parsed.headers['session'].match(/^[^;]+/)[0];
+          if (!Player.config.keepAlive && /timeout/.test(parsed.headers['session'])) {
+            var timeout:uint = parseInt(parsed.headers['session'].match(/timeout=(\d+)/)[1]);
+            Logger.log('RTSP server timeout:', timeout);
+            setKeepAlive(Math.round(timeout * 0.8));
+          }
         }
 
         if (state === STATE_SETUP) {
@@ -509,7 +514,7 @@ package com.axis.rtspclient {
         }
 
         /* Start Keep-alive routine */
-        if (Player.config.keepAlive) {
+        if (kaTimer.delay > 0) {
           kaTimer.reset();
           kaTimer.addEventListener(TimerEvent.TIMER, keepAlive);
           kaTimer.start();
