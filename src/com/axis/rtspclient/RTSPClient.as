@@ -362,7 +362,7 @@ package com.axis.rtspclient {
         authState = newAuthState;
         state = STATE_INITIAL;
         data = new ByteArray();
-        handle.reconnect();
+        sendDescribeReq();
         return false;
       }
 
