@@ -136,6 +136,7 @@ locomote.destroy();
 > - `rtsph` - [RTSP over HTTP][RTSP/HTTP]
 > - `rtsphs` - [RTSP over HTTPS][RTSP/HTTP]
 > - `rtsphap` - RTSP over HTTPS via Axis Proxy
+> - `rtsphnap` - RTSP over non-secure HTTP via Axis Proxy
 > - `rtmp` - [RTMP][RTMP]
 > - `rtmpt` - RTMP over HTTP
 > - `rtmps` - RTMP over SSL
