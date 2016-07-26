@@ -14,6 +14,7 @@ package com.axis.rtspclient {
   import flash.net.URLStream;
   import flash.net.URLLoader;
   import flash.net.URLRequest;
+  import flash.net.URLRequestMethod;
   import flash.utils.ByteArray;
   import flash.utils.*;
 
@@ -32,7 +33,8 @@ package com.axis.rtspclient {
     public function RTSPoverHTTPAPHandle(urlParsed:Object, secure:Boolean) {
       this.sessioncookie = GUID.create();
       this.urlParsed = urlParsed;
-      this.url = 'https://' + this.urlParsed.host + this.urlParsed.urlpath + "?sessioncookie=" + this.sessioncookie;
+      this.url = (secure ? 'https://' : 'http://') + this.urlParsed.host + ':' + this.urlParsed.port
+                 + this.urlParsed.urlpath + (/\?/.test(this.urlParsed.urlpath) ? '&' : '?') +"sessioncookie=" + this.sessioncookie;
       this.base64encoder = new Base64Encoder();
       this.secure = secure;
       this.getChannel = new URLStream();
@@ -47,7 +49,7 @@ package com.axis.rtspclient {
     public function writeUTFBytes(value:String):void {
       var data:String = base64encode(value);
       var req:URLRequest = new URLRequest(this.url);
-      req.method = 'POST';
+      req.method = URLRequestMethod.POST;
       req.data = data;
       req.contentType = 'application/x-rtsp-tunnelled';
 
@@ -95,8 +97,7 @@ package com.axis.rtspclient {
     }
 
     private function onOpen(event:Event):void {
-      Logger.log('RTSP+HTTP+AxisProxy connected to', 'http://' + this.urlParsed.host +
-          this.urlParsed.urlpath + "?sessioncookie=" + sessioncookie);
+      Logger.log('RTSP+HTTP+AxisProxy connected to', this.url);
       dispatchEvent(new Event('connected'));
     }
 

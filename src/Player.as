@@ -267,6 +267,11 @@ package {
         client = new RTSPClient(urlParsed, new RTSPoverHTTPHandle(this.startOptions && this.startOptions.httpUrl ? url.parse(this.startOptions.httpUrl) : urlParsed, true));
         break;
 
+      case 'rtsphnap':
+        /* RTSP over HTTP via non-secure Axis Proxy */
+        client = new RTSPClient(urlParsed, new RTSPoverHTTPAPHandle(urlParsed, false));
+        break;
+
       case 'rtsphap':
         /* RTSP over HTTP via Axis Proxy */
         client = new RTSPClient(urlParsed, new RTSPoverHTTPAPHandle(urlParsed, true));
