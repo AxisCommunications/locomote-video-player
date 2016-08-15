@@ -187,6 +187,7 @@ package com.axis.rtspclient {
     public function stop():Boolean {
       dispatchEvent(new ClientEvent(ClientEvent.STOPPED));
       this.ns.dispose();
+      kaTimer.stop();
       bcTimer.stop();
 
       try {
