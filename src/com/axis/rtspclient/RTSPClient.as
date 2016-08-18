@@ -143,9 +143,7 @@ package com.axis.rtspclient {
 
       /* Stop timer, don't close the connection when paused. */
       bcTimer.stop();
-      if (Player.config.keepAlive) {
-        kaTimer.stop();
-      }
+      kaTimer.stop();
 
       this.ns.pause();
 
@@ -269,6 +267,7 @@ package com.axis.rtspclient {
     public function setKeepAlive(seconds:Number):Boolean {
       if (seconds !== 0) {
         this.kaTimer = new Timer(seconds * 1000);
+        kaTimer.addEventListener(TimerEvent.TIMER, keepAlive);
       } else if (this.kaTimer) {
         this.kaTimer.stop();
       }
@@ -281,7 +280,9 @@ package com.axis.rtspclient {
       this.connectionBroken = true;
 
       bcTimer.stop();
+      kaTimer.stop();
       this.bcTimer.removeEventListener(TimerEvent.TIMER_COMPLETE, bcTimerHandler);
+      kaTimer.removeEventListener(TimerEvent.TIMER, keepAlive);
 
       if (state !== STATE_TEARDOWN) {
         if (this.streamBuffer.length > 0 && this.streamBuffer[this.streamBuffer.length - 1].timestamp - this.ns.time * 1000 < this.ns.bufferTime * 1000) {
@@ -517,7 +518,6 @@ package com.axis.rtspclient {
         /* Start Keep-alive routine */
         if (kaTimer.delay > 0) {
           kaTimer.reset();
-          kaTimer.addEventListener(TimerEvent.TIMER, keepAlive);
           kaTimer.start();
         }
 
