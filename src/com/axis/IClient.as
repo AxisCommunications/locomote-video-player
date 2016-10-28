@@ -96,5 +96,10 @@ package com.axis {
      * Returns the current achieved frames per second for the client.
      */
     function currentFPS():Number;
+
+    /**
+     * Returns presence of audio in the stream
+     */
+    function hasAudio():Boolean;
   }
 }

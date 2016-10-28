@@ -39,6 +39,10 @@ package com.axis {
       return (this.ns) ? this.ns.bufferLength * 1000 : -1;
     }
 
+    public function hasAudio():Boolean {
+      return (this.ns) ? this.ns.info.audioBufferByteLength > 0 : false;
+    }
+
     protected function setupNetStream():void {
       this.ns.bufferTime = Player.config.buffer;
       this.ns.client = this;

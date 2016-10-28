@@ -361,6 +361,7 @@ package {
         'fps': (this.client) ? this.client.currentFPS() : null,
         'resolution': (this.client) ? { width: meta.width, height: meta.height } : null,
         'playbackSpeed': (this.client) ? 1.0 : null,
+        'audio': (this.client) ? this.client.hasAudio() : null,
         'protocol': (this.urlParsed) ? this.urlParsed.protocol : null,
         'state': this.currentState,
         'streamURL': (this.urlParsed) ? this.urlParsed.full : null,

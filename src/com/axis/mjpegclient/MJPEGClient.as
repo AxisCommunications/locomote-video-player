@@ -49,6 +49,10 @@ package com.axis.mjpegclient {
       return this.mjpeg.bufferedTime();
     }
 
+    public function hasAudio():Boolean {
+      return false;
+    }
+
     public function start(options:Object):Boolean {
       this.handle.connect();
       state = "connecting";
