@@ -40,7 +40,7 @@ package com.axis {
     }
 
     public function hasAudio():Boolean {
-      return (this.ns) ? this.ns.info.audioBufferByteLength > 0 : false;
+      return (this.ns) ? this.ns.info.audioBufferLength > 0 : false;
     }
 
     protected function setupNetStream():void {
