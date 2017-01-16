@@ -382,7 +382,9 @@ package com.axis.rtspclient {
         data.readBytes(oBody, 0, parsed.headers['content-length']);
         Logger.log('RTSP IN:', oBody.toString());
       } else {
-        Logger.log('RTSP IN:', data.toString());
+        var dataStr:String = data.toString();
+        
+        Logger.log('RTSP IN:', dataStr.slice(0, dataStr.indexOf("\r\n\r\n")));
       }
 
       requestReset();
