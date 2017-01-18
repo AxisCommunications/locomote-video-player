@@ -9,5 +9,6 @@ package com.axis.rtspclient {
     function connect():void;
     function reconnect():void;
     function disconnect():void;
+    function cmdReceived():void;
   }
 }

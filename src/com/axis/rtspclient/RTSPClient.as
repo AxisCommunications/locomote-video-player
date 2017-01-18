@@ -388,6 +388,7 @@ package com.axis.rtspclient {
     }
 
     private function onRTSPCommand():void {
+      handle.cmdReceived();
       var parsed:*, body:ByteArray = new ByteArray();
       if (false === (parsed = readRequest(body))) {
         return;
