@@ -21,6 +21,7 @@ package com.axis.rtspclient {
 
   public class RTSPoverHTTPAPHandle extends EventDispatcher implements IRTSPHandle {
     private var getChannel:URLStream = null;
+    private var poster:URLLoader = null;
     private var urlParsed:Object;
     private var sessioncookie:String;
     private var url:String;
@@ -51,11 +52,16 @@ package com.axis.rtspclient {
       req.data = data;
       req.contentType = 'application/x-rtsp-tunnelled';
 
-      var poster:URLLoader = new URLLoader();
-      poster.addEventListener(IOErrorEvent.IO_ERROR, function ():void {});
-      poster.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function ():void {});
-      poster.load(req);
-      setTimeout(poster.close, 2000);
+      if (this.poster) {
+        // Close the previous POST request
+        this.poster.close();
+        this.poster.removeEventListener(IOErrorEvent.IO_ERROR, function ():void {});
+        this.poster.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, function ():void {});
+      }
+      this.poster = new URLLoader();
+      this.poster.addEventListener(IOErrorEvent.IO_ERROR, function ():void {});
+      this.poster.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function ():void {});
+      this.poster.load(req);
     }
 
     public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void {
