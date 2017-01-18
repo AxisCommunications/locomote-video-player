@@ -56,6 +56,8 @@ package com.axis.rtspclient {
       dispatchEvent(new Event("closed"));
     }
 
+    public function cmdReceived():void {}
+
     private function onConnect(event:Event):void {
       dispatchEvent(new Event("connected"));
     }

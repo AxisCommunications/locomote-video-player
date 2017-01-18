@@ -52,12 +52,6 @@ package com.axis.rtspclient {
       req.data = data;
       req.contentType = 'application/x-rtsp-tunnelled';
 
-      if (this.poster) {
-        // Close the previous POST request
-        this.poster.close();
-        this.poster.removeEventListener(IOErrorEvent.IO_ERROR, function ():void {});
-        this.poster.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, function ():void {});
-      }
       this.poster = new URLLoader();
       this.poster.addEventListener(IOErrorEvent.IO_ERROR, function ():void {});
       this.poster.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function ():void {});
@@ -94,6 +88,15 @@ package com.axis.rtspclient {
         getChannel.close();
       }
       connect();
+    }
+
+    public function cmdReceived():void {
+      if (this.poster) {
+        // Close the previous POST request
+        this.poster.close();
+        this.poster.removeEventListener(IOErrorEvent.IO_ERROR, function ():void {});
+        this.poster.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, function ():void {});
+      }
     }
 
     private function onComplete(event:Event):void {
