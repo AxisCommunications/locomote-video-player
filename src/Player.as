@@ -433,6 +433,17 @@ package {
         this.stage.displayState = StageDisplayState.NORMAL;
     }
 
+    public static function isUserAgentIE():Boolean {
+      var useragent:String = ''
+      try {
+        useragent = ExternalInterface.call("function(){return navigator.userAgent;}");
+      } catch (e:Error) {
+        Logger.log('Unable to get user Agent');
+      }
+      return ((useragent.indexOf("Trident") != -1 ||
+               useragent.indexOf("Edge") != -1));
+    }
+
     private function onStageAdded(e:Event):void {
       Player.locomoteID = LoaderInfo(this.root.loaderInfo).parameters.locomoteID.toString();
       ExternalInterface.call("LocomoteMap['" + Player.locomoteID + "'].__swfReady");

@@ -10,6 +10,7 @@ package com.axis.rtspclient {
   import flash.events.IOErrorEvent;
   import flash.events.ProgressEvent;
   import flash.events.SecurityErrorEvent;
+  import flash.events.TimerEvent;
 
   import flash.net.URLStream;
   import flash.net.URLLoader;
@@ -25,6 +26,7 @@ package com.axis.rtspclient {
     private var urlParsed:Object;
     private var sessioncookie:String;
     private var url:String;
+    private var connectTimer:Timer;
 
     private var base64encoder:Base64Encoder;
 
@@ -106,6 +108,19 @@ package com.axis.rtspclient {
     private function onOpen(event:Event):void {
       Logger.log('RTSP+HTTP+AxisProxy connected to', 'http://' + this.urlParsed.host +
           this.urlParsed.urlpath + "?sessioncookie=" + sessioncookie);
+      if(Player.isUserAgentIE()) {
+          // IE/Edge workaround. getChannel OPEN event is emitted prematurely.
+          // This causes the following POST request to be sent before the GET channel is established.
+          // Add a delay to give some time for the GET connection to be established.
+          this.connectTimer = new Timer(1000, 1);
+          this.connectTimer.addEventListener(TimerEvent.TIMER, connectedDelay);
+          this.connectTimer.start();
+        } else {
+          dispatchEvent(new Event('connected'));
+        }
+    }
+
+    private function connectedDelay(e:TimerEvent):void {
       dispatchEvent(new Event('connected'));
     }
 
