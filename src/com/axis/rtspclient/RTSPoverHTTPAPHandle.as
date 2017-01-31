@@ -10,6 +10,7 @@ package com.axis.rtspclient {
   import flash.events.IOErrorEvent;
   import flash.events.ProgressEvent;
   import flash.events.SecurityErrorEvent;
+  import flash.events.TimerEvent;
 
   import flash.net.URLStream;
   import flash.net.URLLoader;
@@ -21,9 +22,11 @@ package com.axis.rtspclient {
 
   public class RTSPoverHTTPAPHandle extends EventDispatcher implements IRTSPHandle {
     private var getChannel:URLStream = null;
+    private var poster:URLLoader = null;
     private var urlParsed:Object;
     private var sessioncookie:String;
     private var url:String;
+    private var connectTimer:Timer;
 
     private var base64encoder:Base64Encoder;
 
@@ -51,11 +54,10 @@ package com.axis.rtspclient {
       req.data = data;
       req.contentType = 'application/x-rtsp-tunnelled';
 
-      var poster:URLLoader = new URLLoader();
-      poster.addEventListener(IOErrorEvent.IO_ERROR, function ():void {});
-      poster.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function ():void {});
-      poster.load(req);
-      setTimeout(poster.close, 2000);
+      this.poster = new URLLoader();
+      this.poster.addEventListener(IOErrorEvent.IO_ERROR, function ():void {});
+      this.poster.addEventListener(SecurityErrorEvent.SECURITY_ERROR, function ():void {});
+      this.poster.load(req);
     }
 
     public function readBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0):void {
@@ -90,6 +92,15 @@ package com.axis.rtspclient {
       connect();
     }
 
+    public function cmdReceived():void {
+      if (this.poster) {
+        // Close the previous POST request
+        this.poster.close();
+        this.poster.removeEventListener(IOErrorEvent.IO_ERROR, function ():void {});
+        this.poster.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, function ():void {});
+      }
+    }
+
     private function onComplete(event:Event):void {
       dispatchEvent(new Event('closed'));
     }
@@ -97,6 +108,19 @@ package com.axis.rtspclient {
     private function onOpen(event:Event):void {
       Logger.log('RTSP+HTTP+AxisProxy connected to', 'http://' + this.urlParsed.host +
           this.urlParsed.urlpath + "?sessioncookie=" + sessioncookie);
+      if(Player.isUserAgentIE()) {
+          // IE/Edge workaround. getChannel OPEN event is emitted prematurely.
+          // This causes the following POST request to be sent before the GET channel is established.
+          // Add a delay to give some time for the GET connection to be established.
+          this.connectTimer = new Timer(1000, 1);
+          this.connectTimer.addEventListener(TimerEvent.TIMER, connectedDelay);
+          this.connectTimer.start();
+        } else {
+          dispatchEvent(new Event('connected'));
+        }
+    }
+
+    private function connectedDelay(e:TimerEvent):void {
       dispatchEvent(new Event('connected'));
     }
 

@@ -122,6 +122,9 @@ package com.axis.rtspclient {
       connect();
     }
 
+    // Not applicable
+    public function cmdReceived():void {}
+
     private function onGetChannelConnect(event:Event):void {
       initializeGetChannel();
     }
