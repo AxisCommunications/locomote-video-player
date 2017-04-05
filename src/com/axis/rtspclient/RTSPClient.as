@@ -104,7 +104,8 @@ package com.axis.rtspclient {
       var self:RTSPClient = this;
       handle.addEventListener('connected', function():void {
         if (state !== STATE_INITIAL) {
-          ErrorManager.dispatchError(805);
+          // Ignore if not in state initial
+          Logger.log('Got connect when in state: ', state);
           return;
         }
         self.bcTimer.start();
