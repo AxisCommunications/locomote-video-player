@@ -327,9 +327,7 @@ package {
     }
 
     public function pause():void {
-      try {
-        client.pause()
-      } catch (err:Error) {
+      if (!client || !client.pause()) {
         ErrorManager.dispatchError(808);
       }
     }
