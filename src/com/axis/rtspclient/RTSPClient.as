@@ -572,7 +572,7 @@ package com.axis.rtspclient {
       }
 
       /* Discard the interleaved header. It was extracted previously. */
-      data.readUnsignedInt();
+      data.position += 4;
 
       var pkgData:ByteArray = new ByteArray();
       data.readBytes(pkgData, 0, rtpLength);
