@@ -53,6 +53,7 @@ package {
       'keepAlive': 0,
       'connectionTimeout': 10,
       'scaleUp': false,
+      'exactFit': false,
       'allowFullscreen': true,
       'debugLogger': false,
       'frameByFrame': false
@@ -158,12 +159,19 @@ package {
       var scale:Number = ((stagewidth / meta.width) > (stageheight / meta.height)) ?
         (stageheight / meta.height) : (stagewidth / meta.width);
 
-      video.width = meta.width;
-      video.height = meta.height;
-      if ((scale < 1.0) || (scale > 1.0 && true === config.scaleUp)) {
-        Logger.log('scaling video, scale:' + scale.toFixed(2) + ' (aspect ratio: ' +  (video.width / video.height).toFixed(2) + ')');
-        video.width = meta.width * scale;
-        video.height = meta.height * scale;
+      if (true === config.exactFit) {
+        video.width = stagewidth;
+        video.height = stageheight;
+      }
+      else {
+        video.width = meta.width;
+        video.height = meta.height;
+
+        if ((scale < 1.0) || (scale > 1.0 && true === config.scaleUp)) {
+          Logger.log('scaling video, scale:' + scale.toFixed(2) + ' (aspect ratio: ' +  (video.width / video.height).toFixed(2) + ')');
+          video.width = meta.width * scale;
+          video.height = meta.height * scale;
+        }
       }
 
       video.x = (stagewidth - video.width) / 2;
@@ -207,6 +215,13 @@ package {
         var scaleUpChanged:Boolean = (config.scaleUp !== iconfig.scaleUp);
         config.scaleUp = iconfig.scaleUp;
         if (scaleUpChanged && this.client)
+          this.videoResize();
+      }
+
+      if (iconfig.exactFit !== undefined) {
+        var exactFitChanged:Boolean = (config.exactFit !== iconfig.exactFit);
+        config.exactFit = iconfig.exactFit;
+        if (exactFitChanged && this.client)
           this.videoResize();
       }
 
