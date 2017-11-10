@@ -38,7 +38,7 @@ package com.axis.rtspclient {
 
     public static function parse(rtpInfo:String, range:String):RTPTiming {
       var rtpTime:Object = {};
-      for each (var track:String in rtpInfo.split(',')) {
+      for each (var track:String in rtpInfo.split(',\n')) {
         var rtpTimeMatch:Object = /^.*url=([^;]*);.*rtptime=(\d+).*$/.exec(track);
         rtpTime[rtpTimeMatch[1]] = parseInt(rtpTimeMatch[2]);
       }
@@ -53,7 +53,6 @@ package com.axis.rtspclient {
         /* Some idiot RTSP servers writes Range: npt=0.000-0.000 in the header... */
         to = to <= from ? -1 : to;
       }
-
       return new RTPTiming(rtpTime, { from: from, to: to }, live);
     }
   }
