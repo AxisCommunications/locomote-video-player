@@ -19,6 +19,9 @@ package com.axis.rtspclient {
     public var pt:uint;
     public var sequence:uint;
     public var timestamp:uint;
+    public var defbyprof:uint;
+    public var extlength:uint;
+    public var hdrext:Array;
 
     public var headerLength:uint;
     public var bodyLength:uint;
@@ -37,9 +40,19 @@ package com.axis.rtspclient {
       timestamp = pkt.readUnsignedInt();
       ssrc      = pkt.readUnsignedInt();
 
+      if (extension === 1) {
+        var line2:uint = pkt.readUnsignedInt();
+
+        defbyprof = (line2 & 0xFFFF0000) >>> 16;
+        extlength = (line2 & 0x0000FFFF) >>> 0;
+        hdrext    = new Array(extlength);
+        for (var extidx:uint = 0; extidx < extlength; extidx++) {
+          hdrext.push(pkt.readUnsignedInt());
+        }
+      }
+
       headerLength = pkt.position;
       bodyLength   = pkt.bytesAvailable;
-
       media = sdp.getMediaBlockByPayloadType(pt);
       if (null === media || -1 === media.fmt.indexOf(pt)) {
         Logger.log('Media description for payload type: ' + pt + ' not provided.');
@@ -60,15 +73,20 @@ package com.axis.rtspclient {
 
     public override function toString():String {
       return "RTP(" +
-        "version:"   + version   + ", " +
-        "padding:"   + padding   + ", " +
-        "extension:" + extension + ", " +
-        "csrc:"      + csrc      + ", " +
-        "marker:"    + marker    + ", " +
-        "pt:"        + pt        + ", " +
-        "sequence:"  + sequence  + ", " +
-        "timestamp:" + timestamp + ", " +
-        "ssrc:"      + ssrc      + ")";
+        "version:"            + version   + ", " +
+        "padding:"            + padding   + ", " +
+        "extension:"          + extension + ", " +
+        "csrc:"               + csrc      + ", " +
+        "marker:"             + marker    + ", " +
+        "pt:"                 + pt        + ", " +
+        "sequence:"           + sequence  + ", " +
+        "timestamp:"          + timestamp + ", " +
+        "ssrc:"               + ssrc      + 
+        (extension !== 1 ? ")" : (", " +
+          "defined by profile:" + defbyprof + ", " +
+          "extension length:"   + extlength + ", " +
+          "header extension:"   + hdrext + ")"
+        ));
     }
   }
 }
