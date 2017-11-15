@@ -12,8 +12,11 @@ package com.axis.rtspclient {
   public class ANALU extends EventDispatcher {
     private static const NALTYPE_FU_A:uint = 28;
     private static const NALTYPE_FU_B:uint = 29;
+    private static const SYNC_CODE_LEN:uint = 3;
 
     private var nalu:NALU = null;
+    private var fragbuffer:ByteArray = new ByteArray();
+    private var timestamp:uint;
 
     public function ANALU() {
     }
@@ -21,14 +24,19 @@ package com.axis.rtspclient {
     public function onRTPPacket(pkt:RTP):void {
       var data:ByteArray = pkt.getPayload();
 
-      var nalhdr:uint = data.readUnsignedByte();
+      timestamp = pkt.getTimestampMS();
 
+      var nalhdr:uint	 = data.readUnsignedByte();
       var nri:uint     = nalhdr & 0x60;
       var naltype:uint = nalhdr & 0x1F;
 
       if (27 >= naltype && 0 < naltype) {
         /* This RTP package is a single NALU, dispatch and forget, 0 is undefined */
-        dispatchEvent(new NALU(naltype, nri, data, pkt.getTimestampMS()));
+        var payload:ByteArray = new ByteArray();
+
+        data.position -= 1; // include NAL header
+        payload.writeBytes(data, data.position);
+        dispatchEvent(new NALU(payload, timestamp));
         return;
       }
 
@@ -46,19 +54,47 @@ package com.axis.rtspclient {
       if (NALTYPE_FU_B === naltype) {
         var nfdon:uint = data.readUnsignedShort();
       }
+      if (1 === nfstart) {
+        var hdr:uint = (0x0 & 0x80) | (nri & 0x60) | (nftype & 0x1F);
 
-      if (null === nalu) {
-        /* Create a new NAL unit from multiple fragmented NAL units */
-        nalu = new NALU(nftype, nri, data, pkt.getTimestampMS());
-      } else {
-        /* We've already created the NAL unit, append current data */
-        nalu.appendData(data);
+        fragbuffer.clear();
+        fragbuffer.writeByte(hdr); // prepend NAL header
       }
 
+      fragbuffer.writeBytes(data, data.position);
       if (1 === nfend) {
-        dispatchEvent(nalu);
-        nalu = null;
+        processBuffer();
       }
+    }
+    private function processBuffer():void {
+      var usableLen:uint = fragbuffer.length - SYNC_CODE_LEN;
+      var cur:uint = 1;
+      var pcur:uint = 0;
+			var pos:uint = 0;
+
+      /** Find (00) 00 00 01 sync codes and emit NALs at them */
+      for (cur = 1; cur < usableLen; cur) {
+        pcur = cur;
+        if ( fragbuffer[cur++] === 0x00
+          && fragbuffer[cur++] === 0x00
+          && (
+            fragbuffer[cur] === 0x01
+            || (
+              fragbuffer[cur++] === 0x00
+              && fragbuffer[cur] === 0x01
+          ))
+        ) {
+          emitNalu(pos, pcur - pos);
+          pos = ++cur;
+        }
+      }
+      emitNalu(pos, fragbuffer.length - pos);
+    }
+    private function emitNalu(offset:uint, length:uint):void {
+      var payload:ByteArray = new ByteArray();
+      payload.writeBytes(fragbuffer, offset, length);
+
+      dispatchEvent(new NALU(payload, timestamp));
     }
   }
 }

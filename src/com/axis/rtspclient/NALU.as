@@ -12,12 +12,13 @@ package com.axis.rtspclient {
     public var timestamp:uint;
     public var bodySize:uint;
 
-    public function NALU(ntype:uint, nri:uint, data:ByteArray, timestamp:uint) {
+    public function NALU(data:ByteArray, timestamp:uint) {
       super(NEW_NALU);
 
+      data.position  = 0;
       this.data      = data;
-      this.ntype     = ntype;
-      this.nri       = nri;
+      this.nri       = data[0] & 0x60;
+      this.ntype     = data[0] & 0x1F;
       this.timestamp = timestamp;
       this.bodySize  = data.bytesAvailable;
     }
@@ -32,19 +33,20 @@ package com.axis.rtspclient {
     }
 
     public function writeSize():uint {
-      return 2 + 2 + 1 + data.bytesAvailable;
+      return 2 + 2 + data.length;
     }
 
     public function writeStream(output:ByteArray):void {
-      output.writeUnsignedInt(data.bytesAvailable + 1); // NALU length + header
-      output.writeByte((0x0 & 0x80) | (nri & 0x60) | (ntype & 0x1F)); // NAL header
-      output.writeBytes(data, data.position);
+      output.writeUnsignedInt(data.length); // NALU length + header
+      output.writeBytes(data);
     }
 
     public function getPayload():ByteArray {
       var payload:ByteArray = new ByteArray();
-      data.position -= 1;
-      data.readBytes(payload, 0, data.bytesAvailable);
+
+      payload.writeBytes(data);
+      payload.position = 0;
+
       return payload;
     }
   }
