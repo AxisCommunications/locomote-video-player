@@ -69,6 +69,7 @@ package {
     private var streamHasVideo:Boolean = false;
     private var newPlaylistItem:Boolean = false;
     private var startOptions:Object = null;
+    private var freezeImage:Boolean = false;
 
     public function Player() {
       var self:Player = this;
@@ -300,6 +301,7 @@ package {
         return;
       }
 
+      removeChildren();
       addChild(this.client.getDisplayObject());
 
       client.addEventListener(ClientEvent.STOPPED, onStopped);
@@ -335,7 +337,11 @@ package {
       }
     }
 
-    public function stop():void {
+    public function stop(options:Object=null):void {
+      if (options && options.freezeImage !== undefined) {
+        this.freezeImage = options.freezeImage;
+      }
+
       if (!client || !client.stop()) {
         ErrorManager.dispatchError(810);
         return;
@@ -460,7 +466,9 @@ package {
     }
 
     private function onStopped(event:ClientEvent):void {
-      this.removeChild(this.client.getDisplayObject());
+      if(!this.freezeImage){
+        this.removeChild(this.client.getDisplayObject());
+      }
       this.client.removeEventListener(ClientEvent.STOPPED, onStopped);
       this.client.removeEventListener(ClientEvent.START_PLAY, onStartPlay);
       this.client.removeEventListener(ClientEvent.PAUSED, onPaused);

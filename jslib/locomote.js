@@ -123,8 +123,8 @@
       return this;
     },
 
-    stop: function() {
-      this.e.stop();
+    stop: function(options) {
+      this.e.stop(options ? options : {});
       return this;
     },
 
