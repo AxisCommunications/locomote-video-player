@@ -23,3 +23,6 @@ locomote.sublime-project
 .atom-build.json
 node_modules
 nbproject
+
+.idea/
+*.iml
