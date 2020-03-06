@@ -1,7 +1,7 @@
 # Locomote Video Player [![Build Status](https://travis-ci.org/AxisCommunications/locomote-video-player.svg?branch=master)](https://travis-ci.org/AxisCommunications/locomote-video-player) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/AxisCommunications/locomote-video-player?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # END-OF-LIFE NOTICE
-As [Adobe Flash is reaching it's end-of-life](https://theblog.adobe.com/adobe-flash-update/) Axis Communications is no longer maintaining this project.
+As [Adobe Flash is reaching its end-of-life](https://theblog.adobe.com/adobe-flash-update/) Axis Communications is no longer maintaining this project.
 
 For native HTML5/JavaScript video streaming of Axis cameras, see https://github.com/AxisCommunications/media-stream-library-js instead.
 
